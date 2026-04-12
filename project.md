@@ -6,7 +6,7 @@ DesignHive Admin is a full-stack email automation dashboard for managing and sen
 
 ---
 
-## Repository Structure
+## Repository Structure .
 
 ```
 designhive-admin/
