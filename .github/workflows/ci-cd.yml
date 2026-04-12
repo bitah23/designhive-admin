@@ -82,7 +82,7 @@ jobs:
       # Step 3: Deploy to VPS
       - name: Deploy to VPS
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
           set -e
           
           echo "🚀 Starting deployment..."
@@ -99,25 +99,30 @@ jobs:
             git clone --depth 1 https://github.com/${{ github.repository }}.git .
           fi
           
-          # Create .env file with only application secrets
-          echo "⚙️  Creating .env file..."
-          cat > .env << 'ENVFILE'
-PORT=5000
-NODE_ENV=production
-
-SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
-SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-
-GMAIL_CLIENT_ID=${{ secrets.GMAIL_CLIENT_ID }}
-GMAIL_CLIENT_SECRET=${{ secrets.GMAIL_CLIENT_SECRET }}
-GMAIL_REFRESH_TOKEN=${{ secrets.GMAIL_REFRESH_TOKEN }}
-GMAIL_SENDER_EMAIL=${{ secrets.GMAIL_SENDER_EMAIL }}
-GMAIL_SENDER_NAME=${{ secrets.GMAIL_SENDER_NAME }}
-
-JWT_SECRET=${{ secrets.JWT_SECRET }}
-ENVFILE
-          echo "✅ .env file created"
+          # Create .env file if it doesn't exist
+          if [ ! -f .env ]; then
+            echo "⚙️  Creating .env file..."
+            cat > .env << 'ENVFILE'
+          PORT=5000
+          NODE_ENV=production
+          
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          
+          GMAIL_CLIENT_ID=${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET=${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN=${{ secrets.GMAIL_REFRESH_TOKEN }}
+          GMAIL_SENDER_EMAIL=${{ secrets.GMAIL_SENDER_EMAIL }}
+          GMAIL_SENDER_NAME=${{ secrets.GMAIL_SENDER_NAME }}
+          
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          
+          ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          ENVFILE
+            echo "✅ .env file created"
+          fi
           
           # Login to GitHub Container Registry
           echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -129,11 +134,11 @@ ENVFILE
           
           # Stop and remove old containers
           echo "🛑 Stopping old containers..."
-          docker compose down || true
+          docker-compose down || true
           
           # Start new containers
           echo "🟢 Starting new containers..."
-          docker compose up -d
+          docker-compose up -d
           
           # Wait for services to be healthy
           echo "⏳ Waiting for services to be healthy..."
