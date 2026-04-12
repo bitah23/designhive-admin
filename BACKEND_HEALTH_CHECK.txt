@@ -1,0 +1,10 @@
+// Add this route to email-automation/server/index.js
+// Place it BEFORE other route definitions
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});

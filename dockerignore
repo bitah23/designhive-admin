@@ -1,0 +1,77 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+dist
+build
+.next
+.nuxt
+coverage
+
+# Environment files (don't bake secrets into images)
+.env
+.env.local
+.env.*.local
+.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*.swn
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Testing
+.nyc_output
+.mocha_output
+jest_coverage
+cypress/videos
+cypress/screenshots
+
+# Docker
+docker-compose.yml
+Dockerfile*
+.dockerignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+.travis.yml
+
+# Misc
+README.md
+CHANGELOG.md
+LICENSE
+.editorconfig
+.prettierrc
+.eslintrc*
+tsconfig.json
+jest.config.js
+vite.config.js
+webpack.config.js
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+*.tmp
