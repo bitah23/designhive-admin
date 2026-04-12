@@ -5,21 +5,54 @@ const bcrypt = require('bcryptjs');
 const supabase = require('../config/supabase');
 const { authenticateAdmin } = require('../middleware/auth');
 
-// Secure login using database and hashing
+// One-time setup: create the first admin account (disabled once any admin exists)
+router.post('/setup', async (req, res) => {
+  const { email, password, name } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  try {
+    const { data: existing, error: countError } = await supabase
+      .from('admins')
+      .select('id')
+      .limit(1);
+
+    if (countError) throw countError;
+
+    if (existing && existing.length > 0) {
+      return res.status(403).json({ error: 'Setup already completed. Use the login endpoint.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const password_hash = await bcrypt.hash(password, salt);
+
+    const { data: admin, error: insertError } = await supabase
+      .from('admins')
+      .insert([{ email, password_hash, name: name || null }])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    const token = jwt.sign({ id: admin.id, email: admin.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    return res.json({ message: 'Admin account created successfully', token });
+  } catch (err) {
+    return res.status(500).json({ error: 'Setup failed: ' + err.message });
+  }
+});
+
+// Login using database credentials only
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Fallback to environment variables if database is not configured
-    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-      const token = jwt.sign({ id: 'admin-fallback', email: email }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '1d' });
-      return res.json({ token });
-    }
-
     const { data: admin, error } = await supabase
       .from('admins')
       .select('*')
       .eq('email', email)
+      .eq('is_active', true)
       .single();
 
     if (error || !admin) {
