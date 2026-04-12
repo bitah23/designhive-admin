@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:5000/api/auth/setup -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/setup -H 'Content-Type: application/json' -d '{\"email\": \"admin@designhiveai.com.au\", \"password\": \"DesignHive@2025!\", \"name\": \"Admin\"}')"
+    ]
+  }
+}
