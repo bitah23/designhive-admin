@@ -82,7 +82,7 @@ jobs:
       # Step 3: Deploy to VPS
       - name: Deploy to VPS
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
           set -e
           
           echo "🚀 Starting deployment..."
@@ -129,11 +129,11 @@ ENVFILE
           
           # Stop and remove old containers
           echo "🛑 Stopping old containers..."
-          docker-compose down || true
+          docker compose down || true
           
           # Start new containers
           echo "🟢 Starting new containers..."
-          docker-compose up -d
+          docker compose up -d
           
           # Wait for services to be healthy
           echo "⏳ Waiting for services to be healthy..."
