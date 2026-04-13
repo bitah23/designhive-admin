@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import logoImg from '../assets/logo.png';
+
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,7 +45,7 @@ const Layout = () => {
       {/* Sidebar */}
       <div className="bg-section d-flex flex-column flex-shrink-0 border-end border-white border-opacity-5" style={{ width: '240px', transition: '0.3s' }}>
         <div className="p-4 mb-2 d-flex align-items-center justify-content-center">
-          <img src="/logo.png" alt="Design Hive" style={{ maxHeight: '80px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(250, 204, 21, 0.4))' }} />
+          <img src={logoImg} alt="Design Hive" style={{ maxHeight: '80px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(250, 204, 21, 0.4))' }} />
         </div>
 
         <div className="px-3 py-2 flex-grow-1 overflow-auto custom-scrollbar">
