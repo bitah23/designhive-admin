@@ -11,7 +11,8 @@ import {
   Mail,
   Zap,
   TrendingUp,
-  Activity
+  Activity,
+  Plus
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -19,7 +20,8 @@ import {
   XAxis, 
   YAxis, 
   Tooltip, 
-  ResponsiveContainer
+  ResponsiveContainer,
+  CartesianGrid
 } from 'recharts';
 import { motion } from 'framer-motion';
 
@@ -47,7 +49,6 @@ const Dashboard = () => {
       { name: 'Thu', sent: 0 },{ name: 'Fri', sent: 0 },{ name: 'Sat', sent: 0 },{ name: 'Sun', sent: 0 }
     ];
     
-    // Calculate past 7 days starting from 6 days ago up to today
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -77,7 +78,6 @@ const Dashboard = () => {
         const totalSent = logs.filter(l => l.status === 'sent').length;
         const totalFailed = logs.filter(l => l.status === 'failed').length;
 
-        // Calculate Today/Week stats
         const today = new Date().setHours(0, 0, 0, 0);
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).getTime();
         
@@ -106,89 +106,111 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="animate-fade-in p-2">
-        <Skeleton width="350px" height="40px" className="mb-5" />
-        <div className="row g-4 mb-5">
-          {[1,2,3,4].map(i => (
-            <div className="col-md-6 col-lg-3" key={i}>
-              <div className="card border-0 shadow-sm p-4 bg-white"><Skeleton width="100%" height="80px" /></div>
+      <div className="d-flex flex-column gap-4 animate-pulse p-2">
+        <div className="row g-4 mb-4">
+          {[1, 2, 3, 4].map(i => (
+            <div className="col-md-3" key={i}>
+              <div className="glass-card p-4" style={{ height: '140px' }}><div className="bg-section w-100 h-100 rounded-4"></div></div>
             </div>
           ))}
         </div>
         <div className="row g-4">
-           <div className="col-lg-8"><Skeleton width="100%" height="400px" /></div>
-           <div className="col-lg-4"><Skeleton width="100%" height="400px" /></div>
+           <div className="col-lg-8"><div className="glass-card p-5" style={{ height: '400px' }}></div></div>
+           <div className="col-lg-4"><div className="glass-card p-5" style={{ height: '400px' }}></div></div>
         </div>
       </div>
     );
   }
 
   const cards = [
-    { title: 'Total Users', value: stats.users, icon: <UsersIcon size={20} />, color: '#6366f1', trend: 'Master DB Sync' },
-    { title: 'Sent Today', value: stats.sentToday, icon: <Zap size={20} />, color: '#0ea5e9', trend: 'Weekly: ' + stats.sentWeek },
-    { title: 'Sent Total', value: stats.sentTotal, icon: <Send size={20} />, color: '#10b981', trend: 'Lifetime Deliveries' },
-    { title: 'Failed emails', value: stats.failed, icon: <AlertCircle size={20} />, color: '#ef4444', trend: 'Requires Review' },
+    { title: 'Total Users', value: stats.users, icon: <UsersIcon size={22} />, color: '#FACC15', trend: 'Synced with Hive', bg: 'rgba(250, 204, 21, 0.1)' },
+    { title: 'Sent Today', value: stats.sentToday, icon: <Zap size={22} />, color: '#FACC15', trend: 'Weekly: ' + stats.sentWeek, bg: 'rgba(250, 204, 21, 0.1)' },
+    { title: 'Sent Total', value: stats.sentTotal, icon: <Send size={22} />, color: '#FACC15', trend: 'Global Delivery', bg: 'rgba(250, 204, 21, 0.1)' },
+    { title: 'Failed Alerts', value: stats.failed, icon: <AlertCircle size={22} />, color: '#F87171', trend: 'Review Required', bg: 'rgba(248, 113, 113, 0.1)' },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="d-flex justify-content-between align-items-center mb-5">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-5">
+      <div className="d-flex justify-content-between align-items-end mb-5 mt-n1">
         <div>
-          <h2 className="fw-bold m-0 text-dark ls-tight">Overview Dashboard</h2>
-          <p className="text-muted small m-0 d-flex align-items-center gap-1">
-             <Activity size={14} className="text-success" /> Real-time status from Design Hive Communication Engine
+          <h2 className="fw-bold m-0 text-white ls-tight">Operations Hub</h2>
+          <p className="text-muted small m-0 ls-wide d-flex align-items-center gap-2">
+             <Activity size={14} className="text-gold" /> System Status: Operational • v3.0 Powered By Design Hive
           </p>
         </div>
         <button 
-          className="btn btn-primary px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2 rounded-3"
+          className="btn btn-primary d-flex align-items-center gap-2 px-4 py-2.5 shadow-gold border-0"
           onClick={() => window.location.href = '/admin/campaign'}
         >
-          <Send size={18} /> Launch Campaign
+          <Plus size={18} /> Launch Sync
         </button>
       </div>
 
       <div className="row g-4 mb-5">
         {cards.map((card, idx) => (
           <div className="col-md-6 col-lg-3" key={idx}>
-            <div className="card border-0 shadow-sm h-100 card-hover bg-white p-2" style={{ borderRadius: '20px' }}>
-               <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <div className="p-2.5 rounded-3" style={{ backgroundColor: `${card.color}15`, color: card.color }}>
+            <div className="glass-card h-100 card-hover overflow-hidden position-relative border-opacity-5 p-1">
+               <div className="card-body p-4 position-relative z-2">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div className="p-3 rounded-4 shadow-gold" style={{ backgroundColor: card.bg, color: card.color }}>
                       {card.icon}
                     </div>
                   </div>
-                  <h3 className="fw-bold mb-1">{card.value.toLocaleString()}</h3>
-                  <p className="text-muted small fw-bold text-uppercase mb-2 ls-wide" style={{ fontSize: '0.65rem' }}>{card.title}</p>
-                  <hr className="my-2 opacity-5" />
-                  <div className="text-muted" style={{ fontSize: '0.7rem' }}>{card.trend}</div>
+                  <h3 className="fw-bold text-white mb-1 ls-tight">{card.value.toLocaleString()}</h3>
+                  <p className="text-secondary small fw-bold text-uppercase mb-2 ls-wider" style={{ fontSize: '0.65rem' }}>{card.title}</p>
+                  <div className="text-muted opacity-50" style={{ fontSize: '0.7rem' }}>{card.trend}</div>
                </div>
+               <div className="position-absolute top-50 start-0 translate-middle-y bg-gold opacity-5 blur-3xl rounded-circle pointer-events-none" style={{ width: '80px', height: '80px', zIndex: 1 }}></div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="row g-4 mb-5">
+      <div className="row g-4">
         <div className="col-lg-8">
-          <div className="card border-0 shadow-sm bg-white p-4 h-100" style={{ borderRadius: '24px' }}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="glass-card p-4 p-xl-5 h-100 border-opacity-5">
+            <div className="d-flex justify-content-between align-items-center mb-5">
                <div>
-                  <h5 className="fw-bold m-0">Campaign Velocity</h5>
-                  <p className="text-muted x-small m-0">Performance over the last 7 days</p>
+                  <h5 className="fw-bold text-white m-0">Transmission Velocity</h5>
+                  <p className="text-muted small m-0 opacity-75">Operational flow across 7-day window</p>
                </div>
-               <TrendingUp size={24} className="text-primary opacity-25" />
+               <div className="dropdown">
+                  <button className="btn btn-darker btn-sm border border-white border-opacity-5 rounded-pill px-3 text-secondary small">7D RANGE</button>
+               </div>
             </div>
-            <div style={{ width: '100%', height: '300px' }}>
+            <div style={{ width: '100%', height: '350px' }}>
               <ResponsiveContainer>
                 <AreaChart data={chartData}>
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                  <YAxis hide />
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FACC15" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#FACC15" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#6B7280', fontSize: 11 }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#6B7280', fontSize: 11 }}
+                  />
                   <Tooltip 
-                    contentStyle={{ border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ backgroundColor: '#11131A', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '15px', backdropFilter: 'blur(10px)' }}
+                    itemStyle={{ color: '#FACC15' }}
                   />
                   <Area 
-                    type="monotone" dataKey="sent" 
-                    stroke="#6366f1" strokeWidth={3}
-                    fillOpacity={1} fill="#6366f110"
+                    type="monotone" 
+                    dataKey="sent" 
+                    stroke="#FACC15" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorValue)" 
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -197,48 +219,49 @@ const Dashboard = () => {
         </div>
 
         <div className="col-lg-4">
-          <div className="card border-0 shadow-sm bg-white p-4 h-100" style={{ borderRadius: '24px' }}>
+          <div className="glass-card p-4 p-xl-5 h-100 border-opacity-5">
             <div className="d-flex justify-content-between align-items-center mb-4">
-               <h5 className="fw-bold m-0 text-dark">Recent Activity</h5>
-               <small className="badge bg-light text-muted border fw-bold pt-1.5 px-2">LIVE FEED</small>
+               <h5 className="fw-bold text-white m-0">Live Simulation</h5>
+               <small className="badge bg-gold text-black fw-bold pt-1.5 px-3 rounded-pill ls-wide" style={{ fontSize: '0.6rem' }}>SYNCING</small>
             </div>
-            <div className="d-flex flex-column gap-3 overflow-auto custom-scrollbar" style={{ maxHeight: '420px' }}>
+            <div className="d-flex flex-column gap-3 overflow-auto custom-scrollbar" style={{ maxHeight: '430px' }}>
               {stats.recentLogs.map((log, idx) => (
-                <div className="d-flex align-items-start gap-3 border-bottom pb-3 last-child-border-0" key={idx}>
-                  <div className={`p-2 rounded-circle flex-shrink-0 ${log.status === 'sent' ? 'bg-success-subtle' : 'bg-danger-subtle'}`} style={{ width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    {log.status === 'sent' ? <CheckCircle size={14} className="text-success" /> : <AlertCircle size={14} className="text-danger" />}
+                <div className="d-flex align-items-start gap-3 p-2 rounded-3 hover-bg-white-5 transition-all" key={idx}>
+                  <div className="p-2 rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: log.status === 'sent' ? 'rgba(250, 204, 21, 0.1)' : 'rgba(248, 113, 113, 0.1)' }}>
+                    {log.status === 'sent' ? <CheckCircle size={14} className="text-gold" /> : <AlertCircle size={14} className="text-danger" />}
                   </div>
                   <div className="overflow-hidden w-100">
                     <div className="d-flex justify-content-between">
-                       <p className="small fw-bold mb-0 text-truncate">{log.user_email}</p>
-                       <small className="text-muted opacity-50 pe-1">
+                       <p className="small text-white fw-bold mb-0 text-truncate">{log.user_email}</p>
+                       <small className="text-muted opacity-50" style={{ fontSize: '0.65rem' }}>
                           {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                        </small>
                     </div>
-                    <p className="text-muted mb-0" style={{ fontSize: '0.7rem' }}>
-                       {log.email_templates?.title || 'Direct Send'} 
-                       {log.status === 'failed' && <span className="ms-1 text-danger">• Error logged</span>}
+                    <p className="text-secondary mb-0 opacity-75" style={{ fontSize: '0.7rem' }}>
+                       {log.email_templates?.title || 'System Core Sync'} 
+                       {log.status === 'failed' && <span className="ms-1 text-danger fw-bold">• Blocked</span>}
                     </p>
                   </div>
                 </div>
               ))}
               {stats.recentLogs.length === 0 && (
-                <div className="text-center py-5 opacity-25"><Mail size={40} /><p className="small mt-2">No activity detected.</p></div>
+                <div className="text-center py-5 opacity-25"><Mail size={40} className="text-gold" /><p className="small mt-2 text-white">Quiet in the Hive.</p></div>
               )}
             </div>
             <button 
-              className="btn btn-light w-100 mt-auto py-2.5 fw-bold small text-primary d-flex align-items-center justify-content-center gap-2 border-0"
+              className="btn btn-darker w-100 mt-4 py-2.5 fw-bold small text-secondary d-flex align-items-center justify-content-center gap-2 border border-white border-opacity-5 hover-bg-white-5"
               style={{ borderRadius: '12px' }}
               onClick={() => window.location.href = '/admin/logs'}
             >
-              Access Full Logs <Clock size={14} />
+              Full Operational View <Clock size={14} />
             </button>
           </div>
         </div>
       </div>
       <style>{`
-        .last-child-border-0:last-child { border-bottom: none !important; }
-        .x-small { font-size: 0.75rem; }
+        .bg-darker { background-color: #0F172A; }
+        .blur-3xl { filter: blur(64px); }
+        .shadow-gold { box-shadow: 0 0 20px rgba(250, 204, 21, 0.1); }
       `}</style>
     </motion.div>
   );

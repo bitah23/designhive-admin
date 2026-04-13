@@ -34,39 +34,39 @@ const Users = () => {
 
   const columns = [
     { 
-      title: 'Full Name', 
+      title: 'Operational Identity', 
       data: 'name', 
-      className: 'fw-bold py-3 ps-4' 
+      className: 'fw-bold py-4 text-white ps-4 border-white border-opacity-5' 
     },
     { 
-      title: 'Email Address', 
+      title: 'Neural Address', 
       data: 'email', 
-      render: (data) => `<span class="text-primary fw-medium">${data}</span>`,
-      className: 'py-3' 
+      render: (data) => `<span class="text-gold fw-medium">${data}</span>`,
+      className: 'py-4 border-white border-opacity-5' 
     },
     { 
-      title: 'Joined Date', 
+      title: 'Identification Timestamp', 
       data: 'created_at', 
       render: (data) => new Date(data).toLocaleDateString([], { dateStyle: 'medium' }),
-      className: 'text-muted small py-3' 
+      className: 'text-secondary small py-4 border-white border-opacity-5' 
     },
     {
       title: 'Status',
       data: null,
-      defaultContent: '<span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>',
-      className: 'py-3 text-center'
+      render: () => '<span class="badge bg-gold bg-opacity-10 text-gold border border-gold border-opacity-20 px-3 py-2 rounded-pill small fw-bold">ACTIVE</span>',
+      className: 'py-4 text-center border-white border-opacity-5'
     }
   ];
 
   if (loading) {
     return (
-      <div className="animate-fade-in">
-        <div className="d-flex justify-content-between mb-4">
-          <Skeleton width="220px" height="40px" />
-          <Skeleton width="180px" height="40px" />
+      <div className="animate-pulse p-2">
+        <div className="d-flex justify-content-between mb-5">
+          <div className="skeleton bg-card rounded-3" style={{ width: '220px', height: '40px' }}></div>
+          <div className="skeleton bg-card rounded-3" style={{ width: '180px', height: '40px' }}></div>
         </div>
-        <div className="card border-0 shadow-sm p-4 bg-white">
-          <Skeleton width="100%" height="450px" />
+        <div className="glass-card p-4">
+          <div className="bg-section w-100 rounded-4" style={{ height: '450px' }}></div>
         </div>
       </div>
     );
@@ -74,29 +74,29 @@ const Users = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-5 mt-n1">
         <div>
-          <h2 className="fw-bold m-0 text-dark">User Profiles</h2>
-          <p className="text-muted small m-0">Synchronized with Design Hive master database.</p>
+          <h2 className="fw-bold m-0 text-white ls-tight">User Registry</h2>
+          <p className="text-secondary small m-0 opacity-75">Synchronized transmission targets across the hive.</p>
         </div>
-        <div className="d-flex gap-2">
-           <button className="btn btn-white bg-white border shadow-sm px-3 fw-bold small d-flex align-items-center gap-2" onClick={() => {
+        <div className="d-flex gap-3">
+           <button className="btn btn-darker border border-white border-opacity-5 px-3 fw-bold small d-flex align-items-center gap-2 text-secondary hover-bg-white-5" onClick={() => {
               const csv = ['Name,Email,Joined'].concat(users.map(u => `${u.name},${u.email},${new Date(u.created_at).toLocaleDateString()}`)).join('\n');
               const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'users.csv'; a.click();
-              toast.success('Users exported as CSV!');
+              toast.success('Manifest exported as CSV!');
             }}>
-               <Download size={16} /> Export CSV
+               <Download size={16} /> EXPORT MANIFEST
             </button>
            <button 
-             className="btn btn-primary shadow-sm px-4 fw-bold small d-flex align-items-center gap-2"
+             className="btn btn-primary px-4 py-2.5 shadow-gold d-flex align-items-center gap-2 border-0"
              onClick={() => window.location.href = '/admin/campaign'}
            >
-              <Mail size={16} /> New Campaign
+              <Mail size={16} /> NEW CLUSTER
            </button>
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm bg-white overflow-hidden" style={{ borderRadius: '24px' }}>
+      <div className="glass-card p-0 overflow-hidden border-opacity-5">
         <div className="card-body p-4 pt-2">
           <DataTable
             data={users}
@@ -104,28 +104,50 @@ const Users = () => {
             options={{
               pageLength: 10,
               responsive: true,
-              dom: '<"d-flex justify-content-between align-items-center mb-4"lf>rt<"d-flex justify-content-between align-items-center mt-4"ip>',
+              dom: '<"d-flex justify-content-between align-items-center mb-4 pb-2"f>rt<"d-flex justify-content-between align-items-center mt-4 pt-2 border-top border-white border-opacity-5"ip>',
               language: {
                 search: "",
-                searchPlaceholder: "Search users..."
+                searchPlaceholder: "Identify user...",
+                info: "Tracking _START_ to _END_ of _TOTAL_ identities",
+                lengthMenu: "_MENU_ entries per page"
               }
             }}
-            className="table table-hover align-middle border-top"
+            className="table align-middle"
           />
         </div>
       </div>
 
-      <div className="mt-4 p-4 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-10">
+      <div className="mt-5 p-4 rounded-4 bg-gold bg-opacity-5 border border-gold border-opacity-10">
         <div className="d-flex align-items-center gap-3">
-           <div className="bg-primary p-2 rounded-3">
-              <Plus className="text-white" size={20} />
+           <div className="bg-gold p-2 rounded-3 text-black">
+              <Plus size={20} />
            </div>
            <div>
-              <p className="fw-bold m-0 p-0 fs-6">Looking for manual management?</p>
-              <p className="text-muted small m-0">Individual user creation is handled in the main Design Hive admin portal.</p>
+              <p className="fw-bold m-0 text-white small ls-tight">Identity Management Notice</p>
+              <p className="text-secondary small m-0 opacity-75">Individual identification records are generated automatically via the AI Core engine.</p>
            </div>
         </div>
       </div>
+
+      <style>{`
+        .bg-darker { background-color: #0F172A; }
+        .hover-bg-white-5:hover { background-color: rgba(255,255,255,0.05); color: #fff; }
+        .dataTables_filter input { 
+          background: #0F172A !important; 
+          border: 1px solid rgba(255,255,255,0.05) !important; 
+          color: white !important; 
+          border-radius: 10px !important;
+          padding: 8px 15px !important;
+          font-size: 0.85rem !important;
+          width: 300px !important;
+        }
+        .dataTables_info, .dataTables_paginate {
+          color: #9CA3AF !important;
+          font-size: 0.8rem !important;
+        }
+        .paginate_button { background: transparent !important; border: none !important; color: #9CA3AF !important; }
+        .paginate_button.current { background: #FACC15 !important; color: #000 !important; border-radius: 8px !important; }
+      `}</style>
     </motion.div>
   );
 };

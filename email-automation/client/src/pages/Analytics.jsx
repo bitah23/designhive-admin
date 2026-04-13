@@ -4,36 +4,37 @@ import { motion } from 'framer-motion';
 
 const Analytics = () => {
   const cards = [
-    { title: 'Open Rate', value: '72.4%', trend: '+4.2%', color: '#6366f1' },
-    { title: 'Click Rate', value: '18.9%', trend: '+1.5%', color: '#10b981' },
-    { title: 'Delivery Ratio', value: '99.2%', trend: '-0.1%', color: '#0ea5e9' },
-    { title: 'Bounce Rate', value: '0.8%', trend: '-0.2%', color: '#f43f5e' },
+    { title: 'SIGNAL OPEN RATE', value: '72.4%', trend: '+4.2%', color: '#FACC15' },
+    { title: 'RESPONSE VELOCITY', value: '18.9%', trend: '+1.5%', color: '#FACC15' },
+    { title: 'DELIVERY FIDELITY', value: '99.2%', trend: '-0.1%', color: '#FACC15' },
+    { title: 'BOUNCE FREQUENCY', value: '0.8%', trend: '-0.2%', color: '#f43f5e' },
   ];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="d-flex justify-content-between align-items-center mb-5">
+      <div className="d-flex justify-content-between align-items-end mb-5 mt-n1">
          <div>
-            <h2 className="fw-bold m-0 text-dark ls-tight">Performance Intelligence</h2>
-            <p className="text-muted small m-0">Advanced data visualization and engagement tracking.</p>
+            <h2 className="fw-bold m-0 text-white ls-tight">Data Intelligence</h2>
+            <p className="text-secondary small m-0 opacity-75">Advanced neural visualization and transmission tracking.</p>
          </div>
-         <button className="btn btn-dark px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2 rounded-3 disabled">
-           <TrendingUp size={18} /> FUTURE READY
+         <button className="btn btn-darker border border-white border-opacity-5 px-4 py-2.5 fw-bold text-secondary d-flex align-items-center gap-2 rounded-3 opacity-50 cursor-not-allowed">
+            <TrendingUp size={18} className="text-gold" /> V3_PROXIMITY
          </button>
       </div>
 
-      <div className="row g-3 mb-5">
+      <div className="row g-4 mb-5">
         {cards.map((card, idx) => (
           <div className="col-md-6 col-lg-3" key={idx}>
-             <div className="card border-0 shadow-sm bg-white p-3 h-100" style={{ borderRadius: '20px' }}>
-                <div className="card-body">
-                   <div className="d-flex justify-content-between mb-3 align-items-center">
-                      <h6 className="text-muted small fw-bold text-uppercase ls-wide m-0" style={{ fontSize: '0.6rem' }}>{card.title}</h6>
-                      <span className={`small fw-bold ${card.trend.startsWith('+') ? 'text-success' : 'text-danger'}`} style={{ fontSize: '0.65rem' }}>
+             <div className="glass-card border-opacity-5 p-3 h-100 position-relative overflow-hidden group">
+                <div className="position-absolute top-0 end-0 bg-gold opacity-5 blur-xl rounded-circle" style={{ width: '60px', height: '60px', transform: 'translate(20%, -20%)' }}></div>
+                <div className="card-body position-relative z-2">
+                   <div className="d-flex justify-content-between mb-4 align-items-center">
+                      <h6 className="text-secondary opacity-50 small fw-bold text-uppercase ls-wider m-0" style={{ fontSize: '0.6rem' }}>{card.title}</h6>
+                      <span className={`small fw-bold d-flex align-items-center gap-1 ${card.trend.startsWith('+') ? 'text-gold glow-gold-soft' : 'text-danger'}`} style={{ fontSize: '0.65rem' }}>
                          {card.trend} {card.trend.startsWith('+') ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                       </span>
                    </div>
-                   <h3 className="fw-bold m-0" style={{ color: card.color }}>{card.value}</h3>
+                   <h2 className="fw-bold m-0 ls-tight" style={{ color: card.color }}>{card.value}</h2>
                 </div>
              </div>
           </div>
@@ -42,38 +43,42 @@ const Analytics = () => {
 
       <div className="row g-4">
          <div className="col-lg-7">
-            <div className="card border-0 shadow-sm bg-white p-4 h-100" style={{ borderRadius: '28px' }}>
-               <div className="d-flex justify-content-between mb-4">
-                  <h6 className="fw-bold m-0 text-dark d-flex align-items-center gap-2">
-                     <Target size={18} className="text-primary" /> Reach Optimization
+            <div className="glass-card border-opacity-5 p-4 h-100 overflow-hidden position-relative" style={{ minHeight: '450px' }}>
+               <div className="d-flex justify-content-between mb-4 position-relative z-2">
+                  <h6 className="fw-bold m-0 text-white d-flex align-items-center gap-2 ls-tight">
+                     <Target size={18} className="text-gold" /> Signal Optimization Trace
                   </h6>
-                  <small className="text-muted">Last 30 Days</small>
+                  <small className="text-secondary opacity-40">LAST_30_CYCLE</small>
                </div>
-               <div className="py-5 text-center my-4 opacity-50">
-                  <BarChart3 size={120} className="text-muted mb-3 mx-auto" />
-                  <p className="fw-bold m-0 mt-3">Interactive Heatmap Loading...</p>
-                  <p className="text-muted small">Instrumentation is coming in the V3 deployment</p>
+               <div className="py-5 text-center mt-5 mb-4 opacity-75 position-relative z-2">
+                  <div className="position-relative d-inline-block">
+                     <BarChart3 size={120} className="text-gold opacity-10 mb-3 mx-auto shadow-gold" />
+                     <div className="position-absolute top-50 start-50 translate-middle w-100 h-100 border border-gold border-opacity-5 rounded-circle scale-150 blur-xl"></div>
+                  </div>
+                  <p className="fw-bold text-white m-0 mt-4 ls-tight">INTELLIGENCE HEATMAP OFFLINE</p>
+                  <p className="text-secondary small opacity-50 mt-1">Worker instrumentation pending V3 neural deployment.</p>
                </div>
+               <div className="position-absolute bottom-0 start-0 w-100 h-50 bg-gradient-gold-transparent opacity-5"></div>
             </div>
          </div>
          <div className="col-lg-5">
-            <div className="card border-0 shadow-sm bg-white p-4 h-100" style={{ borderRadius: '28px' }}>
-               <h6 className="fw-bold mb-4 text-dark d-flex align-items-center gap-2">
-                  <PieChart size={18} className="text-success" /> Segment Analysis
+            <div className="glass-card border-opacity-5 p-4 h-100 overflow-hidden">
+               <h6 className="fw-bold mb-5 text-white d-flex align-items-center gap-2 ls-tight">
+                  <PieChart size={18} className="text-gold" /> Sector Identity Analysis
                </h6>
-               <div className="d-flex flex-column gap-3 pt-3">
+               <div className="d-flex flex-column gap-5 pt-3">
                   {[
-                     { label: 'Design Community', value: '45%', color: 'bg-primary' },
-                     { label: 'Marketing Hive', value: '30%', color: 'bg-success' },
-                     { label: 'Uncategorized', value: '25%', color: 'bg-secondary opacity-50' }
+                     { label: 'CORE_DESIGN_CELL', value: '45%', color: '#FACC15' },
+                     { label: 'MARKETING_HIVE', value: '30%', color: 'rgba(250, 204, 21, 0.6)' },
+                     { label: 'UNMAPPED_NODES', value: '25%', color: 'rgba(255, 255, 255, 0.1)' }
                   ].map((s, i) => (
                      <div key={i}>
-                        <div className="d-flex justify-content-between mb-1 small">
-                           <span className="fw-bold">{s.label}</span>
-                           <span className="text-muted">{s.value}</span>
+                        <div className="d-flex justify-content-between mb-2 small ls-tight">
+                           <span className="fw-bold text-secondary text-uppercase" style={{ fontSize: '0.7rem' }}>{s.label}</span>
+                           <span className="text-gold fw-bold">{s.value}</span>
                         </div>
-                        <div className="progress" style={{ height: '6px' }}>
-                           <div className={`progress-bar ${s.color}`} style={{ width: s.value }}></div>
+                        <div className="progress bg-white bg-opacity-5" style={{ height: '5px' }}>
+                           <div className="progress-bar shadow-gold" style={{ width: s.value, backgroundColor: s.color }}></div>
                         </div>
                      </div>
                   ))}
@@ -81,6 +86,14 @@ const Analytics = () => {
             </div>
          </div>
       </div>
+      <style>{`
+         .bg-darker { background-color: #0F172A; }
+         .bg-gradient-gold-transparent { background: linear-gradient(0deg, rgba(250, 204, 21, 0.2) 0%, transparent 100%); }
+         .shadow-gold { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.1)); }
+         .glow-gold-soft { text-shadow: 0 0 10px rgba(250, 204, 21, 0.4); }
+         .ls-wider { letter-spacing: 0.1em; }
+         .blur-xl { filter: blur(30px); }
+      `}</style>
     </motion.div>
   );
 };

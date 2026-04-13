@@ -71,11 +71,14 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Admin Password Update Route
-router.put('/password', authenticateAdmin, async (req, res) => {
-  const { current, new: newPass } = req.body;
-  const adminEmail = req.admin.email;
+const { sendAdminPasswordReset } = require('../services/emailService');
 
+const globalOtps = new Map(); // Store OTPs in memory for now. Key: email, Value: { otp, expires }
+
+// Request OTP for password reset
+router.post('/reset-request', authenticateAdmin, async (req, res) => {
+  const adminEmail = req.admin.email;
+  
   try {
     const { data: admin, error } = await supabase
       .from('admins')
@@ -85,22 +88,48 @@ router.put('/password', authenticateAdmin, async (req, res) => {
 
     if (error || !admin) return res.status(404).json({ error: 'Admin not found' });
 
-    const isMatch = await bcrypt.compare(current, admin.password_hash);
-    if (!isMatch) return res.status(400).json({ error: 'Incorrect current password' });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
+    const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    globalOtps.set(adminEmail, { otp, expires });
+
+    await sendAdminPasswordReset(adminEmail, otp);
+
+    res.json({ message: 'Reset code sent to your email.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to initiate password reset' });
+  }
+});
+
+// Confirm OTP and update password
+router.post('/reset-password', authenticateAdmin, async (req, res) => {
+  const { otp, newPassword } = req.body;
+  const adminEmail = req.admin.email;
+
+  try {
+    const record = globalOtps.get(adminEmail);
+    if (!record || record.otp !== otp || Date.now() > record.expires) {
+      return res.status(400).json({ error: 'Invalid or expired reset code' });
+    }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPass, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     const { error: updateError } = await supabase
       .from('admins')
       .update({ password_hash: hashedPassword })
-      .eq('id', admin.id);
+      .eq('email', adminEmail);
 
     if (updateError) throw updateError;
 
-    res.json({ message: 'Authority key updated successfully' });
+    // Clear OTP after successful reset
+    globalOtps.delete(adminEmail);
+
+    res.json({ message: 'Password reset successfully. Db updated.' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update credentials' });
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update credentials in db' });
   }
 });
 

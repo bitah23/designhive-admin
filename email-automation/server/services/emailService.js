@@ -104,8 +104,41 @@ const sendBulkEmails = async (template, users) => {
   return Promise.all(tasks);
 };
 
+const sendAdminPasswordReset = async (email, otp) => {
+  const senderEmail = process.env.GMAIL_SENDER_EMAIL || 'info@designhiveai.com.au';
+  const senderName = process.env.GMAIL_SENDER_NAME || 'DesignHive Administration';
+  const subject = 'Your Password Reset OTP';
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333;">
+      <h2 style="color: #FACC15;">DesignHive Admin Security</h2>
+      <p>A password reset was requested for your administrative account.</p>
+      <p>Your verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
+      <p>This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
+    </div>
+  `;
+
+  try {
+    const raw = buildRawEmail(
+      email,
+      `"${senderName}" <${senderEmail}>`,
+      subject,
+      htmlBody
+    );
+
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: { raw },
+    });
+    return true;
+  } catch (error) {
+    console.error('Failed to send admin reset email:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendBulkEmails,
   replaceVariables,
+  sendAdminPasswordReset,
   gmail,
 };

@@ -16,11 +16,20 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Layout = lazy(() => import('./components/Layout'));
 
 const LoadingFallback = () => (
-  <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
-    <div className="text-center">
-      <div className="spinner-grow text-primary" role="status" style={{ width: '3rem', height: '3rem' }}></div>
-      <p className="mt-3 fw-bold text-primary opacity-75 small ls-wide">INITIALIZING FLOW...</p>
+  <div className="d-flex align-items-center justify-content-center vh-100 bg-deep overflow-hidden position-relative">
+    <div className="position-absolute top-50 start-50 translate-middle bg-gold opacity-10 blur-3xl rounded-circle" style={{ width: '300px', height: '300px' }}></div>
+    <div className="text-center position-relative z-2">
+      <div className="spinner-grow text-gold" role="status" style={{ width: '4rem', height: '4rem' }}>
+         <span className="visually-hidden">Loading...</span>
+      </div>
+      <p className="mt-4 fw-bold text-gold opacity-80 small ls-wider text-uppercase">Synching Neural Hive...</p>
     </div>
+    <style>{`
+      .bg-deep { background-color: #0A0A0F; }
+      .text-gold { color: #FACC15; }
+      .ls-wider { letter-spacing: 0.2em; }
+      .blur-3xl { filter: blur(64px); }
+    `}</style>
   </div>
 );
 
@@ -36,10 +45,19 @@ function App() {
         position="top-right"
         toastOptions={{
           style: {
-            borderRadius: '12px',
-            background: '#333',
+            borderRadius: '16px',
+            background: '#11131A',
             color: '#fff',
-            fontWeight: 'bold',
+            fontWeight: '600',
+            border: '1px solid rgba(250, 204, 21, 0.1)',
+            padding: '12px 24px',
+            fontSize: '0.85rem'
+          },
+          success: {
+            iconTheme: {
+              primary: '#FACC15',
+              secondary: '#000',
+            },
           },
         }}
       />

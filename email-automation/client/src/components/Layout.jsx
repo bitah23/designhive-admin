@@ -1,21 +1,20 @@
 import React from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
+import {
+  LayoutDashboard,
   Users as UsersIcon,
-  FileText, 
-  Send, 
-  History, 
+  FileText,
+  Send,
+  History,
   Calendar,
   Eye,
   Settings,
   BarChart3,
-  LogOut, 
+  LogOut,
   Mail,
   Bell,
   Search,
-  User,
-  ShieldCheck
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,36 +31,32 @@ const Layout = () => {
     { path: '/admin', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
     { path: '/admin/users', icon: <UsersIcon size={18} />, label: 'Users' },
     { path: '/admin/templates', icon: <FileText size={18} />, label: 'Templates' },
-    { path: '/admin/campaign', icon: <Send size={18} />, label: 'Send Email' },
-    { path: '/admin/logs', icon: <History size={18} />, label: 'Email Logs' },
-    { path: '/admin/scheduled', icon: <Calendar size={18} />, label: 'Scheduled' },
-    { path: '/admin/test-preview', icon: <Eye size={18} />, label: 'Test & Preview' },
-    { path: '/admin/settings', icon: <Settings size={18} />, label: 'Settings' },
-    { path: '/admin/analytics', icon: <BarChart3 size={18} />, label: 'Analytics' },
+    { path: '/admin/campaign', icon: <Send size={18} />, label: 'Campaigns' },
+    { path: '/admin/logs', icon: <History size={18} />, label: 'Audit Logs' },
+    { path: '/admin/scheduled', icon: <Calendar size={18} />, label: 'Scheduler' },
+    { path: '/admin/test-preview', icon: <Eye size={18} />, label: 'Simulator' },
+    { path: '/admin/settings', icon: <Settings size={18} />, label: 'Settings' }
   ];
 
   return (
-    <div className="container-fluid p-0 overflow-hidden vh-100 bg-light d-flex">
+    <div className="container-fluid p-0 overflow-hidden vh-100 bg-deep d-flex text-secondary">
       {/* Sidebar */}
-      <div className="bg-dark d-flex flex-column flex-shrink-0 shadow-lg" style={{ width: '260px', transition: '0.3s' }}>
-        <div className="p-4 mb-3 d-flex align-items-center gap-3 border-bottom border-white border-opacity-10">
-          <div className="bg-primary p-2 rounded-3 shadow-primary">
-            <Mail className="text-white" size={20} />
-          </div>
-          <span className="fs-5 fw-bold text-white letter-spacing--1">EmailFlow</span>
+      <div className="bg-section d-flex flex-column flex-shrink-0 border-end border-white border-opacity-5" style={{ width: '240px', transition: '0.3s' }}>
+        <div className="p-4 mb-2 d-flex align-items-center justify-content-center">
+          <img src="/logo.png" alt="Design Hive" style={{ maxHeight: '80px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(250, 204, 21, 0.4))' }} />
         </div>
 
         <div className="px-3 py-2 flex-grow-1 overflow-auto custom-scrollbar">
-          <small className="text-uppercase text-muted fw-bold ls-wider ps-2 mb-3 d-block" style={{ fontSize: '0.65rem' }}>Main Console</small>
+          <small className="text-uppercase text-muted fw-bold ls-wider ps-2 mb-3 d-block" style={{ fontSize: '0.6rem' }}>Admin Console</small>
           <ul className="nav nav-pills flex-column mb-auto gap-1">
             {menuItems.map((item) => (
               <li className="nav-item" key={item.path}>
-                <Link 
-                  to={item.path} 
-                  className={`nav-link d-flex align-items-center gap-3 px-3 py-2 fw-medium border-0 transition-all ${location.pathname === item.path ? 'active bg-primary' : 'text-white text-opacity-70 hover-bg-white-10'}`}
-                  style={{ borderRadius: '10px', fontSize: '0.9rem' }}
+                <Link
+                  to={item.path}
+                  className={`nav-link d-flex align-items-center gap-3 px-3 py-2 fw-medium border-0 transition-all ${location.pathname === item.path ? 'active bg-gold text-black shadow-gold' : 'text-secondary hover-bg-white-5'}`}
+                  style={{ borderRadius: '12px', fontSize: '0.85rem' }}
                 >
-                  <span className={location.pathname === item.path ? 'text-white' : 'text-primary'}>
+                  <span className={location.pathname === item.path ? 'text-black' : 'text-gold'}>
                     {item.icon}
                   </span>
                   {item.label}
@@ -71,8 +66,8 @@ const Layout = () => {
           </ul>
         </div>
 
-        <div className="p-4 mt-auto border-top border-white border-opacity-10">
-          <button 
+        <div className="p-4 mt-auto border-top border-white border-opacity-5">
+          <button
             onClick={handleLogout}
             className="nav-link d-flex align-items-center gap-3 px-3 py-2 fw-medium text-danger border-0 w-100 text-start hover-bg-danger-10 rounded-3 small"
             style={{ background: 'transparent' }}
@@ -85,36 +80,43 @@ const Layout = () => {
       {/* Main Content Area */}
       <div className="flex-grow-1 d-flex flex-column overflow-hidden">
         {/* Topbar */}
-        <header className="bg-white border-bottom px-4 py-3 d-flex align-items-center justify-content-between shadow-sm z-3">
+        <header className="px-4 py-3 d-flex align-items-center justify-content-between border-bottom border-white border-opacity-5 glass-effect z-3">
           <div className="d-flex align-items-center gap-3 w-50">
-             <div className="input-group input-group-sm bg-light rounded-3 border-0 px-2" style={{ maxWidth: '400px' }}>
-                <span className="input-group-text bg-transparent border-0 text-muted">
-                  <Search size={16} />
-                </span>
-                <input type="text" className="form-control bg-transparent border-0 shadow-none ps-0" placeholder="System Search..." />
-             </div>
+            <div className="d-flex align-items-center bg-card rounded-3 border border-white border-opacity-10 px-3 py-1" style={{ maxWidth: '350px', flex: 1, transition: '0.2s', focusWithin: { borderColor: '#FACC15' } }}>
+              <Search size={16} className="text-muted me-2" />
+              <input
+                type="text"
+                className="bg-transparent border-0 text-white small w-100 placeholder-muted"
+                placeholder="Search resources..."
+                style={{ outline: 'none', boxShadow: 'none' }}
+              />
+            </div>
           </div>
-          
+
           <div className="d-flex align-items-center gap-3">
-             <div className="bg-primary bg-opacity-10 text-primary fw-bold text-center rounded-3 p-1 px-3 small border border-primary border-opacity-25">
-                ADMIN CONSOLE
-             </div>
-             <div className="vr mx-2 bg-secondary opacity-25" style={{ height: '32px' }}></div>
-             <div className="bg-light rounded-circle p-2 text-muted">
-                <User size={18} />
-             </div>
+            <div className="text-gold fw-bold text-center small ls-wide border px-3 py-1 rounded-pill" style={{ backgroundColor: 'rgba(250, 204, 21, 0.05)', borderColor: 'rgba(250, 204, 21, 0.2)' }}>
+              AI CORE v3.0
+            </div>
+            <div className="vr mx-2 bg-secondary opacity-20" style={{ height: '24px' }}></div>
+            <div className="bg-card border border-white border-opacity-5 rounded-circle p-2 text-muted glow-hover cursor-pointer position-relative">
+              <Bell size={18} color="#9CA3AF" />
+              <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-white border-2 rounded-circle"></span>
+            </div>
+            <div className="bg-card border border-white border-opacity-5 rounded-circle p-2 text-muted glow-hover cursor-pointer">
+              <User size={18} color="#9CA3AF" />
+            </div>
           </div>
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-grow-1 overflow-auto p-4 p-lg-5 bg-light-gray custom-scrollbar">
+        <main className="flex-grow-1 overflow-auto p-4 p-xl-5 bg-deep custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 5 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
             >
               <Outlet />
             </motion.div>
@@ -123,15 +125,18 @@ const Layout = () => {
       </div>
 
       <style>{`
-        .hover-bg-white-10:hover { background-color: rgba(255,255,255,0.08); }
+        .bg-deep { background-color: #0A0A0F; }
+        .bg-section { background-color: #161A23; }
+        .bg-card { background-color: #11131A; }
+        .glass-effect { background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(10px); }
+        .hover-bg-white-5:hover { background-color: rgba(255,255,255,0.05); color: #fff; }
         .hover-bg-danger-10:hover { background-color: rgba(220,53,69,0.1); }
-        .transition-all { transition: all 0.2s ease-in-out; }
-        .bg-light-gray { background-color: #f8fafc; }
+        .transition-all { transition: all 0.25s ease-out; }
         .letter-spacing--1 { letter-spacing: -0.05em; }
-        .shadow-primary { box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4); }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        .shadow-gold { box-shadow: 0 0 15px var(--accent-glow); }
+        .glow-hover:hover { box-shadow: 0 0 15px var(--accent-glow); border-color: var(--accent-yellow); }
+        .cursor-pointer { cursor: pointer; }
+        .ls-wide { letter-spacing: 0.05em; }
       `}</style>
     </div>
   );
