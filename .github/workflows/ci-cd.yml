@@ -80,39 +80,49 @@ jobs:
           GMAIL_SENDER_NAME: ${{ secrets.GMAIL_SENDER_NAME }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          ssh -i ~/.ssh/key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            GITHUB_REPOSITORY="$REPO" \
-            GHCR_ACTOR="$ACTOR" \
-            GHCR_TOKEN="$GHCR_TOKEN" \
-            DEPLOY_SHA="$DEPLOY_SHA" \
-            SUPABASE_URL="$SUPABASE_URL" \
-            SUPABASE_KEY="$SUPABASE_KEY" \
-            SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
-            GMAIL_CLIENT_ID="$GMAIL_CLIENT_ID" \
-            GMAIL_CLIENT_SECRET="$GMAIL_CLIENT_SECRET" \
-            GMAIL_REFRESH_TOKEN="$GMAIL_REFRESH_TOKEN" \
-            GMAIL_SENDER_EMAIL="$GMAIL_SENDER_EMAIL" \
-            GMAIL_SENDER_NAME="$GMAIL_SENDER_NAME" \
-            JWT_SECRET="$JWT_SECRET" \
-            bash << 'EOF'
+          ssh -i ~/.ssh/key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            bash -s \
+              "$REPO" \
+              "$ACTOR" \
+              "$GHCR_TOKEN" \
+              "$DEPLOY_SHA" \
+              "$SUPABASE_URL" \
+              "$SUPABASE_KEY" \
+              "$SUPABASE_SERVICE_ROLE_KEY" \
+              "$GMAIL_CLIENT_ID" \
+              "$GMAIL_CLIENT_SECRET" \
+              "$GMAIL_REFRESH_TOKEN" \
+              "$GMAIL_SENDER_EMAIL" \
+              "$GMAIL_SENDER_NAME" \
+              "$JWT_SECRET" \
+            << 'EOF'
           set -e
 
-          echo "Deploying SHA: ${DEPLOY_SHA}..."
+          GITHUB_REPOSITORY="$1"
+          GHCR_ACTOR="$2"
+          GHCR_TOKEN="$3"
+          DEPLOY_SHA="$4"
+          SUPABASE_URL="$5"
+          SUPABASE_KEY="$6"
+          SUPABASE_SERVICE_ROLE_KEY="$7"
+          GMAIL_CLIENT_ID="$8"
+          GMAIL_CLIENT_SECRET="$9"
+          GMAIL_REFRESH_TOKEN="${10}"
+          GMAIL_SENDER_EMAIL="${11}"
+          GMAIL_SENDER_NAME="${12}"
+          JWT_SECRET="${13}"
 
-          # Export repo name so docker compose can resolve image names
-          export GITHUB_REPOSITORY
+          echo "Deploying ${GITHUB_REPOSITORY} @ ${DEPLOY_SHA}..."
 
           mkdir -p /var/www/designhive-admin
           cd /var/www/designhive-admin
 
-          # Ensure repo exists and is up to date
           if [ ! -d .git ]; then
-            git clone https://github.com/${GITHUB_REPOSITORY}.git .
+            git clone "https://github.com/${GITHUB_REPOSITORY}.git" .
           else
             git pull origin main
           fi
 
-          # Write .env on every deploy so secrets stay current
           {
             echo "PORT=5000"
             echo "NODE_ENV=production"
@@ -131,26 +141,20 @@ jobs:
           } > .env
           chmod 600 .env
 
-          # Login to GHCR
           echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_ACTOR}" --password-stdin
 
-          # Pull images by exact SHA tag built in this CI run — guarantees the
-          # newly built code is what gets deployed, not a stale cached :latest.
-          docker pull ghcr.io/${GITHUB_REPOSITORY}/frontend:${DEPLOY_SHA}
-          docker pull ghcr.io/${GITHUB_REPOSITORY}/backend:${DEPLOY_SHA}
+          docker pull "ghcr.io/${GITHUB_REPOSITORY}/frontend:${DEPLOY_SHA}"
+          docker pull "ghcr.io/${GITHUB_REPOSITORY}/backend:${DEPLOY_SHA}"
 
-          # Re-tag as :latest so docker-compose.yml resolves correctly
-          docker tag ghcr.io/${GITHUB_REPOSITORY}/frontend:${DEPLOY_SHA} ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
-          docker tag ghcr.io/${GITHUB_REPOSITORY}/backend:${DEPLOY_SHA} ghcr.io/${GITHUB_REPOSITORY}/backend:latest
+          docker tag "ghcr.io/${GITHUB_REPOSITORY}/frontend:${DEPLOY_SHA}" "ghcr.io/${GITHUB_REPOSITORY}/frontend:latest"
+          docker tag "ghcr.io/${GITHUB_REPOSITORY}/backend:${DEPLOY_SHA}" "ghcr.io/${GITHUB_REPOSITORY}/backend:latest"
 
-          # Restart containers — --pull always forces compose to check the
-          # registry even if :latest appears locally cached
+          export GITHUB_REPOSITORY
           docker compose up -d --pull always --force-recreate
 
-          # Cleanup dangling images from previous deploys
           docker image prune -f
 
-          echo "Deployment done (SHA: ${DEPLOY_SHA})"
+          echo "Deployment done (${GITHUB_REPOSITORY} @ ${DEPLOY_SHA})"
           EOF
 
       - name: Cleanup SSH
