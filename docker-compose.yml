@@ -1,9 +1,6 @@
 services:
-  # Frontend service — React + Nginx
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
+    image: ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
     container_name: designhive-frontend
     ports:
       - "3000:3000"
@@ -24,16 +21,12 @@ services:
       retries: 3
       start_period: 10s
 
-  # Backend service — Node.js + Express
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: ghcr.io/${GITHUB_REPOSITORY}/backend:latest
     container_name: designhive-backend
     ports:
       - "5000:5000"
     environment:
-      # These will be overridden by .env file on VPS
       NODE_ENV: production
       PORT: 5000
     env_file:
@@ -56,8 +49,3 @@ services:
 networks:
   designhive-network:
     driver: bridge
-
-volumes:
-  # Optional: for persistent logs or data
-  backend-logs:
-    driver: local

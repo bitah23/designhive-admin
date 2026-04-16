@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -19,157 +19,140 @@ jobs:
       packages: write
 
     steps:
-      # Step 1: Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Docker Buildx (for layer caching & multi-platform builds)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Step 3: Login to GitHub Container Registry
-      - name: Login to GitHub Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # Step 4: Build and push frontend image
-      - name: Build and push frontend image
+      - name: Build & Push Frontend
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.frontend
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ghcr.io/${{ env.IMAGE_NAME_FRONTEND }}:latest
+            ghcr.io/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
 
-      # Step 5: Build and push backend image
-      - name: Build and push backend image
+      - name: Build & Push Backend
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.backend
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ghcr.io/${{ env.IMAGE_NAME_BACKEND }}:latest
+            ghcr.io/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: success()
 
     steps:
-      # Step 1: Checkout code (needed for docker-compose.yml)
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Step 2: Setup SSH key for VPS connection
-      - name: Setup SSH key
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      # Step 3: Deploy to VPS
       - name: Deploy to VPS
+        env:
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          DEPLOY_SHA: ${{ github.sha }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+          GMAIL_SENDER_EMAIL: ${{ secrets.GMAIL_SENDER_EMAIL }}
+          GMAIL_SENDER_NAME: ${{ secrets.GMAIL_SENDER_NAME }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          ssh -i ~/.ssh/key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            GITHUB_REPOSITORY="$REPO" \
+            GHCR_ACTOR="$ACTOR" \
+            GHCR_TOKEN="$GHCR_TOKEN" \
+            DEPLOY_SHA="$DEPLOY_SHA" \
+            SUPABASE_URL="$SUPABASE_URL" \
+            SUPABASE_KEY="$SUPABASE_KEY" \
+            SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+            GMAIL_CLIENT_ID="$GMAIL_CLIENT_ID" \
+            GMAIL_CLIENT_SECRET="$GMAIL_CLIENT_SECRET" \
+            GMAIL_REFRESH_TOKEN="$GMAIL_REFRESH_TOKEN" \
+            GMAIL_SENDER_EMAIL="$GMAIL_SENDER_EMAIL" \
+            GMAIL_SENDER_NAME="$GMAIL_SENDER_NAME" \
+            JWT_SECRET="$JWT_SECRET" \
+            bash << 'EOF'
           set -e
-          
-          echo "🚀 Starting deployment..."
-          
-          # Navigate to project directory
-          cd /var/www/designhive-admin || mkdir -p /var/www/designhive-admin && cd /var/www/designhive-admin
-          
-          # Pull latest code from main branch
-          if [ -d .git ]; then
-            echo "📥 Pulling latest code..."
+
+          echo "Deploying SHA: ${DEPLOY_SHA}..."
+
+          # Export repo name so docker compose can resolve image names
+          export GITHUB_REPOSITORY
+
+          mkdir -p /var/www/designhive-admin
+          cd /var/www/designhive-admin
+
+          # Ensure repo exists and is up to date
+          if [ ! -d .git ]; then
+            git clone https://github.com/${GITHUB_REPOSITORY}.git .
+          else
             git pull origin main
-          else
-            echo "📦 Cloning repository..."
-            git clone --depth 1 https://github.com/${{ github.repository }}.git .
           fi
-          
-          # Create .env file if it doesn't exist
-          if [ ! -f .env ]; then
-            echo "⚙️  Creating .env file..."
-            cat > .env << 'ENVFILE'
-          PORT=5000
-          NODE_ENV=production
-          
-          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          
-          GMAIL_CLIENT_ID=${{ secrets.GMAIL_CLIENT_ID }}
-          GMAIL_CLIENT_SECRET=${{ secrets.GMAIL_CLIENT_SECRET }}
-          GMAIL_REFRESH_TOKEN=${{ secrets.GMAIL_REFRESH_TOKEN }}
-          GMAIL_SENDER_EMAIL=${{ secrets.GMAIL_SENDER_EMAIL }}
-          GMAIL_SENDER_NAME=${{ secrets.GMAIL_SENDER_NAME }}
-          
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          
-          
-          ENVFILE
-            echo "✅ .env file created"
-          fi
-          
-          # Login to GitHub Container Registry
-          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          
-          # Pull latest images
-          echo "📦 Pulling latest Docker images..."
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-          
-          # Stop and remove old containers
-          echo "🛑 Stopping old containers..."
-          docker-compose down || true
-          
-          # Start new containers
-          echo "🟢 Starting new containers..."
-          docker-compose up -d
-          
-          # Wait for services to be healthy
-          echo "⏳ Waiting for services to be healthy..."
-          sleep 10
-          
-          # Check health
-          if curl -s http://localhost:5000/api/health > /dev/null; then
-            echo "✅ Backend is healthy"
-          else
-            echo "❌ Backend health check failed"
-            exit 1
-          fi
-          
-          if curl -s http://localhost:3000 > /dev/null; then
-            echo "✅ Frontend is healthy"
-          else
-            echo "⚠️  Frontend not responding (this may be normal)"
-          fi
-          
-          echo "🎉 Deployment successful!"
+
+          # Write .env on every deploy so secrets stay current
+          cat > .env << ENVFILE
+PORT=5000
+NODE_ENV=production
+
+SUPABASE_URL=${SUPABASE_URL}
+SUPABASE_KEY=${SUPABASE_KEY}
+SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+
+GMAIL_CLIENT_ID=${GMAIL_CLIENT_ID}
+GMAIL_CLIENT_SECRET=${GMAIL_CLIENT_SECRET}
+GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN}
+GMAIL_SENDER_EMAIL=${GMAIL_SENDER_EMAIL}
+GMAIL_SENDER_NAME=${GMAIL_SENDER_NAME}
+
+JWT_SECRET=${JWT_SECRET}
+ENVFILE
+          chmod 600 .env
+
+          # Login to GHCR
+          echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_ACTOR}" --password-stdin
+
+          # Pull images by exact SHA tag built in this CI run — guarantees the
+          # newly built code is what gets deployed, not a stale cached :latest.
+          docker pull ghcr.io/${GITHUB_REPOSITORY}/frontend:${DEPLOY_SHA}
+          docker pull ghcr.io/${GITHUB_REPOSITORY}/backend:${DEPLOY_SHA}
+
+          # Re-tag as :latest so docker-compose.yml resolves correctly
+          docker tag ghcr.io/${GITHUB_REPOSITORY}/frontend:${DEPLOY_SHA} ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
+          docker tag ghcr.io/${GITHUB_REPOSITORY}/backend:${DEPLOY_SHA} ghcr.io/${GITHUB_REPOSITORY}/backend:latest
+
+          # Restart containers — --pull always forces compose to check the
+          # registry even if :latest appears locally cached
+          docker compose up -d --pull always --force-recreate
+
+          # Cleanup dangling images from previous deploys
+          docker image prune -f
+
+          echo "Deployment done (SHA: ${DEPLOY_SHA})"
           EOF
 
-      # Step 4: Cleanup SSH key
-      - name: Cleanup SSH key
+      - name: Cleanup SSH
         if: always()
-        run: rm -f ~/.ssh/deploy_key
-
-      # Step 5: Notify deployment status
-      - name: Deployment status
-        if: success()
-        run: echo "✅ Deployment completed successfully to ${{ secrets.VPS_HOST }}"
-
-      - name: Deployment failed
-        if: failure()
-        run: echo "❌ Deployment failed. Check logs above for details."
+        run: rm -f ~/.ssh/key
