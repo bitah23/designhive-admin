@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users — DesignHive Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="sidebar"></aside>
+    <div class="main-area">
+      <div id="topbar"></div>
+      <main class="page-content">
+
+        <div class="page-header">
+          <div>
+            <h1>Users</h1>
+            <p id="user-count">Loading...</p>
+          </div>
+          <div class="input-wrap" style="width:260px">
+            <span class="icon"><i data-lucide="search" style="width:14px;height:14px"></i></span>
+            <input type="text" id="search" placeholder="Search by name or email...">
+          </div>
+        </div>
+
+        <div class="card" id="users-card">
+          <div style="padding:16px"><div class="skeleton" style="height:300px"></div></div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Send Email Modal -->
+  <div class="modal-overlay hidden" id="email-modal">
+    <div class="modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <div class="flex-center gap-2">
+          <div style="background:var(--gold-dim);border-radius:8px;padding:7px;display:flex">
+            <i data-lucide="mail" style="width:17px;height:17px;color:var(--gold)"></i>
+          </div>
+          <div>
+            <div class="title">Send Email</div>
+            <div id="modal-recipient" style="font-size:0.78rem;color:var(--text-muted)"></div>
+          </div>
+        </div>
+        <button class="btn-icon" onclick="closeEmailModal()"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+      </div>
+      <form id="email-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Subject *</label>
+            <input type="text" id="email-subject" class="form-control" placeholder="Email subject" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message *</label>
+            <textarea id="email-body" class="form-control" rows="5" placeholder="Write your message here..." required></textarea>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Attachments</label>
+            <input type="file" id="file-input" multiple style="display:none">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input').click()">
+              <i data-lucide="paperclip" style="width:13px;height:13px"></i> Attach Files
+            </button>
+            <div id="file-list" style="margin-top:8px;display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeEmailModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="send-btn">
+            <i data-lucide="send" style="width:14px;height:14px"></i> Send
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/users.js"></script>
+</body>
+</html>

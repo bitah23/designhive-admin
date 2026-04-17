@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Templates — DesignHive Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="sidebar"></aside>
+    <div class="main-area">
+      <div id="topbar"></div>
+      <main class="page-content">
+
+        <div class="page-header">
+          <div>
+            <h1>Email Templates</h1>
+            <p>Create and manage your email templates</p>
+          </div>
+          <button class="btn btn-primary" onclick="openTemplateModal(null)">
+            <i data-lucide="plus" style="width:15px;height:15px"></i> New Template
+          </button>
+        </div>
+
+        <div class="grid grid-3" id="templates-grid">
+          <div class="skeleton" style="height:180px"></div>
+          <div class="skeleton" style="height:180px"></div>
+          <div class="skeleton" style="height:180px"></div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Create / Edit Modal -->
+  <div class="modal-overlay hidden" id="template-modal">
+    <div class="modal-box" style="max-width:760px">
+      <div class="modal-header">
+        <div class="flex-center gap-2">
+          <div style="background:var(--gold-dim);border-radius:8px;padding:7px;display:flex">
+            <i data-lucide="file-text" style="width:17px;height:17px;color:var(--gold)"></i>
+          </div>
+          <span class="title" id="modal-template-title">New Template</span>
+        </div>
+        <button class="btn-icon" onclick="closeTemplateModal()"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+      </div>
+      <form id="template-form">
+        <div class="modal-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+            <div>
+              <label class="form-label">Template Name *</label>
+              <input type="text" id="t-title" class="form-control" placeholder="e.g. Welcome Email" required>
+            </div>
+            <div>
+              <label class="form-label">Email Subject *</label>
+              <input type="text" id="t-subject" class="form-control" placeholder="e.g. Welcome to DesignHive!" required>
+            </div>
+          </div>
+          <div>
+            <div class="flex-between mb-2">
+              <label class="form-label" style="margin:0">Email Body *</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="toggle-mode-btn" onclick="toggleEditorMode()">
+                <i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode
+              </button>
+            </div>
+            <div id="quill-wrap">
+              <div id="quill-editor"></div>
+            </div>
+            <textarea id="html-editor" class="form-control" rows="10" placeholder="Paste your HTML here..." style="display:none;font-family:monospace;font-size:0.82rem"></textarea>
+            <p style="color:var(--text-muted);font-size:0.75rem;margin-top:8px">
+              Variables: <code style="color:var(--gold)">{{name}}</code> &nbsp;
+              <code style="color:var(--gold)">{{email}}</code> &nbsp;
+              <code style="color:var(--gold)">{{date}}</code>
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-template-btn">
+            <i data-lucide="save" style="width:14px;height:14px"></i> Save Template
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal-overlay hidden" id="preview-modal">
+    <div class="modal-box" style="max-width:660px">
+      <div class="modal-header">
+        <div class="flex-center gap-2">
+          <div style="background:var(--gold);border-radius:8px;padding:7px;display:flex">
+            <i data-lucide="mail" style="width:17px;height:17px;color:#000"></i>
+          </div>
+          <span class="title">Email Preview</span>
+        </div>
+        <button class="btn-icon" onclick="closePreviewModal()"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+      </div>
+      <div class="modal-body" style="background:#f3f4f6;max-height:60vh;overflow-y:auto">
+        <div id="preview-content" style="background:#fff;border-radius:10px;padding:28px;max-width:540px;margin:0 auto;color:#333;font-size:0.9rem;line-height:1.6"></div>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <span style="font-size:0.78rem;color:var(--text-muted)">Sample data: John Doe · john@example.com</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/templates.js"></script>
+</body>
+</html>

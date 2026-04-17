@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — DesignHive Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="sidebar"></aside>
+    <div class="main-area">
+      <div id="topbar"></div>
+      <main class="page-content">
+
+        <div class="page-header">
+          <div>
+            <h1>Overview</h1>
+            <p>Email campaign summary</p>
+          </div>
+          <a href="/campaign.html" class="btn btn-primary">
+            <i data-lucide="send" style="width:15px;height:15px"></i>
+            Send Campaign
+          </a>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-4 mb-4" id="stat-cards">
+          <div class="card stat-card skeleton" style="height:90px"></div>
+          <div class="card stat-card skeleton" style="height:90px"></div>
+          <div class="card stat-card skeleton" style="height:90px"></div>
+          <div class="card stat-card skeleton" style="height:90px"></div>
+        </div>
+
+        <!-- Templates Table -->
+        <div class="card">
+          <div class="flex-between" style="padding:14px 18px;border-bottom:1px solid var(--border)">
+            <span style="font-weight:600;color:#fff;font-size:0.875rem">All Templates / Campaigns</span>
+          </div>
+          <div id="templates-table-wrap">
+            <div style="padding:16px">
+              <div class="skeleton" style="height:180px"></div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

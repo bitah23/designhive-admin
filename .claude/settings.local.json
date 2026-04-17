@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(python -c \"from passlib.context import CryptContext; pwd = CryptContext\\(schemes=['bcrypt'], deprecated='auto'\\); print\\(pwd.hash\\('Admin@1234'\\)\\)\")",
-      "Bash(python -c \"import bcrypt; pw = b'Admin@1234'; h = bcrypt.hashpw\\(pw, bcrypt.gensalt\\(12\\)\\); print\\(h.decode\\(\\)\\)\")"
+      "Bash(python -c \"import bcrypt; pw = b'Admin@1234'; h = bcrypt.hashpw\\(pw, bcrypt.gensalt\\(12\\)\\); print\\(h.decode\\(\\)\\)\")",
+      "Bash(python -c \"import bcrypt; print\\(bcrypt.hashpw\\(b'Admin@1234', bcrypt.gensalt\\(10\\)\\).decode\\(\\)\\)\")"
     ]
   }
 }

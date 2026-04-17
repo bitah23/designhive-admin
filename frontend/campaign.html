@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campaign — DesignHive Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="sidebar"></aside>
+    <div class="main-area">
+      <div id="topbar"></div>
+      <main class="page-content">
+
+        <div class="page-header">
+          <div>
+            <h1>Campaign</h1>
+            <p>Select a template and recipients, then send</p>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:16px" id="campaign-grid">
+          <div class="skeleton" style="height:420px"></div>
+          <div class="skeleton" style="height:420px"></div>
+        </div>
+
+        <div class="flex" style="justify-content:flex-end">
+          <button class="btn btn-primary" id="send-campaign-btn" onclick="sendCampaign()" disabled style="padding:10px 28px;font-size:0.9rem">
+            <i data-lucide="send" style="width:16px;height:16px"></i>
+            <span id="send-label">Send Campaign</span>
+          </button>
+        </div>
+
+        <div class="card mt-4" id="results-card" style="display:none;padding:20px">
+          <div style="font-weight:600;color:#fff;margin-bottom:16px">Send Results</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:10px;padding:20px;text-align:center">
+              <div id="res-sent" style="font-size:1.8rem;font-weight:700;color:var(--gold)">0</div>
+              <div class="label-upper mt-1">Sent</div>
+            </div>
+            <div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);border-radius:10px;padding:20px;text-align:center">
+              <div id="res-failed" style="font-size:1.8rem;font-weight:700;color:var(--danger)">0</div>
+              <div class="label-upper mt-1">Failed</div>
+            </div>
+          </div>
+          <div id="res-rows" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto"></div>
+          <div style="text-align:right;margin-top:12px">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('results-card').style.display='none'">Dismiss</button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/campaign.js"></script>
+</body>
+</html>

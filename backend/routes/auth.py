@@ -20,8 +20,8 @@ _otp_store: dict = {}
 
 @router.post("/login")
 def login(body: LoginRequest):
-    result = supabase.table("admins").select("*").eq("email", body.email).single().execute()
-    admin = result.data
+    result = supabase.table("admins").select("*").eq("email", body.email).limit(1).execute()
+    admin = result.data[0] if result.data else None
     if not admin or not pwd.verify(body.password, admin["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if admin.get("is_active") is False:
