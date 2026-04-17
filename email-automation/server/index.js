@@ -25,12 +25,14 @@ const templateRoutes = require('./routes/templates');
 const userRoutes = require('./routes/users');
 const emailRoutes = require('./routes/email');
 const logRoutes = require('./routes/logs');
+const adminRoutes = require('./routes/admins');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/admins', adminRoutes);
 
 // Setup Realtime Listener for new signups
 const supabase = require('./config/supabase');
