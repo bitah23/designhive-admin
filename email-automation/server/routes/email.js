@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sendBulkEmails } = require('../services/emailService');
+const { sendBulkEmails, sendDirectEmail } = require('../services/emailService');
 const { authenticateAdmin } = require('../middleware/auth');
 const supabase = require('../config/supabase');
 
@@ -38,6 +38,24 @@ router.post('/send', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/email/send-direct — send a one-off email to a single user
+// Body: { to, subject, body, attachments?: [{ name, mimeType, data }] }
+router.post('/send-direct', async (req, res) => {
+  const { to, subject, body, attachments = [] } = req.body;
+
+  if (!to || !subject || !body) {
+    return res.status(400).json({ error: 'to, subject, and body are required' });
+  }
+
+  try {
+    await sendDirectEmail(to, subject, body, attachments);
+    return res.json({ message: 'Email sent successfully' });
+  } catch (err) {
+    console.error('Direct email error:', err);
+    return res.status(500).json({ error: 'Failed to send email: ' + err.message });
   }
 });
 

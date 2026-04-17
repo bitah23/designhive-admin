@@ -136,9 +136,58 @@ const sendAdminPasswordReset = async (email, otp) => {
   }
 };
 
+/**
+ * Send a direct email to one recipient, with optional base64-encoded attachments.
+ * attachments: [{ name, mimeType, data }]  (data = base64 string, no data-URI prefix)
+ */
+const sendDirectEmail = async (to, subject, htmlBody, attachments = []) => {
+  const senderEmail = process.env.GMAIL_SENDER_EMAIL || 'info@designhiveai.com.au';
+  const senderName  = process.env.GMAIL_SENDER_NAME  || 'DesignHive';
+  const from        = `"${senderName}" <${senderEmail}>`;
+  const boundary    = `boundary_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  const lines = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Reply-To: ${from}`,
+    `Subject: ${subject}`,
+    `Date: ${new Date().toUTCString()}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: 7bit',
+    '',
+    htmlBody,
+  ];
+
+  for (const file of attachments) {
+    lines.push(
+      `--${boundary}`,
+      `Content-Type: ${file.mimeType || 'application/octet-stream'}; name="${file.name}"`,
+      `Content-Disposition: attachment; filename="${file.name}"`,
+      'Content-Transfer-Encoding: base64',
+      '',
+      file.data, // already base64
+    );
+  }
+
+  lines.push(`--${boundary}--`);
+
+  const raw = Buffer.from(lines.join('\r\n'))
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
+};
+
 module.exports = {
   sendBulkEmails,
   replaceVariables,
   sendAdminPasswordReset,
+  sendDirectEmail,
   gmail,
 };
