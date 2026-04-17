@@ -29,8 +29,8 @@ a { text-decoration: none; color: inherit; }
 /* ── Shell ─────────────────────────────────────── */
 .app-shell { display: flex; height: 100vh; overflow: hidden; }
 
-.sidebar {
-  width: 240px;
+#sidebar, .sidebar {
+  width: 280px;
   flex-shrink: 0;
   background: var(--bg-section);
   border-right: 1px solid var(--border);
