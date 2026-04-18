@@ -1,34 +1,29 @@
-const API_BASE = '/api';
+const API_BASE = window.ENV_API_URL || 'http://localhost:8000/api';
 
-async function apiFetch(path, options = {}) {
+axios.defaults.baseURL = API_BASE;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+axios.interceptors.request.use(cfg => {
   const token = localStorage.getItem('adminToken');
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  return cfg;
+});
 
-  let res;
-  try {
-    res = await fetch(API_BASE + path, { ...options, headers });
-  } catch {
-    throw new Error('Network error — is the server running?');
+axios.interceptors.response.use(
+  response => response,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('adminToken');
+      window.location.replace('/login.html');
+    }
+    return Promise.reject(err);
   }
-
-  if (res.status === 401) {
-    localStorage.removeItem('adminToken');
-    window.location.href = '/login.html';
-    return null;
-  }
-
-  if (res.status === 204) return null;
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.detail || `Error ${res.status}`);
-  return data;
-}
+);
 
 const api = {
-  get:    (path)        => apiFetch(path),
-  post:   (path, body)  => apiFetch(path, { method: 'POST',   body: JSON.stringify(body) }),
-  put:    (path, body)  => apiFetch(path, { method: 'PUT',    body: JSON.stringify(body) }),
-  patch:  (path, body)  => apiFetch(path, { method: 'PATCH',  body: JSON.stringify(body) }),
-  del:    (path)        => apiFetch(path, { method: 'DELETE' }),
+  get: async (path, config = {}) => (await axios.get(path, config)).data,
+  post: async (path, body, config = {}) => (await axios.post(path, body, config)).data,
+  put: async (path, body, config = {}) => (await axios.put(path, body, config)).data,
+  patch: async (path, body, config = {}) => (await axios.patch(path, body, config)).data,
+  del: async (path, config = {}) => (await axios.delete(path, config)).data,
 };
