@@ -92,32 +92,28 @@ img {
 }
 
 .sidebar-logo {
-  padding: 24px 20px 18px;
+  padding: 16px 12px;
   border-bottom: 1px solid var(--border);
 }
 
 .sidebar-logo-link {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
 }
 
 .sidebar-logo-mark {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(239, 201, 76, 0.16), rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(239, 201, 76, 0.18);
+  height: 70px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--logo-shadow);
-  padding: 10px;
+  padding: 0;
 }
 
 .sidebar-logo-mark img {
-  width: 100%;
   height: 100%;
+  width: auto;
   object-fit: contain;
 }
 
@@ -839,8 +835,11 @@ tbody tr.is-selected td {
 }
 
 .login-logo img {
-  width: min(240px, 100%);
-  margin: 0 auto 14px;
+  height: 120px;
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto 24px;
+  object-fit: contain;
   filter: drop-shadow(0 12px 30px rgba(239, 201, 76, 0.12));
 }
 
@@ -1139,9 +1138,12 @@ tbody tr.is-selected td {
   }
 
   .sidebar-logo-mark {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
+    height: 40px;
+    width: auto;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
   }
 
   .nav-link {

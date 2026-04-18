@@ -35,10 +35,6 @@ function initLayout() {
           <div class="sidebar-logo-mark">
             <img src="/assets/brand/logo.png" alt="Design Hive logo">
           </div>
-          <div class="sidebar-logo-copy">
-            <div class="sidebar-logo-title">DesignHive Admin</div>
-            <div class="sidebar-logo-subtitle">AI operations</div>
-          </div>
         </a>
       </div>
       <nav class="sidebar-nav">

@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from jose import jwt
 from passlib.context import CryptContext
 
-from config import supabase, JWT_SECRET, JWT_ALGORITHM, GMAIL_SENDER_EMAIL
+from config import supabase, JWT_SECRET, JWT_ALGORITHM, GMAIL_SENDER_EMAIL, MOCK_MODE
 from deps import get_current_admin
 from models import LoginRequest, ResetPasswordRequest
 from services.email import send_direct_email
@@ -20,6 +20,16 @@ _otp_store: dict = {}
 
 @router.post("/login")
 def login(body: LoginRequest):
+    if MOCK_MODE:
+        # Simple mock login for local testing
+        return {
+            "token": jwt.encode(
+                {"id": "admin-1", "email": body.email, "exp": datetime.utcnow() + timedelta(days=7)},
+                JWT_SECRET,
+                algorithm=JWT_ALGORITHM,
+            )
+        }
+
     result = supabase.table("admins").select("*").eq("email", body.email).limit(1).execute()
     admin = result.data[0] if result.data else None
     if not admin or not pwd.verify(body.password, admin["password_hash"]):
