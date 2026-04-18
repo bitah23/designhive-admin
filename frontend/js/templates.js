@@ -4,6 +4,7 @@ let editingId = null;
 let htmlMode = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // 6.3 Quill init
   quill = new Quill('#quill-editor', {
     theme: 'snow',
     placeholder: 'Write your email here...',
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadTemplates();
 });
 
+// 6.1 Load templates — GET /templates
 async function loadTemplates() {
   try {
     templates = await api.get('/templates');
@@ -29,16 +31,23 @@ async function loadTemplates() {
   } catch (err) {
     const message = err.response?.data?.detail || err.message;
     Toast.error(message);
-    document.getElementById('templates-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1">${esc(message)}</div>`;
+    document.getElementById('templates-grid').innerHTML =
+      `<div class="empty-state" style="grid-column:1/-1">${esc(message)}</div>`;
   }
 }
 
+// 6.2 Template card grid
 function renderGrid() {
   const grid = document.getElementById('templates-grid');
   if (templates.length === 0) {
-    grid.innerHTML = `<div class="empty-state dashboard-empty-state" style="grid-column:1/-1">
-      <i data-lucide="file-text" style="width:40px;height:40px;opacity:0.2;margin-bottom:10px"></i>
-      <p>No templates yet. Create your first one.</p>
+    grid.innerHTML = `<div class="dashboard-empty-state" style="grid-column:1/-1">
+      <div class="dashboard-empty-icon">
+        <i data-lucide="file-text" style="width:28px;height:28px"></i>
+      </div>
+      <p style="color:var(--text-muted);margin-bottom:16px">No templates yet. Create your first one.</p>
+      <button class="btn btn-primary" onclick="openTemplateModal(null)">
+        <i data-lucide="plus" style="width:14px;height:14px"></i> New Template
+      </button>
     </div>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
@@ -69,6 +78,7 @@ function renderGrid() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+// 6.3 TemplateModal — create (POST) or edit (PUT)
 function openTemplateModal(id) {
   editingId = id;
   const t = id ? templates.find(x => x.id === id) : null;
@@ -79,6 +89,7 @@ function openTemplateModal(id) {
   document.getElementById('save-template-btn').innerHTML =
     `<i data-lucide="save" style="width:14px;height:14px"></i> ${t ? 'Save Changes' : 'Save Template'}`;
 
+  // Reset to visual mode
   htmlMode = false;
   document.getElementById('quill-wrap').style.display = '';
   document.getElementById('html-editor').style.display = 'none';
@@ -97,6 +108,7 @@ function closeTemplateModal() {
   editingId = null;
 }
 
+// Toggle between Quill visual editor and raw HTML textarea
 function toggleEditorMode() {
   htmlMode = !htmlMode;
   if (htmlMode) {
@@ -115,6 +127,7 @@ function toggleEditorMode() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+// Save — POST /templates (create) or PUT /templates/:id (edit)
 async function saveTemplate(e) {
   e.preventDefault();
   const btn = document.getElementById('save-template-btn');
@@ -126,7 +139,7 @@ async function saveTemplate(e) {
     : quill.root.innerHTML;
 
   const payload = {
-    title:   document.getElementById('t-title').value.trim(),
+    title: document.getElementById('t-title').value.trim(),
     subject: document.getElementById('t-subject').value.trim(),
     body,
   };
@@ -152,8 +165,9 @@ async function saveTemplate(e) {
   }
 }
 
+// 6.5 Delete — SweetAlert2 confirm, then DELETE /templates/:id,
+//             remove from local state WITHOUT full refetch
 async function deleteTemplate(id) {
-  const t = templates.find(x => x.id === id);
   const result = await Swal.fire({
     title: 'Delete this template?',
     text: 'This cannot be undone.',
@@ -169,7 +183,7 @@ async function deleteTemplate(id) {
 
   try {
     await api.del(`/templates/${id}`);
-    templates = templates.filter(x => x.id !== id);
+    templates = templates.filter(x => x.id !== id);  // local-only remove
     renderGrid();
     Toast.success('Template deleted');
   } catch (err) {
@@ -177,13 +191,15 @@ async function deleteTemplate(id) {
   }
 }
 
+// 6.4 PreviewModal — rendered HTML with sample variable substitution
 function openPreview(id) {
   const t = templates.find(x => x.id === id);
   if (!t) return;
+  const todayAU = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
   const html = (t.body || '')
     .replace(/\{\{name\}\}/g, '<strong style="color:#FACC15">John Doe</strong>')
     .replace(/\{\{email\}\}/g, '<em style="color:#9CA3AF">john@example.com</em>')
-    .replace(/\{\{date\}\}/g, new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }));
+    .replace(/\{\{date\}\}/g, todayAU);
   document.getElementById('preview-content').innerHTML = html;
   document.getElementById('preview-modal').classList.remove('hidden');
 }
@@ -192,6 +208,7 @@ function closePreviewModal() {
   document.getElementById('preview-modal').classList.add('hidden');
 }
 
+// Variable insertion — works in both Quill and HTML mode
 function insertVariable(variable) {
   if (htmlMode) {
     const editor = document.getElementById('html-editor');
@@ -202,7 +219,6 @@ function insertVariable(variable) {
     editor.setSelectionRange(start + variable.length, start + variable.length);
     return;
   }
-
   const range = quill.getSelection(true);
   const index = range ? range.index : quill.getLength();
   quill.insertText(index, variable);
@@ -216,5 +232,5 @@ function stripHtml(html) {
 }
 
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

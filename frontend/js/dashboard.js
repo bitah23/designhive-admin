@@ -1,19 +1,21 @@
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    // 4.2 Parallel fetch
     const [templates, logs, users] = await Promise.all([
       api.get('/templates'),
       api.get('/logs'),
       api.get('/users'),
     ]);
 
-    const sent = logs.filter(l => l.status === 'sent').length;
+    const sent   = logs.filter(l => l.status === 'sent').length;
     const failed = logs.filter(l => l.status === 'failed').length;
 
+    // 4.3 Stat cards
     const cards = [
-      { label: 'Emails Sent', value: sent, icon: 'mail', delta: '+2 this week', deltaClass: 'delta-positive' },
-      { label: 'Templates', value: templates.length, icon: 'file-text', delta: '--', deltaClass: 'delta-neutral' },
-      { label: 'Total Users', value: users.length, icon: 'users', delta: '+1 this week', deltaClass: 'delta-positive' },
-      { label: 'Failed Emails', value: failed, icon: 'x-circle', delta: failed > 0 ? `${failed} need review` : '--', deltaClass: failed > 0 ? 'delta-negative' : 'delta-neutral' },
+      { label: 'Emails Sent',   value: sent,             icon: 'mail',      delta: '+2 this week',             deltaClass: 'delta-positive' },
+      { label: 'Templates',     value: templates.length, icon: 'file-text', delta: '--',                        deltaClass: 'delta-neutral' },
+      { label: 'Total Users',   value: users.length,     icon: 'users',     delta: '+1 this week',              deltaClass: 'delta-positive' },
+      { label: 'Failed Emails', value: failed,           icon: 'x-circle',  delta: failed > 0 ? `${failed} need review` : '--', deltaClass: failed > 0 ? 'delta-negative' : 'delta-neutral' },
     ];
 
     document.getElementById('stat-cards').innerHTML = cards.map(card => `
@@ -28,10 +30,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="stat-delta ${card.deltaClass}">${card.delta}</div>
       </div>`).join('');
 
+    // 4.4 Templates table
     const tableHTML = templates.length === 0
       ? `<div class="dashboard-empty-state">
           <div class="dashboard-empty-icon"><i data-lucide="file-text" style="width:28px;height:28px"></i></div>
-          <p>No templates yet. Create your first template.</p>
+          <p style="color:var(--text-muted);margin-bottom:16px">No templates yet. Create your first template.</p>
           <a href="/templates.html" class="btn btn-outline">Create Template</a>
         </div>`
       : `<div class="table-wrap">
