@@ -3,35 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — DesignHive Admin</title>
-  <link rel="stylesheet" href="/css/main.css">
+  <title>Login - DesignHive Admin</title>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('mock') === '0') {
+        localStorage.removeItem('designhiveMockMode');
+      } else if (!localStorage.getItem('designhiveMockMode') || params.get('mock') === '1') {
+        localStorage.setItem('designhiveMockMode', '1');
+      }
+
+      if (localStorage.getItem('adminToken')) {
+        window.location.replace('/dashboard.html');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
   <div class="login-shell">
     <div class="login-box">
       <div class="login-logo">
-        <div class="brand">Design<span>Hive</span></div>
-        <div class="sub">Sign in to your admin panel</div>
+        <img src="/assets/brand/logo.png" alt="Design Hive">
       </div>
 
-      <form id="login-form">
+      <form id="login-form" novalidate>
         <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" id="email" class="form-control" placeholder="admin@example.com" required autocomplete="email">
+          <label class="form-label" for="email">Email</label>
+          <input type="email" id="email" class="form-control" placeholder="admin@example.com" autocomplete="email">
+          <div id="email-error" class="field-error" aria-live="assertive"></div>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          <label class="form-label" for="password">Password</label>
+          <div id="password-wrap" class="input-wrap">
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+            <button type="button" class="action" id="password-toggle" aria-label="Show password">
+              <i data-lucide="eye" style="width:16px;height:16px"></i>
+            </button>
+          </div>
+          <div id="password-error" class="field-error" aria-live="assertive"></div>
         </div>
-        <button type="submit" class="btn btn-primary w-full" id="login-btn" style="justify-content:center;margin-top:8px">
-          Sign In
-        </button>
-        <p id="login-error" style="color:var(--danger);font-size:0.82rem;margin-top:10px;display:none;text-align:center"></p>
+
+        <button type="submit" class="btn btn-primary w-full" id="login-btn">Sign In</button>
       </form>
     </div>
   </div>
 
   <div id="toast-container"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="/js/mock-boot.js"></script>
+  <script src="/js/axios.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/login.js"></script>
