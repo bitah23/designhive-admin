@@ -4,7 +4,13 @@
   <meta charset="UTF-8">
   <title>DesignHive Admin</title>
   <script>
-    window.location.href = localStorage.getItem('adminToken') ? '/dashboard.html' : '/login.html';
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mock') === '1') localStorage.setItem('designhiveMockMode', '1');
+    if (localStorage.getItem('designhiveMockMode') === '1') {
+      window.location.href = '/dashboard.html?mock=1';
+    } else {
+      window.location.href = localStorage.getItem('adminToken') ? '/dashboard.html' : '/login.html';
+    }
   </script>
 </head>
 <body></body>
