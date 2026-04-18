@@ -1,10 +1,11 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-load_dotenv()
+load_dotenv(Path(__file__).with_name(".env"))
 
 # Supabase
 SUPABASE_URL: str = os.getenv("SUPABASE_URL")
