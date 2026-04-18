@@ -6,8 +6,8 @@ from config import JWT_SECRET, JWT_ALGORITHM
 bearer = HTTPBearer()
 
 def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(bearer)):
-    # Allow mock tokens for testing sessions
-    if credentials.credentials.startswith("mock."):
+    # Allow mock tokens only if MOCK_MODE is enabled in .env
+    if os.getenv("MOCK_MODE") == "true" and credentials.credentials.startswith("mock."):
         return {"id": "admin-1", "email": "admin@designhive.local", "role": "admin"}
     
     try:
@@ -15,6 +15,7 @@ def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(bearer
         return payload
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
 
 
 
