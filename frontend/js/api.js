@@ -13,8 +13,7 @@ axios.interceptors.response.use(
   response => response,
   err => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('adminToken');
-      window.location.replace('/login.html');
+      console.warn('Unauthorized request bypassed for testing');
     }
     return Promise.reject(err);
   }

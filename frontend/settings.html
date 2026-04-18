@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/js/auth-guard.js"></script>
   <title>Settings — DesignHive Admin</title>
   <link rel="stylesheet" href="/css/main.css">
 </head>
+
 <body>
   <div class="app-shell">
     <aside id="sidebar"></aside>
@@ -33,18 +36,33 @@
           <!-- Add Admin Form -->
           <div style="padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px">
             <div class="label-upper mb-3">Add New Admin</div>
-            <form id="add-admin-form" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+            <form id="add-admin-form"
+              style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
               <div>
-                <label class="form-label">Name</label>
+                <label class="form-label" for="new-name">Name</label>
                 <input type="text" id="new-name" class="form-control" placeholder="Full name">
               </div>
               <div>
-                <label class="form-label">Email *</label>
+                <label class="form-label" for="new-email">Email *</label>
                 <input type="email" id="new-email" class="form-control" placeholder="admin@example.com" required>
               </div>
               <div>
-                <label class="form-label">Password *</label>
-                <input type="password" id="new-password" class="form-control" placeholder="Min. 8 characters" required minlength="8">
+                <label class="form-label" for="new-password">Password *</label>
+                <!-- Password field with show/hide toggle -->
+                <div style="position:relative">
+                  <input type="password" id="new-password" class="form-control" placeholder="Min. 8 characters" required
+                    minlength="8" style="padding-right:38px">
+                  <button type="button" onclick="
+                    var f=document.getElementById('new-password');
+                    f.type=f.type==='password'?'text':'password';
+                    this.innerHTML=f.type==='password'
+                      ?'<i data-lucide=\'eye\' style=\'width:14px;height:14px\'></i>'
+                      :'<i data-lucide=\'eye-off\' style=\'width:14px;height:14px\'></i>';
+                    if(typeof lucide!=='undefined')lucide.createIcons();"
+                    style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center">
+                    <i data-lucide="eye" style="width:14px;height:14px"></i>
+                  </button>
+                </div>
               </div>
               <button type="submit" class="btn btn-primary" id="add-admin-btn">
                 <i data-lucide="user-plus" style="width:15px;height:15px"></i> Add
@@ -55,7 +73,10 @@
           <!-- Admin List -->
           <div>
             <div class="label-upper mb-3">Existing Admins</div>
-            <div id="admin-list"><div class="skeleton" style="height:56px;margin-bottom:8px"></div><div class="skeleton" style="height:56px"></div></div>
+            <div id="admin-list">
+              <div class="skeleton" style="height:56px;margin-bottom:8px"></div>
+              <div class="skeleton" style="height:56px"></div>
+            </div>
           </div>
         </div>
 
@@ -68,28 +89,40 @@
             <span style="font-weight:700;color:#fff;font-size:0.9rem">Change Password</span>
           </div>
 
+          <!-- Idle state -->
           <div id="pw-step-idle">
             <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:16px">
               A 6-digit verification code will be sent to your registered email address.
             </p>
-            <button class="btn btn-secondary" id="send-otp-btn" onclick="sendOtp()">
+            <button class="btn btn-outline" id="send-otp-btn" onclick="sendOtp()">
               <i data-lucide="mail" style="width:15px;height:15px"></i> Send Reset Code
             </button>
           </div>
 
+          <!-- Sent state -->
           <form id="pw-step-form" style="display:none" onsubmit="confirmReset(event)">
             <div style="display:grid;grid-template-columns:220px 1fr 1fr;gap:14px;align-items:end">
               <div>
-                <label class="form-label">Verification Code</label>
-                <input type="text" id="otp-input" class="form-control" placeholder="6-digit code" maxlength="6" required>
+                <label class="form-label" for="otp-input">Verification Code</label>
+                <input type="text" id="otp-input" class="form-control" placeholder="6-digit code" maxlength="6" required
+                  inputmode="numeric">
               </div>
               <div>
-                <label class="form-label">New Password</label>
-                <input type="password" id="new-pw" class="form-control" placeholder="Min. 8 characters" required minlength="8">
+                <label class="form-label" for="new-pw">New Password</label>
+                <input type="password" id="new-pw" class="form-control" placeholder="Min. 8 characters" required
+                  minlength="8">
               </div>
               <div>
-                <label class="form-label">Confirm Password</label>
-                <input type="password" id="confirm-pw" class="form-control" placeholder="Repeat password" required>
+                <label class="form-label" for="confirm-pw">Confirm Password</label>
+                <div style="position:relative">
+                  <input type="password" id="confirm-pw" class="form-control" placeholder="Repeat password" required
+                    style="padding-right:38px">
+                  <!-- Single toggle affects both pw fields -->
+                  <button type="button" id="pw-eye-btn" onclick="togglePwVisibility(this)"
+                    style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center">
+                    <i data-lucide="eye" style="width:14px;height:14px"></i>
+                  </button>
+                </div>
               </div>
             </div>
             <div style="display:flex;gap:10px;margin-top:16px">
@@ -109,9 +142,11 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/mock-boot.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/settings.js"></script>
 </body>
+
 </html>

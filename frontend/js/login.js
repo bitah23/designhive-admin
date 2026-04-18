@@ -1,10 +1,9 @@
 (function () {
-  if (window.DesignHiveRuntime?.isMockMode?.()) {
-    window.DesignHiveRuntime.enableMockMode();
-    window.location.href = '/dashboard.html?mock=1';
-    return;
+  // If already logged in, skip to dashboard
+  if (localStorage.getItem('adminToken')) {
+    const isMock = localStorage.getItem('designhiveMockMode') === '1';
+    window.location.href = isMock ? '/dashboard.html?mock=1' : '/dashboard.html';
   }
-  if (localStorage.getItem('adminToken')) window.location.href = '/dashboard.html';
 })();
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -15,18 +14,18 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const password = document.getElementById('password').value;
 
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>';
+  btn.innerHTML = '<span class="spinner"></span> Signin in...';
   errEl.style.display = 'none';
 
   try {
-    if (window.DesignHiveRuntime?.isMockMode?.()) {
-      window.DesignHiveRuntime.enableMockMode();
-    }
     const data = await api.post('/auth/login', { email, password });
     localStorage.setItem('adminToken', data.token);
-    window.location.href = window.DesignHiveRuntime?.isMockMode?.() ? '/dashboard.html?mock=1' : '/dashboard.html';
+
+    const isMock = localStorage.getItem('designhiveMockMode') === '1';
+    window.location.href = isMock ? '/dashboard.html?mock=1' : '/dashboard.html';
   } catch (err) {
-    errEl.textContent = err.message || 'Invalid email or password';
+    const msg = err.response?.data?.detail || err.message || 'Invalid email or password';
+    errEl.textContent = msg;
     errEl.style.display = 'block';
     btn.disabled = false;
     btn.innerHTML = 'Sign In';

@@ -13,6 +13,7 @@ const Toast = {
     }, duration);
   },
   success: (msg) => Toast.show(msg, 'success'),
-  error:   (msg) => Toast.show(msg, 'error'),
-  info:    (msg) => Toast.show(msg, 'info'),
+  error: (msg) => Toast.show(msg, 'error'),
+  info: (msg) => Toast.show(msg, 'info'),
+  warn: (msg) => Toast.show(msg, 'warn', 5000), // Warn toast for campaign validation
 };

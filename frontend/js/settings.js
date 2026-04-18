@@ -2,84 +2,88 @@ let admins = [];
 let currentAdminId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  // 9.1 Decode JWT to get current admin id
   try {
     const token = localStorage.getItem('adminToken');
     if (token) currentAdminId = JSON.parse(atob(token.split('.')[1])).id;
-  } catch {}
+  } catch { }
   loadAdmins();
   document.getElementById('add-admin-form').addEventListener('submit', addAdmin);
 });
 
+// 9.2 Admin list — GET /admins
 async function loadAdmins() {
   try {
     admins = await api.get('/admins');
     renderAdminList();
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   }
 }
 
 function renderAdminList() {
   if (admins.length === 0) {
-    document.getElementById('admin-list').innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem">No admin accounts found.</p>`;
+    document.getElementById('admin-list').innerHTML =
+      `<p style="color:var(--text-muted);font-size:0.875rem">No admin accounts found.</p>`;
     return;
   }
 
   document.getElementById('admin-list').innerHTML = admins.map(a => {
-    const isSelf   = a.id === currentAdminId;
+    const isSelf = a.id === currentAdminId;
     const isActive = a.is_active !== false;
-    const letter   = (a.name || a.email)[0].toUpperCase();
+    const letter = (a.name || a.email)[0].toUpperCase();
 
-    return `
-      <div class="admin-row">
-        <div class="flex-center gap-2">
-          <div class="admin-avatar ${isActive ? '' : 'inactive'}">${esc(letter)}</div>
-          <div>
-            <div style="font-weight:600;color:#fff;font-size:0.875rem">
-              ${esc(a.name || '—')}
-              ${isSelf ? `<span class="badge badge-gold ms-1" style="font-size:0.62rem;padding:1px 7px">You</span>` : ''}
-            </div>
-            <div style="font-size:0.78rem;color:var(--text-muted)">${esc(a.email)}</div>
+    return `<div class="admin-row">
+      <div class="flex-center gap-2">
+        <div class="admin-avatar ${isActive ? '' : 'inactive'}">${esc(letter)}</div>
+        <div>
+          <div style="font-weight:600;color:#fff;font-size:0.875rem;display:flex;align-items:center;gap:6px">
+            ${esc(a.name || '—')}
+            ${isSelf ? `<span class="badge badge-gold" style="font-size:0.62rem;padding:1px 7px">You</span>` : ''}
           </div>
+          <div style="font-size:0.78rem;color:var(--text-muted)">${esc(a.email)}</div>
         </div>
-        <div class="flex-center gap-2">
-          <span class="badge ${isActive ? 'badge-green' : 'badge-red'}">${isActive ? 'Active' : 'Inactive'}</span>
-          ${!isSelf ? `
-            <button class="btn btn-secondary btn-sm" onclick="toggleAdmin('${esc(a.id)}',${isActive})">
-              ${isActive ? 'Deactivate' : 'Activate'}
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="deleteAdmin('${esc(a.id)}','${esc(a.email)}')">
-              <i data-lucide="trash-2" style="width:13px;height:13px"></i>
-            </button>
-          ` : ''}
-        </div>
-      </div>`;
+      </div>
+      <div class="flex-center gap-2">
+        <span class="badge ${isActive ? 'badge-green' : 'badge-red'}">${isActive ? 'Active' : 'Inactive'}</span>
+        ${!isSelf ? `
+          <button class="btn btn-secondary btn-sm" onclick="toggleAdmin('${esc(a.id)}',${isActive})">
+            ${isActive ? 'Deactivate' : 'Activate'}
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAdmin('${esc(a.id)}','${esc(a.email)}')">
+            <i data-lucide="trash-2" style="width:13px;height:13px"></i>
+          </button>` : ''}
+      </div>
+    </div>`;
   }).join('');
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+// 9.2 Add admin — POST /admins, local append
 async function addAdmin(e) {
   e.preventDefault();
-  const btn = document.getElementById('add-admin-btn');
+  const email = document.getElementById('new-email').value.trim();
   const password = document.getElementById('new-password').value;
+  const name = document.getElementById('new-name').value.trim() || null;
+
+  // Client-side validation
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { Toast.error('Invalid email format'); return; }
   if (password.length < 8) { Toast.error('Password must be at least 8 characters'); return; }
 
+  const btn = document.getElementById('add-admin-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>';
 
   try {
-    const data = await api.post('/admins', {
-      name:     document.getElementById('new-name').value.trim() || null,
-      email:    document.getElementById('new-email').value.trim(),
-      password,
-    });
+    const data = await api.post('/admins', { name, email, password });
     admins.push(data);
     renderAdminList();
     document.getElementById('add-admin-form').reset();
     Toast.success(`Admin "${data.email}" added`);
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
+    // Do NOT clear form on failure
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="user-plus" style="width:15px;height:15px"></i> Add';
@@ -87,6 +91,7 @@ async function addAdmin(e) {
   }
 }
 
+// 9.2 Toggle active — SweetAlert2 confirm, PATCH, local update
 async function toggleAdmin(id, isActive) {
   const action = isActive ? 'deactivate' : 'activate';
   const conf = await Swal.fire({
@@ -104,10 +109,11 @@ async function toggleAdmin(id, isActive) {
     renderAdminList();
     Toast.success(`Admin ${data.is_active ? 'activated' : 'deactivated'}`);
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   }
 }
 
+// 9.2 Delete — SweetAlert2 confirm, DELETE, local remove
 async function deleteAdmin(id, email) {
   const conf = await Swal.fire({
     title: 'Delete Admin?',
@@ -124,21 +130,33 @@ async function deleteAdmin(id, email) {
     renderAdminList();
     Toast.success('Admin deleted');
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   }
 }
 
+// 9.3 Password show/hide — toggles both pw fields simultaneously
+function togglePwVisibility(btn) {
+  const fields = document.querySelectorAll('#new-pw, #confirm-pw');
+  const isHidden = fields[0].type === 'password';
+  fields.forEach(f => { f.type = isHidden ? 'text' : 'password'; });
+  btn.innerHTML = isHidden
+    ? '<i data-lucide="eye-off" style="width:14px;height:14px"></i>'
+    : '<i data-lucide="eye" style="width:14px;height:14px"></i>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// 9.3 Send OTP — POST /auth/reset-request, transition to sent state
 async function sendOtp() {
   const btn = document.getElementById('send-otp-btn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner spinner-light"></span>';
+  btn.innerHTML = '<span class="spinner spinner-light"></span> Sending...';
   try {
     await api.post('/auth/reset-request');
     Toast.success('Reset code sent to your email');
     document.getElementById('pw-step-idle').style.display = 'none';
     document.getElementById('pw-step-form').style.display = '';
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="mail" style="width:15px;height:15px"></i> Send Reset Code';
@@ -146,10 +164,13 @@ async function sendOtp() {
   }
 }
 
+// 9.3 Submit new password — POST /auth/reset-password
 async function confirmReset(e) {
   e.preventDefault();
-  const newPw    = document.getElementById('new-pw').value;
+  const newPw = document.getElementById('new-pw').value;
   const confirmPw = document.getElementById('confirm-pw').value;
+
+  if (newPw.length < 8) { Toast.error('Password must be at least 8 characters'); return; }
   if (newPw !== confirmPw) { Toast.error('Passwords do not match'); return; }
 
   const btn = document.getElementById('update-pw-btn');
@@ -164,7 +185,7 @@ async function confirmReset(e) {
     Toast.success('Password updated successfully');
     cancelReset();
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="save" style="width:14px;height:14px"></i> Update Password';
@@ -179,5 +200,5 @@ function cancelReset() {
 }
 
 function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

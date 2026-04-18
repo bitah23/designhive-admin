@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/js/auth-guard.js"></script>
   <title>Logs — DesignHive Admin</title>
   <link rel="stylesheet" href="/css/main.css">
 </head>
+
 <body>
   <div class="app-shell">
     <aside id="sidebar"></aside>
@@ -18,21 +21,26 @@
             <h1>Email Logs</h1>
             <p>Full history of every email sent</p>
           </div>
-          <button class="btn btn-secondary" id="refresh-btn" onclick="fetchLogs(true)">
-            <i data-lucide="refresh-cw" style="width:14px;height:14px" id="refresh-icon"></i>
-            Refresh
-          </button>
+          <div class="flex-center gap-2">
+            <span id="updated-label"
+              style="font-size:0.75rem;color:var(--text-muted);opacity:0;transition:opacity 0.4s"></span>
+            <button class="btn btn-secondary" id="refresh-btn" onclick="fetchLogs(true)">
+              <i data-lucide="refresh-cw" style="width:14px;height:14px" id="refresh-icon"></i>
+              Refresh
+            </button>
+          </div>
         </div>
 
         <!-- Filters + Counts -->
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div
+          style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
           <div style="display:flex;gap:10px">
             <div class="input-wrap" style="width:168px">
               <span class="icon"><i data-lucide="filter" style="width:13px;height:13px;color:var(--gold)"></i></span>
               <select id="status-filter" onchange="applyFilters()">
                 <option value="all">All Status</option>
-                <option value="sent">Sent Only</option>
-                <option value="failed">Failed Only</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
               </select>
             </div>
             <div class="input-wrap" style="width:160px">
@@ -59,7 +67,13 @@
         </div>
 
         <div class="card" id="logs-card">
-          <div style="padding:16px"><div class="skeleton" style="height:300px"></div></div>
+          <div style="padding:16px">
+            <div class="users-skeleton-row"></div>
+            <div class="users-skeleton-row"></div>
+            <div class="users-skeleton-row"></div>
+            <div class="users-skeleton-row"></div>
+            <div class="users-skeleton-row"></div>
+          </div>
         </div>
 
       </main>
@@ -69,9 +83,11 @@
   <div id="toast-container"></div>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="/js/mock-boot.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/logs.js"></script>
 </body>
+
 </html>
