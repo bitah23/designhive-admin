@@ -1,26 +1,26 @@
 const NAV = [
   { href: '/dashboard.html', icon: 'layout-dashboard', label: 'Dashboard' },
-  { href: '/users.html',     icon: 'users',            label: 'Users' },
-  { href: '/templates.html', icon: 'file-text',         label: 'Templates' },
-  { href: '/campaign.html',  icon: 'send',              label: 'Campaign' },
-  { href: '/logs.html',      icon: 'history',           label: 'Logs' },
-  { href: '/settings.html',  icon: 'settings',          label: 'Settings' },
+  { href: '/users.html', icon: 'users', label: 'Users' },
+  { href: '/templates.html', icon: 'file-text', label: 'Templates' },
+  { href: '/campaign.html', icon: 'send', label: 'Campaign' },
+  { href: '/logs.html', icon: 'history', label: 'Logs' },
+  { href: '/settings.html', icon: 'settings', label: 'Settings' },
 ];
 
 const PAGE_TITLES = {
   '/dashboard.html': 'Dashboard',
-  '/users.html':     'Users',
+  '/users.html': 'Users',
   '/templates.html': 'Email Templates',
-  '/campaign.html':  'Campaign',
-  '/logs.html':      'Email Logs',
-  '/settings.html':  'Settings',
+  '/campaign.html': 'Campaign',
+  '/logs.html': 'Email Logs',
+  '/settings.html': 'Settings',
 };
 
 function initLayout() {
-  if (!localStorage.getItem('adminToken')) {
-    window.location.href = '/login.html';
-    return;
-  }
+  // if (!localStorage.getItem('adminToken')) {
+  //   window.location.href = '/login.html';
+  //   return;
+  // }
 
   const path = window.location.pathname;
 
