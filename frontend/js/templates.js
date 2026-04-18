@@ -27,15 +27,16 @@ async function loadTemplates() {
     templates = await api.get('/templates');
     renderGrid();
   } catch (err) {
-    Toast.error(err.message);
-    document.getElementById('templates-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1">${esc(err.message)}</div>`;
+    const message = err.response?.data?.detail || err.message;
+    Toast.error(message);
+    document.getElementById('templates-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1">${esc(message)}</div>`;
   }
 }
 
 function renderGrid() {
   const grid = document.getElementById('templates-grid');
   if (templates.length === 0) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+    grid.innerHTML = `<div class="empty-state dashboard-empty-state" style="grid-column:1/-1">
       <i data-lucide="file-text" style="width:40px;height:40px;opacity:0.2;margin-bottom:10px"></i>
       <p>No templates yet. Create your first one.</p>
     </div>`;
@@ -62,7 +63,7 @@ function renderGrid() {
           </button>
         </div>
       </div>
-      <div class="t-preview">${esc(stripHtml(t.body)).substring(0, 150) || 'No content yet...'}</div>
+      <div class="t-preview">${esc(stripHtml(t.body)) || 'No content yet...'}</div>
     </div>`).join('');
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -143,7 +144,7 @@ async function saveTemplate(e) {
     renderGrid();
     closeTemplateModal();
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i data-lucide="save" style="width:14px;height:14px"></i> ${editingId ? 'Save Changes' : 'Save Template'}`;
@@ -154,8 +155,8 @@ async function saveTemplate(e) {
 async function deleteTemplate(id) {
   const t = templates.find(x => x.id === id);
   const result = await Swal.fire({
-    title: 'Delete Template?',
-    text: `"${t?.title}" will be permanently deleted.`,
+    title: 'Delete this template?',
+    text: 'This cannot be undone.',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Yes, Delete',
@@ -172,7 +173,7 @@ async function deleteTemplate(id) {
     renderGrid();
     Toast.success('Template deleted');
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   }
 }
 
@@ -182,13 +183,30 @@ function openPreview(id) {
   const html = (t.body || '')
     .replace(/\{\{name\}\}/g, '<strong style="color:#FACC15">John Doe</strong>')
     .replace(/\{\{email\}\}/g, '<em style="color:#9CA3AF">john@example.com</em>')
-    .replace(/\{\{date\}\}/g, new Date().toLocaleDateString());
+    .replace(/\{\{date\}\}/g, new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }));
   document.getElementById('preview-content').innerHTML = html;
   document.getElementById('preview-modal').classList.remove('hidden');
 }
 
 function closePreviewModal() {
   document.getElementById('preview-modal').classList.add('hidden');
+}
+
+function insertVariable(variable) {
+  if (htmlMode) {
+    const editor = document.getElementById('html-editor');
+    const start = editor.selectionStart ?? editor.value.length;
+    const end = editor.selectionEnd ?? editor.value.length;
+    editor.value = `${editor.value.slice(0, start)}${variable}${editor.value.slice(end)}`;
+    editor.focus();
+    editor.setSelectionRange(start + variable.length, start + variable.length);
+    return;
+  }
+
+  const range = quill.getSelection(true);
+  const index = range ? range.index : quill.getLength();
+  quill.insertText(index, variable);
+  quill.setSelection(index + variable.length);
 }
 
 function stripHtml(html) {

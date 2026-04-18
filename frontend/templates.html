@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/js/auth-guard.js"></script>
   <title>Templates — DesignHive Admin</title>
   <link rel="stylesheet" href="/css/main.css">
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
@@ -69,11 +70,12 @@
               <div id="quill-editor"></div>
             </div>
             <textarea id="html-editor" class="form-control" rows="10" placeholder="Paste your HTML here..." style="display:none;font-family:monospace;font-size:0.82rem"></textarea>
-            <p style="color:var(--text-muted);font-size:0.75rem;margin-top:8px">
-              Variables: <code style="color:var(--gold)">{{name}}</code> &nbsp;
-              <code style="color:var(--gold)">{{email}}</code> &nbsp;
-              <code style="color:var(--gold)">{{date}}</code>
-            </p>
+            <div class="variable-hints">
+              <span class="variable-label">Variables:</span>
+              <button type="button" class="variable-chip" onclick="insertVariable('{{name}}')">{{name}}</button>
+              <button type="button" class="variable-chip" onclick="insertVariable('{{email}}')">{{email}}</button>
+              <button type="button" class="variable-chip" onclick="insertVariable('{{date}}')">{{date}}</button>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -111,7 +113,7 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="/js/mock-boot.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>

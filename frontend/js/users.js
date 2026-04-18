@@ -4,11 +4,13 @@ let currentPage = 1;
 let selectedUser = null;
 const PER_PAGE = 10;
 const attachedFiles = [];
+let searchTimer = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadUsers();
   document.getElementById('search').addEventListener('input', e => {
-    filterUsers(e.target.value);
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => filterUsers(e.target.value), 300);
   });
   document.getElementById('file-input').addEventListener('change', handleFileAdd);
   document.getElementById('email-form').addEventListener('submit', sendEmail);
@@ -21,8 +23,8 @@ async function loadUsers() {
       `${allUsers.length} registered user${allUsers.length !== 1 ? 's' : ''}`;
     filterUsers('');
   } catch (err) {
-    Toast.error(err.message);
-    document.getElementById('users-card').innerHTML = `<div class="empty-state">${err.message}</div>`;
+    Toast.error(err.response?.data?.detail || err.message);
+    document.getElementById('users-card').innerHTML = `<div class="empty-state">${err.response?.data?.detail || err.message}</div>`;
   }
 }
 
@@ -42,14 +44,14 @@ function renderTable() {
   const page = filteredUsers.slice(start, start + PER_PAGE);
 
   const rows = page.length === 0
-    ? `<tr><td colspan="4" class="empty-state">No users found.</td></tr>`
+    ? `<tr><td colspan="4" class="empty-state">No users match your search.</td></tr>`
     : page.map(u => `
         <tr>
           <td class="bold" style="padding-left:20px">${esc(u.name || '—')}</td>
           <td class="gold">${esc(u.email)}</td>
           <td class="text-muted">${fmtDate(u.created_at)}</td>
           <td style="text-align:center">
-            <button class="btn btn-secondary btn-sm" onclick="openEmailModal(${JSON.stringify(JSON.stringify(u))})">
+            <button class="btn btn-outline btn-sm" onclick="openEmailModal(${JSON.stringify(JSON.stringify(u))})">
               <i data-lucide="mail" style="width:12px;height:12px"></i> Send Email
             </button>
           </td>
@@ -91,6 +93,7 @@ function changePage(dir) {
 
 function openEmailModal(userJson) {
   selectedUser = JSON.parse(userJson);
+  document.getElementById('email-modal-title').textContent = `Send Email to ${selectedUser.name || selectedUser.email}`;
   document.getElementById('modal-recipient').textContent =
     (selectedUser.name ? `${selectedUser.name} — ` : '') + selectedUser.email;
   document.getElementById('email-subject').value = '';
@@ -107,7 +110,13 @@ function closeEmailModal() {
 }
 
 function handleFileAdd(e) {
-  for (const file of e.target.files) attachedFiles.push(file);
+  for (const file of e.target.files) {
+    if (file.size > 5 * 1024 * 1024) {
+      Toast.error(`${file.name} exceeds the 5MB limit`);
+      continue;
+    }
+    attachedFiles.push(file);
+  }
   e.target.value = '';
   renderFileList();
 }
@@ -149,10 +158,10 @@ async function sendEmail(e) {
       attachments,
     });
 
-    Toast.success(`Email sent to ${selectedUser.email}`);
+    Toast.success(`Email sent to ${selectedUser.name || selectedUser.email}`);
     closeEmailModal();
   } catch (err) {
-    Toast.error(err.message);
+    Toast.error(err.response?.data?.detail || err.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="send" style="width:14px;height:14px"></i> Send';
