@@ -1,61 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="/js/auth-guard.js"></script>
-  <title>Campaign — DesignHive Admin</title>
-  <link rel="stylesheet" href="/css/main.css">
+  <title>Campaign - DesignHive Admin</title>
+  <link rel="stylesheet" href="/css/app.css">
 </head>
-
 <body>
   <div class="app-shell">
     <aside id="sidebar"></aside>
     <div class="main-area">
       <div id="topbar"></div>
       <main class="page-content">
-
         <div class="page-header">
           <div>
             <h1>Campaign</h1>
-            <p>Select a template and recipients, then send</p>
+            <p>Select one template, choose recipients, and send with confidence.</p>
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:16px" id="campaign-grid">
+        <div class="grid grid-2" id="campaign-grid" style="margin-bottom:16px">
           <div class="skeleton" style="height:420px"></div>
           <div class="skeleton" style="height:420px"></div>
         </div>
 
         <div class="flex" style="justify-content:flex-end">
-          <button class="btn btn-primary" id="send-campaign-btn" onclick="sendCampaign()" disabled
-            style="padding:10px 28px;font-size:0.9rem">
+          <button class="btn btn-primary" id="send-campaign-btn" type="button">
             <i data-lucide="send" style="width:16px;height:16px"></i>
             <span id="send-label">Send Campaign</span>
           </button>
         </div>
 
-        <div class="card mt-4" id="results-card" style="display:none;padding:20px">
-          <div style="font-weight:600;color:#fff;margin-bottom:16px">Send Results</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-            <div
-              style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:10px;padding:20px;text-align:center">
-              <div id="res-sent" style="font-size:1.8rem;font-weight:700;color:var(--gold)">0</div>
-              <div class="label-upper mt-1">Sent</div>
-            </div>
-            <div
-              style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);border-radius:10px;padding:20px;text-align:center">
-              <div id="res-failed" style="font-size:1.8rem;font-weight:700;color:var(--danger)">0</div>
-              <div class="label-upper mt-1">Failed</div>
-            </div>
+        <div class="card mt-4" id="results-card" hidden>
+          <div style="padding:20px 20px 0">
+            <div style="color:var(--text-primary);font-weight:700;font-size:1rem">Send Results</div>
           </div>
-          <div id="res-rows" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto"></div>
-          <div style="text-align:right;margin-top:12px">
-            <button class="btn btn-secondary btn-sm" onclick="dismissResults()">Dismiss</button>
+          <div style="padding:20px">
+            <div class="grid grid-2" style="gap:12px;margin-bottom:16px">
+              <div class="card" style="padding:18px;box-shadow:none;background:var(--success-dim)">
+                <div id="res-sent" style="font-size:2rem;font-weight:700;color:var(--success)">0</div>
+                <div class="label-upper" style="margin-top:8px">Sent</div>
+              </div>
+              <div class="card" style="padding:18px;box-shadow:none;background:var(--danger-dim)">
+                <div id="res-failed" style="font-size:2rem;font-weight:700;color:var(--danger)">0</div>
+                <div class="label-upper" style="margin-top:8px">Failed</div>
+              </div>
+            </div>
+            <div id="res-rows" style="display:flex;flex-direction:column;gap:8px"></div>
+            <div style="display:flex;justify-content:flex-end;margin-top:14px">
+              <button type="button" class="btn btn-outline" id="dismiss-results-btn">Dismiss</button>
+            </div>
           </div>
         </div>
-
       </main>
     </div>
   </div>
@@ -68,7 +65,6 @@
   <script src="/js/api.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>
-  <script src="/js/campaign.js"></script>
+  <script src="/js/campaign-page.js"></script>
 </body>
-
 </html>

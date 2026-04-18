@@ -3,28 +3,26 @@ const API_BASE = window.ENV_API_URL || 'http://localhost:8000/api';
 axios.defaults.baseURL = API_BASE;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-// Use fetch adapter to ensure mock-boot.js can intercept these calls
 if (localStorage.getItem('designhiveMockMode') === '1') {
   axios.defaults.adapter = 'fetch';
 }
 
-
 axios.interceptors.request.use(cfg => {
   const token = localStorage.getItem('adminToken');
-  if (token) cfg.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    cfg.headers = cfg.headers || {};
+    cfg.headers.Authorization = `Bearer ${token}`;
+  }
   return cfg;
 });
 
-axios.interceptors.response.use(
-  response => response,
-  err => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('adminToken');
-      window.location.replace('/login.html');
-    }
-    return Promise.reject(err);
+axios.interceptors.response.use(null, err => {
+  if (err.response?.status === 401) {
+    localStorage.removeItem('adminToken');
+    window.location.replace('/login.html');
   }
-);
+  return Promise.reject(err);
+});
 
 const api = {
   get: async (path, config = {}) => (await axios.get(path, config)).data,

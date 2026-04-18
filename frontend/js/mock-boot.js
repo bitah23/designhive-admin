@@ -5,6 +5,9 @@ const DH_TOKEN_KEY = 'adminToken';
   const params = new URLSearchParams(window.location.search);
   if (params.get('mock') === '1') localStorage.setItem(DH_MOCK_MODE_KEY, '1');
   if (params.get('mock') === '0') localStorage.removeItem(DH_MOCK_MODE_KEY);
+  if (!localStorage.getItem(DH_MOCK_MODE_KEY) && params.get('mock') !== '0') {
+    localStorage.setItem(DH_MOCK_MODE_KEY, '1');
+  }
   if (isMockMode() && !localStorage.getItem(DH_TOKEN_KEY)) {
     localStorage.setItem(DH_TOKEN_KEY, getMockToken());
   }
@@ -15,7 +18,7 @@ function isMockMode() {
 }
 
 function getMockToken() {
-  const payload = btoa(JSON.stringify({ id: 'admin-1', role: 'admin', mock: true }));
+  const payload = btoa(JSON.stringify({ id: 'admin-1', email: 'admin@designhive.local', role: 'admin', mock: true }));
   return `mock.${payload}.sig`;
 }
 
@@ -32,14 +35,14 @@ const mockDb = {
       id: 'tpl-1',
       title: 'Welcome Flow',
       subject: 'Welcome to DesignHive',
-      body: '<h2>Welcome {{name}}</h2><p>Your account for {{email}} is ready.</p>',
+      body: '<h1 style="margin:0 0 12px;font-size:32px;line-height:1.1;color:#0f172a">Welcome to DesignHive, {{name}}</h1><p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#334155">Your admin toolkit is live and ready to help you move from first draft to delivery with more control.</p><p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#475569">We built your workspace for {{email}} with campaign controls, template previews, delivery visibility, and team-safe workflows.</p><div style="display:inline-block;padding:14px 22px;border-radius:999px;background:#a31f45;color:#ffffff;font-weight:700;text-decoration:none">Open Dashboard</div><div style="margin-top:32px;padding-top:20px;border-top:1px solid #e2e8f0;color:#64748b;font-size:14px;line-height:1.7">Questions? Reply anytime and our operators will help. <br> The DesignHive AI team</div>',
       created_at: isoOffset(-6),
     },
     {
       id: 'tpl-2',
       title: 'Promo Launch',
       subject: 'Your next campaign is live',
-      body: '<h2>Hi {{name}}</h2><p>Check the latest launch updates for {{date}}.</p>',
+      body: '<p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#a31f45">Campaign Update</p><h1 style="margin:0 0 14px;font-size:30px;line-height:1.1;color:#0f172a">Your next campaign is ready to launch</h1><p style="margin:0 0 18px;font-size:16px;line-height:1.7;color:#334155">Hi {{name}}, your DesignHive workflow has a fresh promotional draft lined up for {{date}} with updated content blocks and improved delivery pacing.</p><ul style="margin:0 0 24px;padding-left:18px;color:#475569;line-height:1.8"><li>Sharper content hierarchy</li><li>Better send visibility</li><li>Cleaner admin review flow</li></ul><div style="display:inline-block;padding:14px 22px;border-radius:999px;background:#a31f45;color:#ffffff;font-weight:700;text-decoration:none">Review in Dashboard</div><div style="margin-top:32px;padding-top:20px;border-top:1px solid #e2e8f0;color:#64748b;font-size:14px;line-height:1.7">DesignHive AI keeps every launch polished, measurable, and easier to manage. <br> The DesignHive AI team</div>',
       created_at: isoOffset(-2),
     },
   ],
@@ -48,6 +51,14 @@ const mockDb = {
     { id: 'usr-2', name: 'Noah Smith', email: 'noah@example.com', created_at: isoOffset(-10) },
     { id: 'usr-3', name: 'Mia Patel', email: 'mia@example.com', created_at: isoOffset(-4) },
     { id: 'usr-4', name: 'Liam Chen', email: 'liam@example.com', created_at: isoOffset(-1) },
+    { id: 'usr-5', name: 'Olivia Reed', email: 'olivia@example.com', created_at: isoOffset(-12) },
+    { id: 'usr-6', name: 'Ethan Brooks', email: 'ethan@example.com', created_at: isoOffset(-11) },
+    { id: 'usr-7', name: 'Sophia Malik', email: 'sophia@example.com', created_at: isoOffset(-9) },
+    { id: 'usr-8', name: 'Mason Grant', email: 'mason@example.com', created_at: isoOffset(-8) },
+    { id: 'usr-9', name: 'Amelia Khan', email: 'amelia@example.com', created_at: isoOffset(-7) },
+    { id: 'usr-10', name: 'Lucas Moore', email: 'lucas@example.com', created_at: isoOffset(-6) },
+    { id: 'usr-11', name: 'Harper Stone', email: 'harper@example.com', created_at: isoOffset(-5) },
+    { id: 'usr-12', name: 'Logan Hale', email: 'logan@example.com', created_at: isoOffset(-3) },
   ],
   logs: [
     {

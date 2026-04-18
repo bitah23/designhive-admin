@@ -1,25 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="/js/auth-guard.js"></script>
   <title>Dashboard - DesignHive Admin</title>
-  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/app.css">
 </head>
-
 <body>
   <div class="app-shell">
     <aside id="sidebar"></aside>
     <div class="main-area">
       <div id="topbar"></div>
       <main class="page-content">
-
         <div class="page-header">
           <div>
             <h1>Overview</h1>
-            <p>Email campaign summary</p>
+            <p>Campaign performance, template activity, and delivery health in one place.</p>
           </div>
           <a href="/campaign.html" class="btn btn-primary">
             <i data-lucide="send" style="width:15px;height:15px"></i>
@@ -28,15 +25,15 @@
         </div>
 
         <div class="grid grid-4 mb-4" id="stat-cards">
-          <div class="card stat-card skeleton" style="height:168px"></div>
-          <div class="card stat-card skeleton" style="height:168px"></div>
-          <div class="card stat-card skeleton" style="height:168px"></div>
-          <div class="card stat-card skeleton" style="height:168px"></div>
+          <div class="card dashboard-stat-card skeleton"></div>
+          <div class="card dashboard-stat-card skeleton"></div>
+          <div class="card dashboard-stat-card skeleton"></div>
+          <div class="card dashboard-stat-card skeleton"></div>
         </div>
 
         <div class="card">
-          <div class="flex-between dashboard-table-header">
-            <span>All Templates / Campaigns</span>
+          <div class="flex-between" style="padding:18px 20px;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-primary);font-weight:700">All Templates / Campaigns</span>
           </div>
           <div id="templates-table-wrap">
             <div style="padding:16px">
@@ -44,18 +41,17 @@
             </div>
           </div>
         </div>
-
       </main>
     </div>
   </div>
 
   <div id="toast-container"></div>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="/js/mock-boot.js"></script>
   <script src="/js/axios.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>
-  <script src="/js/dashboard.js"></script>
+  <script src="/js/dashboard-page.js"></script>
 </body>
-
 </html>

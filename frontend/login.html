@@ -1,60 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — DesignHive Admin</title>
-  <link rel="stylesheet" href="/css/main.css">
-</head>
+  <title>Login - DesignHive Admin</title>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('mock') === '0') {
+        localStorage.removeItem('designhiveMockMode');
+      } else if (!localStorage.getItem('designhiveMockMode') || params.get('mock') === '1') {
+        localStorage.setItem('designhiveMockMode', '1');
+      }
 
+      if (localStorage.getItem('adminToken')) {
+        window.location.replace('/dashboard.html');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
 <body>
   <div class="login-shell">
     <div class="login-box">
       <div class="login-logo">
-        <div style="display:inline-flex;align-items:center;gap:14px;margin-bottom:8px">
-          <div
-            style="background:var(--gold-dim);border-radius:12px;padding:10px;display:flex;box-shadow:0 0 20px rgba(250,204,21,0.15)">
-            <i data-lucide="hexagon" style="width:28px;height:28px;color:var(--gold)"></i>
-          </div>
-          <div style="display:flex;flex-direction:column;text-align:left">
-            <span style="font-size:2.2rem;font-weight:800;color:#fff;line-height:1;letter-spacing:-0.03em">Design<span
-                style="color:var(--gold)">Hive</span></span>
-            <span
-              style="font-size:0.85rem;color:var(--text-muted);letter-spacing:0.05em;margin-top:2px;font-weight:500">MANAGEMENT
-              PLATFORM</span>
-          </div>
-        </div>
+        <img src="/assets/brand/logo.png" alt="Design Hive">
+        <div class="brand-title">DesignHive Admin</div>
+        <div class="brand-subtitle">Sign in to manage templates, campaigns, users, and delivery logs.</div>
       </div>
 
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input type="email" id="email" class="form-control" placeholder="admin@example.com" autocomplete="email">
+          <div id="email-error" class="field-error" aria-live="assertive"></div>
+        </div>
 
-      <form id="login-form">
         <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" id="email" class="form-control" placeholder="admin@example.com" required
-            autocomplete="email">
+          <label class="form-label" for="password">Password</label>
+          <div id="password-wrap" class="input-wrap">
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+            <button type="button" class="action" id="password-toggle" aria-label="Show password">
+              <i data-lucide="eye" style="width:16px;height:16px"></i>
+            </button>
+          </div>
+          <div id="password-error" class="field-error" aria-live="assertive"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="••••••••" required
-            autocomplete="current-password">
-        </div>
-        <button type="submit" class="btn btn-primary w-full" id="login-btn"
-          style="justify-content:center;margin-top:8px">
-          Sign In
-        </button>
-        <p id="login-error"
-          style="color:var(--danger);font-size:0.82rem;margin-top:10px;display:none;text-align:center"></p>
+
+        <button type="submit" class="btn btn-primary w-full" id="login-btn">Sign In</button>
       </form>
     </div>
   </div>
 
   <div id="toast-container"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="/js/mock-boot.js"></script>
   <script src="/js/axios.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/login.js"></script>
 </body>
-
 </html>

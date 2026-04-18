@@ -4,72 +4,96 @@ const NAV = [
   { href: '/templates.html', icon: 'file-text', label: 'Templates' },
   { href: '/campaign.html', icon: 'send', label: 'Campaign' },
   { href: '/logs.html', icon: 'history', label: 'Logs' },
-  { href: '/settings.html', icon: 'settings', label: 'Settings' },
+  { href: '/settings.html', icon: 'settings', label: 'Settings' }
 ];
 
-const PAGE_TITLES = {
-  '/dashboard.html': 'Dashboard',
-  '/users.html': 'Users',
-  '/templates.html': 'Email Templates',
-  '/campaign.html': 'Campaign',
-  '/logs.html': 'Email Logs',
-  '/settings.html': 'Settings',
+const PAGE_META = {
+  '/dashboard.html': { title: 'Dashboard', subtitle: 'System-wide campaign health and recent template activity' },
+  '/users.html': { title: 'Users', subtitle: 'Search recipients and send direct outreach' },
+  '/templates.html': { title: 'Email Templates', subtitle: 'Create, preview, edit, and remove reusable email content' },
+  '/campaign.html': { title: 'Campaign', subtitle: 'Choose one template and a recipient segment, then send' },
+  '/logs.html': { title: 'Email Logs', subtitle: 'Inspect send history, statuses, timestamps, and errors' },
+  '/settings.html': { title: 'Settings', subtitle: 'Manage admins and update account security' }
 };
 
 function initLayout() {
-  if (!localStorage.getItem('adminToken')) {
-    window.location.href = '/login.html';
-    return;
-  }
-
   const path = window.location.pathname;
-
-  const navHTML = NAV.map(n => `
-    <a href="${n.href}" class="nav-link ${path === n.href ? 'active' : ''}">
-      <i data-lucide="${n.icon}" style="width:16px;height:16px;flex-shrink:0"></i>
-      ${n.label}
-    </a>`).join('');
+  const meta = PAGE_META[path] || { title: 'DesignHive Admin', subtitle: 'Admin tools' };
 
   const sidebar = document.getElementById('sidebar');
   if (sidebar) {
+    const navHTML = NAV.map(item => `
+      <a href="${item.href}" class="nav-link ${path === item.href ? 'active' : ''}">
+        <i data-lucide="${item.icon}" style="width:16px;height:16px;flex-shrink:0"></i>
+        <span>${item.label}</span>
+      </a>
+    `).join('');
+
     sidebar.innerHTML = `
       <div class="sidebar-logo">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="background:var(--gold-dim);border-radius:10px;padding:8px;display:flex;box-shadow:0 0 15px rgba(250,204,21,0.1)">
-            <i data-lucide="hexagon" style="width:20px;height:20px;color:var(--gold)"></i>
+        <a href="/dashboard.html" class="sidebar-logo-link">
+          <div class="sidebar-logo-mark">
+            <img src="/assets/brand/logo.png" alt="Design Hive logo">
           </div>
-          <div style="display:flex;flex-direction:column">
-            <span style="font-size:1.4rem;font-weight:800;color:#fff;line-height:1">Design<span style="color:var(--gold)">Hive</span></span>
-            <span style="font-size:0.68rem;color:var(--text-muted);letter-spacing:0.08em;margin-top:2px;font-weight:600">ADMIN CONSOLE</span>
+          <div class="sidebar-logo-copy">
+            <div class="sidebar-logo-title">DesignHive Admin</div>
+            <div class="sidebar-logo-subtitle">AI operations</div>
           </div>
-        </div>
+        </a>
       </div>
-
       <nav class="sidebar-nav">
         <div class="label-upper mb-2" style="padding-left:4px">Menu</div>
         ${navHTML}
       </nav>
       <div class="sidebar-footer">
-        <button class="nav-link logout" onclick="logout()">
+        <button class="nav-link logout" type="button" onclick="logout()">
           <i data-lucide="log-out" style="width:16px;height:16px;flex-shrink:0"></i>
-          Sign Out
+          <span>Sign Out</span>
         </button>
-      </div>`;
+      </div>
+    `;
   }
 
   const topbar = document.getElementById('topbar');
   if (topbar) {
     topbar.innerHTML = `
-      <span class="page-title">${PAGE_TITLES[path] || 'DesignHive Admin'}</span>
-      <span class="admin-badge">ADMIN</span>`;
+      <div class="page-title-group">
+        <div class="page-title">${meta.title}</div>
+        <div class="page-subtitle">${meta.subtitle}</div>
+      </div>
+      <span class="admin-badge">${localStorage.getItem('designhiveMockMode') === '1' ? 'Mock Mode' : 'Admin'}</span>
+    `;
   }
 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function logout() {
   localStorage.removeItem('adminToken');
   window.location.href = '/login.html';
 }
+
+function getCurrentAdmin() {
+  const token = localStorage.getItem('adminToken');
+  if (!token) return null;
+
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (err) {
+    return null;
+  }
+}
+
+function buildPageUrl(path) {
+  const params = new URLSearchParams(window.location.search);
+  return localStorage.getItem('designhiveMockMode') === '1' && !params.get('mock') ? `${path}?mock=1` : path;
+}
+
+window.DesignHiveLayout = {
+  getCurrentAdmin,
+  buildPageUrl
+};
 
 document.addEventListener('DOMContentLoaded', initLayout);
