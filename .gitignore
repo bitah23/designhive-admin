@@ -7,6 +7,17 @@ node_modules/
 .env
 .env.local
 .env.*.local
+backend/.env
+
+# Python local environments and cache
+.venv/
+venv/
+env/
+backend/.venv/
+backend/venv/
+backend/env/
+__pycache__/
+*.py[cod]
 
 # Logs
 logs/
