@@ -17,10 +17,10 @@ const PAGE_TITLES = {
 };
 
 function initLayout() {
-  // if (!localStorage.getItem('adminToken')) {
-  //   window.location.href = '/login.html';
-  //   return;
-  // }
+  if (!localStorage.getItem('adminToken')) {
+    window.location.href = '/login.html';
+    return;
+  }
 
   const path = window.location.pathname;
 
@@ -34,9 +34,17 @@ function initLayout() {
   if (sidebar) {
     sidebar.innerHTML = `
       <div class="sidebar-logo">
-        <div class="brand">Design<span>Hive</span></div>
-        <div class="sub">Admin Panel</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="background:var(--gold-dim);border-radius:10px;padding:8px;display:flex;box-shadow:0 0 15px rgba(250,204,21,0.1)">
+            <i data-lucide="hexagon" style="width:20px;height:20px;color:var(--gold)"></i>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <span style="font-size:1.4rem;font-weight:800;color:#fff;line-height:1">Design<span style="color:var(--gold)">Hive</span></span>
+            <span style="font-size:0.68rem;color:var(--text-muted);letter-spacing:0.08em;margin-top:2px;font-weight:600">ADMIN CONSOLE</span>
+          </div>
+        </div>
       </div>
+
       <nav class="sidebar-nav">
         <div class="label-upper mb-2" style="padding-left:4px">Menu</div>
         ${navHTML}
