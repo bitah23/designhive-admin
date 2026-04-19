@@ -503,8 +503,9 @@ img {
 
 .form-control {
   width: 100%;
-  min-height: 48px;
-  padding: 12px 16px;
+  height: 48px;
+  line-height: 48px;
+  padding: 0 16px;
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -536,12 +537,13 @@ textarea.form-control {
 .input-wrap {
   min-height: 48px;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--bg-input);
   overflow: hidden;
   transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  padding: 0 4px;
 }
 
 .input-wrap:focus-within {
@@ -552,35 +554,38 @@ textarea.form-control {
 
 .input-wrap .icon,
 .input-wrap .action {
-  width: 44px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.4);
   flex-shrink: 0;
+  border-radius: 8px;
+  transition: all 150ms ease;
 }
 
 .input-wrap .action {
   border: 0;
   background: transparent;
   cursor: pointer;
-  transition: color 150ms ease, opacity 150ms ease;
 }
 
 .input-wrap .action:hover {
+  background: rgba(255, 255, 255, 0.05);
   color: var(--gold-strong);
-  opacity: 1;
 }
 
 .input-wrap input,
 .input-wrap select {
-  width: 100%;
+  flex: 1;
   border: 0;
   outline: 0;
   background: transparent;
   color: #fff;
-  padding: 12px 16px;
-  padding-left: 14px;
+  height: 48px;
+  line-height: 48px;
+  padding: 0 12px;
 }
 
 .field-error {
