@@ -5,8 +5,11 @@
 
   if (params.get('mock') === '0') {
     localStorage.removeItem(MOCK_KEY);
-  } else if (!localStorage.getItem(MOCK_KEY) || params.get('mock') === '1') {
+  } else if (params.get('mock') === '1') {
     localStorage.setItem(MOCK_KEY, '1');
+  } else {
+    // Default to real mode — clear any previously auto-set mock flag
+    localStorage.removeItem(MOCK_KEY);
   }
 
   if (localStorage.getItem(MOCK_KEY) === '1' && !localStorage.getItem(TOKEN_KEY)) {

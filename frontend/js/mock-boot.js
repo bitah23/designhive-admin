@@ -3,10 +3,11 @@ const DH_TOKEN_KEY = 'adminToken';
 
 (function initMockMode() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('mock') === '1') localStorage.setItem(DH_MOCK_MODE_KEY, '1');
-  if (params.get('mock') === '0') localStorage.removeItem(DH_MOCK_MODE_KEY);
-  if (!localStorage.getItem(DH_MOCK_MODE_KEY) && params.get('mock') !== '0') {
+  if (params.get('mock') === '1') {
     localStorage.setItem(DH_MOCK_MODE_KEY, '1');
+  } else {
+    // Default to real mode — clear any previously auto-set mock flag
+    localStorage.removeItem(DH_MOCK_MODE_KEY);
   }
   if (isMockMode() && !localStorage.getItem(DH_TOKEN_KEY)) {
     localStorage.setItem(DH_TOKEN_KEY, getMockToken());
