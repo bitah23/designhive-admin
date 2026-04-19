@@ -56,7 +56,8 @@ async function fetchLogs(isRefresh) {
   } catch (error) {
     Toast.error(error.response?.data?.detail || error.message || 'Failed to load logs.');
   } finally {
-    icon.style.animation = '';
+    const currentIcon = document.getElementById('refresh-icon');
+    if (currentIcon) currentIcon.style.animation = '';
     document.getElementById('refresh-btn').disabled = false;
     redrawIcons();
   }
