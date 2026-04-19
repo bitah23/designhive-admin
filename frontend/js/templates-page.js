@@ -249,7 +249,7 @@ function buildPreviewEmail(template) {
       <div style="font-size:15px;line-height:1.8;color:#243041">${body}</div>
       <div style="margin-top:24px;padding:18px 20px;border-radius:18px;background:#f7f2e4;border:1px solid #eadfbc">
         <div style="font-size:13px;font-weight:700;color:#8d173c;margin-bottom:8px">Dashboard shortcut</div>
-        <a href=\"#\" style=\"display:inline-block;padding:12px 18px;border-radius:999px;background:#8d173c;color:#fff;text-decoration:none;font-weight:700\">Open Dashboard</a>
+        <a href="/dashboard.html" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#8d173c;color:#fff;text-decoration:none;font-weight:700">Open Dashboard</a>
       </div>
     </div>
     <div style="padding:0 28px 28px">
