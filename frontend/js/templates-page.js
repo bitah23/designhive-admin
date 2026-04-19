@@ -287,41 +287,71 @@ function insertVariable(variable) {
 }
 
 function getDefaultTemplateBody() {
-  return `<div style="background-color: #090c14; padding: 40px 0; font-family: 'Inter', -apple-system, sans-serif;">
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #121826; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+  return `<div style="background-color: #111111; padding: 40px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #1a1a1a; border-radius: 16px; overflow: hidden; border-top: 4px solid #f5a623; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+        <!-- Header -->
         <tr>
             <td align="center" style="padding: 40px 0 20px;">
-                <div style="background: rgba(239, 201, 76, 0.1); border: 1px solid rgba(239, 201, 76, 0.2); border-radius: 20px; padding: 15px; display: inline-block;">
-                    <span style="font-size: 24px; font-weight: 800; color: #efc94c; letter-spacing: 2px;">DESIGN HIVE</span>
-                </div>
+                <h2 style="color: #f5a623; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: 1px;">DESIGN HIVE</h2>
             </td>
         </tr>
+
+        <!-- Hero -->
         <tr>
             <td align="center" style="padding: 0 40px 30px;">
-                <h1 style="color: #ffffff; font-size: 36px; font-weight: 800; margin: 0; line-height: 1.2;">Welcome Aboard 🚀</h1>
-                <p style="color: #8d9ab3; font-size: 18px; margin-top: 10px;">Your journey with DesignHive has officially started.</p>
+                <h1 style="color: #ffffff; font-size: 32px; font-weight: 700; margin: 0;">Welcome Aboard 🚀</h1>
             </td>
         </tr>
+
+        <!-- Body -->
         <tr>
             <td style="padding: 0 40px 30px;">
-                <div style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 25px; border: 1px solid rgba(255,255,255,0.05);">
-                    <p style="color: #ffffff; font-size: 16px; margin: 0;">Hello <strong>{{name}}</strong>,</p>
-                    <p style="color: #d7dfed; font-size: 15px; line-height: 1.6; margin: 15px 0 0;">
-                        We're excited to have you with us. You now have access to powerful tools designed to help you move faster, build smarter, and scale effortlessly.
-                    </p>
+                <p style="color: #ffffff; font-size: 16px; margin: 0 0 20px;">Hello <strong>{{name}}</strong>,</p>
+                <p style="color: #cccccc; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">
+                    Your journey with Design Hive has officially started. We're excited to have you with us.
+                </p>
+                
+                <div style="background: rgba(245, 166, 35, 0.05); border: 1px solid rgba(245, 166, 35, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+                    <h4 style="color: #f5a623; margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Your Account Details</h4>
+                    <p style="color: #ffffff; margin: 0; font-size: 14px;"><strong>Name:</strong> {{name}}</p>
+                    <p style="color: #ffffff; margin: 5px 0 0; font-size: 14px;"><strong>Email:</strong> {{email}}</p>
                 </div>
+
+                <p style="color: #cccccc; font-size: 15px; line-height: 1.6; margin: 0 0 30px;">
+                    You now have access to powerful tools designed to help you move faster, build smarter, and scale effortlessly. This is just the beginning — we’ve built this experience to grow with you.
+                </p>
             </td>
         </tr>
+
+        <!-- CTA -->
         <tr>
             <td align="center" style="padding: 0 40px 40px;">
-                <a href="https://app.designhivestudio.ai/dashboard.html" style="background: linear-gradient(180deg, #f6d86d 0%, #efc94c 100%); color: #090c14; text-decoration: none; padding: 18px 40px; border-radius: 14px; font-weight: 800; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(239, 201, 76, 0.2);">
+                <a href="https://app.designhivestudio.ai/dashboard.html" style="background-color: #f5a623; color: #1a1a1a; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 700; font-size: 16px; display: inline-block;">
                     Go to Dashboard
                 </a>
             </td>
         </tr>
+
+        <!-- Next Steps -->
         <tr>
-            <td align="center" style="padding: 40px; background-color: #0c111d;">
-                <p style="color: #ffffff; font-size: 14px; font-weight: 700; margin: 0;">— The DesignHive Team</p>
+            <td style="padding: 30px 40px; background-color: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05);">
+                <h4 style="color: #ffffff; margin: 0 0 15px; font-size: 15px;">What you can do next:</h4>
+                <ul style="color: #cccccc; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                    <li>Explore your dashboard</li>
+                    <li>Start your first project</li>
+                    <li>Customize your workflow</li>
+                </ul>
+            </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+            <td align="center" style="padding: 30px 40px; color: #666666; font-size: 12px; line-height: 1.6;">
+                <p style="margin: 0 0 10px;">If you ever need help, just reply to this email — we’ve got your back.</p>
+                <p style="color: #999999; margin: 0; font-weight: 700;">— The Design Hive Team</p>
+                <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                    <p style="margin: 0;">You're receiving this email because you signed up for Design Hive.</p>
+                </div>
             </td>
         </tr>
     </table>
