@@ -58,6 +58,9 @@ a {
 #sidebar,
 .sidebar {
   width: 280px;
+}
+.sidebar {
+  width: 240px;
   flex-shrink: 0;
   background: var(--bg-section);
   border-right: 1px solid var(--border);

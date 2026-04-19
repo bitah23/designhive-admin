@@ -57,7 +57,7 @@ function initLayout() {
         <div class="page-title">${meta.title}</div>
         <div class="page-subtitle">${meta.subtitle}</div>
       </div>
-      <span class="admin-badge">${localStorage.getItem('designhiveMockMode') === '1' ? 'Mock Mode' : 'Admin'}</span>
+      <span class="admin-badge">Admin</span>
     `;
   }
 
@@ -82,14 +82,8 @@ function getCurrentAdmin() {
   }
 }
 
-function buildPageUrl(path) {
-  const params = new URLSearchParams(window.location.search);
-  return localStorage.getItem('designhiveMockMode') === '1' && !params.get('mock') ? `${path}?mock=1` : path;
-}
-
 window.DesignHiveLayout = {
-  getCurrentAdmin,
-  buildPageUrl
+  getCurrentAdmin
 };
 
 document.addEventListener('DOMContentLoaded', initLayout);
