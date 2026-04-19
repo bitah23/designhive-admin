@@ -83,57 +83,78 @@ function getCurrentAdmin() {
 }
 
 function showWelcomeMessage() {
-  const showWelcome = localStorage.getItem('showWelcome');
-  if (showWelcome !== 'true') return;
+  try {
+    const showWelcome = localStorage.getItem('showWelcome');
+    if (showWelcome !== 'true') return;
 
-  const admin = getCurrentAdmin();
-  const adminName = admin ? (admin.email.split('@')[0].split(/[._-]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')) : 'Admin';
+    const admin = getCurrentAdmin();
+    let adminName = 'Admin';
+    
+    if (admin) {
+      const namePart = admin.email || admin.sub || admin.id || '';
+      if (namePart && typeof namePart === 'string' && namePart.includes('@')) {
+        adminName = namePart.split('@')[0].split(/[._-]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+      } else if (namePart) {
+        adminName = namePart;
+      }
+    }
 
-  const overlay = document.createElement('div');
-  overlay.className = 'welcome-overlay';
-  overlay.innerHTML = `
-    <div class="welcome-card">
-      <div class="welcome-icon-wrap">
-        <i data-lucide="sparkles" style="width:48px;height:48px"></i>
+    const overlay = document.createElement('div');
+    overlay.className = 'welcome-overlay';
+    overlay.innerHTML = `
+      <div class="welcome-card">
+        <div class="welcome-icon-wrap">
+          <i data-lucide="sparkles" style="width:48px;height:48px"></i>
+        </div>
+        <h1 class="welcome-title">Welcome Back, ${adminName}!</h1>
+        <p class="welcome-subtitle">Mission control is fully operational. We've prepared everything for your next campaign.</p>
+        <div class="flex-center" style="justify-content:center">
+          <button class="btn btn-primary welcome-action-btn" id="welcome-dismiss">
+            <span>Enter Dashboard</span>
+            <i data-lucide="arrow-right" style="width:18px;height:18px"></i>
+          </button>
+        </div>
       </div>
-      <h1 class="welcome-title">Welcome Back, ${adminName}!</h1>
-      <p class="welcome-subtitle">Mission control is fully operational. We've prepared everything for your next campaign.</p>
-      <div class="flex-center" style="justify-content:center">
-        <button class="btn btn-primary welcome-action-btn" id="welcome-dismiss">
-          <span>Enter Dashboard</span>
-          <i data-lucide="arrow-right" style="width:18px;height:18px"></i>
-        </button>
-      </div>
-    </div>
-  `;
+    `;
 
-  document.body.appendChild(overlay);
-  
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons({
-      nameAttr: 'data-lucide'
-    });
-  }
+    document.body.appendChild(overlay);
+    
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons({
+        nameAttr: 'data-lucide'
+      });
+    }
 
-  // Trigger animation after a short delay to ensure DOM and CSS are ready
-  setTimeout(() => {
-    overlay.classList.add('active');
-  }, 300);
-
-  document.getElementById('welcome-dismiss').addEventListener('click', () => {
-    overlay.classList.remove('active');
     setTimeout(() => {
-      overlay.remove();
-      localStorage.removeItem('showWelcome');
-    }, 800);
-  });
+      overlay.classList.add('active');
+    }, 400);
+
+    const dismissBtn = document.getElementById('welcome-dismiss');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+          overlay.remove();
+          localStorage.removeItem('showWelcome');
+        }, 800);
+      });
+    }
+  } catch (err) {
+    console.error('Welcome message error:', err);
+  }
 }
 
 window.DesignHiveLayout = {
   getCurrentAdmin
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+function init() {
   initLayout();
   showWelcomeMessage();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
