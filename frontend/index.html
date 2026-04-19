@@ -5,13 +5,6 @@
   <title>DesignHive Admin</title>
   <script>
     (function () {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('mock') === '0') {
-        localStorage.removeItem('designhiveMockMode');
-      } else if (!localStorage.getItem('designhiveMockMode') || params.get('mock') === '1') {
-        localStorage.setItem('designhiveMockMode', '1');
-      }
-
       const target = localStorage.getItem('adminToken') ? '/dashboard.html' : '/login.html';
       window.location.replace(target);
     })();

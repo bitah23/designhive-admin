@@ -3,10 +3,6 @@ const API_BASE = window.ENV_API_URL || 'http://localhost:8000/api';
 axios.defaults.baseURL = API_BASE;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-if (localStorage.getItem('designhiveMockMode') === '1') {
-  axios.defaults.adapter = 'fetch';
-}
-
 axios.interceptors.request.use(cfg => {
   const token = localStorage.getItem('adminToken');
   if (token) {
