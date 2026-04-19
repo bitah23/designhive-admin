@@ -1,4 +1,4 @@
-const API_BASE = window.ENV_API_URL || 'http://localhost:8000/api';
+const API_BASE = window.ENV_API_URL || '/api';
 
 axios.defaults.baseURL = API_BASE;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
