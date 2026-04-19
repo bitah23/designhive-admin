@@ -287,7 +287,45 @@ function insertVariable(variable) {
 }
 
 function getDefaultTemplateBody() {
-  return '<p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#334155">Hi {{name}},</p><p style="margin:0 0 16px;font-size:15px;line-height:1.8;color:#334155">Your DesignHive workspace is ready to help you shape stronger campaigns and cleaner admin workflows.</p><p style="margin:0 0 18px;font-size:15px;line-height:1.8;color:#334155">We now support richer previews, clearer delivery visibility, and a more polished sending experience.</p><p style="margin:0;font-size:15px;line-height:1.8;color:#334155">Thanks,<br>The DesignHive AI team</p>';
+  return `<div style="background-color: #090c14; padding: 40px 0; font-family: 'Inter', -apple-system, sans-serif;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #121826; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <tr>
+            <td align="center" style="padding: 40px 0 20px;">
+                <div style="background: rgba(239, 201, 76, 0.1); border: 1px solid rgba(239, 201, 76, 0.2); border-radius: 20px; padding: 15px; display: inline-block;">
+                    <span style="font-size: 24px; font-weight: 800; color: #efc94c; letter-spacing: 2px;">DESIGN HIVE</span>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="padding: 0 40px 30px;">
+                <h1 style="color: #ffffff; font-size: 36px; font-weight: 800; margin: 0; line-height: 1.2;">Welcome Aboard 🚀</h1>
+                <p style="color: #8d9ab3; font-size: 18px; margin-top: 10px;">Your journey with DesignHive has officially started.</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 0 40px 30px;">
+                <div style="background: rgba(255, 255, 255, 0.03); border-radius: 16px; padding: 25px; border: 1px solid rgba(255,255,255,0.05);">
+                    <p style="color: #ffffff; font-size: 16px; margin: 0;">Hello <strong>{{name}}</strong>,</p>
+                    <p style="color: #d7dfed; font-size: 15px; line-height: 1.6; margin: 15px 0 0;">
+                        We're excited to have you with us. You now have access to powerful tools designed to help you move faster, build smarter, and scale effortlessly.
+                    </p>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="padding: 0 40px 40px;">
+                <a href="https://app.designhivestudio.ai/dashboard.html" style="background: linear-gradient(180deg, #f6d86d 0%, #efc94c 100%); color: #090c14; text-decoration: none; padding: 18px 40px; border-radius: 14px; font-weight: 800; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(239, 201, 76, 0.2);">
+                    Go to Dashboard
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="padding: 40px; background-color: #0c111d;">
+                <p style="color: #ffffff; font-size: 14px; font-weight: 700; margin: 0;">— The DesignHive Team</p>
+            </td>
+        </tr>
+    </table>
+</div>`;
 }
 
 function stripHtml(html) {
