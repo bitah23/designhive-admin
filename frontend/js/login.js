@@ -70,6 +70,7 @@
       });
 
       localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('showWelcome', 'true');
       window.location.replace('/dashboard.html');
     } catch (error) {
       const message = error.response?.data?.detail || error.message || 'Invalid email or password.';

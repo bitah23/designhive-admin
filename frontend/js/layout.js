@@ -82,8 +82,56 @@ function getCurrentAdmin() {
   }
 }
 
+function showWelcomeMessage() {
+  const showWelcome = localStorage.getItem('showWelcome');
+  if (showWelcome !== 'true') return;
+
+  const admin = getCurrentAdmin();
+  const adminName = admin ? (admin.email.split('@')[0].split(/[._-]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')) : 'Admin';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'welcome-overlay';
+  overlay.innerHTML = `
+    <div class="welcome-card">
+      <div class="welcome-icon-wrap">
+        <i data-lucide="sparkles" style="width:48px;height:48px"></i>
+      </div>
+      <h1 class="welcome-title">Welcome back!</h1>
+      <p class="welcome-subtitle">Mission control is ready. We've missed you! Let's build something extraordinary today.</p>
+      <button class="btn btn-primary welcome-action-btn" id="welcome-dismiss">
+        <span>Enter Dashboard</span>
+        <i data-lucide="arrow-right" style="width:18px;height:18px"></i>
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons({
+      nameAttr: 'data-lucide'
+    });
+  }
+
+  // Trigger animation
+  setTimeout(() => {
+    overlay.classList.add('active');
+  }, 100);
+
+  document.getElementById('welcome-dismiss').addEventListener('click', () => {
+    overlay.classList.remove('active');
+    setTimeout(() => {
+      overlay.remove();
+      localStorage.removeItem('showWelcome');
+    }, 600);
+  });
+}
+
 window.DesignHiveLayout = {
   getCurrentAdmin
 };
 
-document.addEventListener('DOMContentLoaded', initLayout);
+document.addEventListener('DOMContentLoaded', () => {
+  initLayout();
+  showWelcomeMessage();
+});
