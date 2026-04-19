@@ -76,6 +76,14 @@ img {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  background: var(--bg-base);
+  --bg-base: #000000;
+  --bg-base-alt: #050505;
+  --bg-shell: rgba(0, 0, 0, 0.96);
+  --bg-sidebar: #000000;
+  --bg-card: #0b0b0b;
+  --bg-card-alt: #111111;
+  --bg-input: #050505;
 }
 
 #sidebar {
@@ -170,9 +178,15 @@ img {
 }
 
 .nav-link.active {
-  background: linear-gradient(180deg, rgba(239, 201, 76, 0.18), rgba(239, 201, 76, 0.1));
-  border-color: rgba(239, 201, 76, 0.2);
-  color: var(--gold-strong);
+  background: linear-gradient(180deg, var(--gold-strong), var(--gold));
+  color: #000;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(239, 201, 76, 0.15);
+}
+
+.nav-link.active i,
+.nav-link.active svg {
+  color: #000 !important;
 }
 
 .nav-link.logout {

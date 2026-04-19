@@ -47,6 +47,12 @@ a {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  background: var(--bg-deep);
+  --bg-deep: #000000;
+  --bg-section: #050505;
+  --bg-card: #080808;
+  --bg-card-alt: #0c0c0c;
+  --bg-input: #050505;
 }
 
 #sidebar,
@@ -120,8 +126,10 @@ a {
   background: var(--gold);
   color: #000;
   font-weight: 600;
+  box-shadow: 0 4px 12px var(--gold-glow);
 }
 
+.nav-link.active i,
 .nav-link.active svg {
   color: #000 !important;
 }
