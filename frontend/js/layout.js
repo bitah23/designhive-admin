@@ -96,12 +96,14 @@ function showWelcomeMessage() {
       <div class="welcome-icon-wrap">
         <i data-lucide="sparkles" style="width:48px;height:48px"></i>
       </div>
-      <h1 class="welcome-title">Welcome back!</h1>
-      <p class="welcome-subtitle">Mission control is ready. We've missed you! Let's build something extraordinary today.</p>
-      <button class="btn btn-primary welcome-action-btn" id="welcome-dismiss">
-        <span>Enter Dashboard</span>
-        <i data-lucide="arrow-right" style="width:18px;height:18px"></i>
-      </button>
+      <h1 class="welcome-title">Welcome Back, ${adminName}!</h1>
+      <p class="welcome-subtitle">Mission control is fully operational. We've prepared everything for your next campaign.</p>
+      <div class="flex-center" style="justify-content:center">
+        <button class="btn btn-primary welcome-action-btn" id="welcome-dismiss">
+          <span>Enter Dashboard</span>
+          <i data-lucide="arrow-right" style="width:18px;height:18px"></i>
+        </button>
+      </div>
     </div>
   `;
 
@@ -113,17 +115,17 @@ function showWelcomeMessage() {
     });
   }
 
-  // Trigger animation
+  // Trigger animation after a short delay to ensure DOM and CSS are ready
   setTimeout(() => {
     overlay.classList.add('active');
-  }, 100);
+  }, 300);
 
   document.getElementById('welcome-dismiss').addEventListener('click', () => {
     overlay.classList.remove('active');
     setTimeout(() => {
       overlay.remove();
       localStorage.removeItem('showWelcome');
-    }, 600);
+    }, 800);
   });
 }
 

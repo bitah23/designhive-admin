@@ -1219,18 +1219,19 @@ tbody tr.is-selected td {
 .welcome-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 99999; /* Boosted z-index */
   background: 
     radial-gradient(circle at top left, rgba(239, 201, 76, 0.15), transparent 30%),
     radial-gradient(circle at bottom right, rgba(169, 35, 69, 0.2), transparent 30%),
-    rgba(0, 0, 0, 0.85);
+    rgba(0, 0, 0, 0.8); /* Slightly more transparent backdrop */
   backdrop-filter: blur(20px);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Centered horizontally, start at top */
   justify-content: center;
+  padding-top: 60px; /* A bit at the top */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .welcome-overlay.active {
