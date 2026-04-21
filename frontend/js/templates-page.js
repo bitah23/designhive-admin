@@ -220,10 +220,15 @@ function closePreviewModal() {
   previewModal.classList.add('hidden');
 }
 
+/* ─────────────────────────────────────────────
+   BUILD PREVIEW EMAIL
+   Clean white email with amber/gold brand accents.
+   Email-client-safe inline styles only.
+   ───────────────────────────────────────────── */
 function buildPreviewEmail(template) {
   const today = new Date().toLocaleDateString('en-AU', {
     day: 'numeric',
-    month: 'short',
+    month: 'long',
     year: 'numeric'
   });
 
@@ -232,42 +237,205 @@ function buildPreviewEmail(template) {
     .replace(/\{\{email\}\}/g, 'john@example.com')
     .replace(/\{\{date\}\}/g, today);
 
+  // Strip any outer wrapper divs from the body since we're wrapping ourselves
+  const cleanBody = body.trim();
+
   return `
-    <div style="padding:28px 28px 0;background:linear-gradient(135deg,#fff6db,#fff)">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px">
-        <img src="/assets/brand/logo.png" alt="Design Hive" style="width:128px;height:auto">
-        <div style="padding:8px 12px;border-radius:999px;background:#f5e5a4;color:#7b183a;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase">Admin Dispatch</div>
-      </div>
-      <div style="padding:28px;border-radius:24px;background:linear-gradient(135deg,#8d173c,#b62453);color:#fff">
-        <div style="font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;opacity:.82">DesignHive AI</div>
-        <h1 style="margin:12px 0 10px;font-size:32px;line-height:1.08">${escapeHtml(template.subject)}</h1>
-        <p style="margin:0;font-size:15px;line-height:1.7;max-width:440px;opacity:.9">A more polished, dashboard-aware email with stronger hierarchy, cleaner content pacing, and a real footer your team can ship confidently.</p>
-      </div>
-    </div>
-    <div style="padding:28px 28px 22px">
-      <div style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8d173c;margin-bottom:12px">Message</div>
-      <div style="font-size:15px;line-height:1.8;color:#243041">${body}</div>
-      <div style="margin-top:24px;padding:18px 20px;border-radius:18px;background:#f7f2e4;border:1px solid #eadfbc">
-        <div style="font-size:13px;font-weight:700;color:#8d173c;margin-bottom:8px">Dashboard shortcut</div>
-        <a href="/dashboard.html" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#8d173c;color:#fff;text-decoration:none;font-weight:700">Open Dashboard</a>
-      </div>
-    </div>
-    <div style="padding:0 28px 28px">
-      <div style="padding:20px;border-radius:18px;background:#111827;color:#d5d9e5">
-        <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
-          <div>
-            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:6px">DesignHive AI</div>
-            <div style="font-size:13px;line-height:1.7">Campaign workflows, template previews, user targeting, and delivery tracking.</div>
-          </div>
-          <div style="font-size:13px;line-height:1.8">
-            <div>support@designhive.ai</div>
-            <div>admin.designhive.ai</div>
-          </div>
-        </div>
-        <div style="margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);font-size:13px;line-height:1.8;color:#cbd5e1">Thanks for building with us.<br>The DesignHive AI team</div>
-      </div>
-    </div>
+  <div style="margin:0;padding:0;background-color:#f4f4f0;font-family:'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f4f4f0;padding:32px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">
+
+            <!-- ── TOP BAR ── -->
+            <tr>
+              <td style="background-color:#111111;border-radius:16px 16px 0 0;padding:20px 32px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td>
+                      <!-- Honeycomb SVG logo mark + wordmark -->
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="padding-right:10px;vertical-align:middle;">
+                            <svg width="32" height="32" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                              <polygon points="40,2 72,20 72,56 40,74 8,56 8,20" fill="#f5a623" stroke="#111" stroke-width="4"/>
+                              <polygon points="40,14 62,26 62,50 40,62 18,50 18,26" fill="#ffc547" stroke="#f5a623" stroke-width="2"/>
+                            </svg>
+                          </td>
+                          <td style="vertical-align:middle;">
+                            <span style="font-size:18px;font-weight:800;color:#f5a623;letter-spacing:0.08em;text-transform:uppercase;">DESIGN HIVE</span>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td align="right" style="vertical-align:middle;">
+                      <span style="display:inline-block;padding:5px 14px;border-radius:999px;background-color:#f5a623;color:#111111;font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;">Admin Dispatch</span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── HERO BANNER ── -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2a2008 100%);padding:40px 32px 36px;">
+                <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#f5a623;">DesignHive AI</p>
+                <h1 style="margin:0 0 14px;font-size:30px;line-height:1.15;font-weight:800;color:#ffffff;">${escapeHtml(template.subject)}</h1>
+                <p style="margin:0;font-size:14px;line-height:1.7;color:#c8b98a;max-width:420px;">Professional email dispatch from your DesignHive admin dashboard.</p>
+                <div style="margin-top:20px;display:inline-block;width:40px;height:3px;background-color:#f5a623;border-radius:2px;"></div>
+              </td>
+            </tr>
+
+            <!-- ── DATE STRIP ── -->
+            <tr>
+              <td style="background-color:#f5a623;padding:8px 32px;">
+                <p style="margin:0;font-size:11px;font-weight:700;color:#111111;letter-spacing:0.12em;text-transform:uppercase;">${today}</p>
+              </td>
+            </tr>
+
+            <!-- ── MAIN BODY ── -->
+            <tr>
+              <td style="background-color:#ffffff;padding:40px 32px 32px;">
+                <div style="font-size:15px;line-height:1.85;color:#2c2c2c;">
+                  ${cleanBody}
+                </div>
+
+                <!-- CTA Button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:32px;">
+                  <tr>
+                    <td style="border-radius:8px;background-color:#111111;">
+                      <a href="/dashboard.html" style="display:inline-block;padding:14px 28px;border-radius:8px;background-color:#111111;color:#f5a623;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:0.04em;">Open Dashboard &rarr;</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── DIVIDER ── -->
+            <tr>
+              <td style="background-color:#ffffff;padding:0 32px;">
+                <div style="height:1px;background:linear-gradient(to right,#f5a623,#ffe08a,#f5a623);"></div>
+              </td>
+            </tr>
+
+            <!-- ── QUICK LINKS ── -->
+            <tr>
+              <td style="background-color:#ffffff;padding:24px 32px 32px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td width="33%" style="text-align:center;padding:16px 8px;border-radius:10px;background-color:#fafaf7;border:1px solid #eeeeea;">
+                      <p style="margin:0 0 4px;font-size:20px;">📊</p>
+                      <p style="margin:0;font-size:11px;font-weight:700;color:#111111;letter-spacing:0.06em;">CAMPAIGNS</p>
+                    </td>
+                    <td width="4%"></td>
+                    <td width="33%" style="text-align:center;padding:16px 8px;border-radius:10px;background-color:#fafaf7;border:1px solid #eeeeea;">
+                      <p style="margin:0 0 4px;font-size:20px;">👤</p>
+                      <p style="margin:0;font-size:11px;font-weight:700;color:#111111;letter-spacing:0.06em;">USERS</p>
+                    </td>
+                    <td width="4%"></td>
+                    <td width="33%" style="text-align:center;padding:16px 8px;border-radius:10px;background-color:#fafaf7;border:1px solid #eeeeea;">
+                      <p style="margin:0 0 4px;font-size:20px;">📝</p>
+                      <p style="margin:0;font-size:11px;font-weight:700;color:#111111;letter-spacing:0.06em;">TEMPLATES</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- ── FOOTER ── -->
+            <tr>
+              <td style="background-color:#111111;border-radius:0 0 16px 16px;padding:28px 32px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td>
+                      <p style="margin:0 0 4px;font-size:13px;font-weight:800;color:#f5a623;">DesignHive AI</p>
+                      <p style="margin:0;font-size:12px;color:#888888;line-height:1.6;">Campaign workflows · Template previews · Delivery tracking</p>
+                    </td>
+                    <td align="right" style="vertical-align:top;">
+                      <p style="margin:0;font-size:12px;color:#888888;">support@designhive.ai</p>
+                      <p style="margin:2px 0 0;font-size:12px;color:#888888;">admin.designhive.ai</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding-top:20px;border-top:1px solid rgba(255,255,255,0.08);margin-top:20px;">
+                      <!-- actual border-top trick for email: use a nested table -->
+                    </td>
+                  </tr>
+                </table>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid rgba(255,255,255,0.08);margin-top:16px;padding-top:16px;">
+                  <tr>
+                    <td>
+                      <p style="margin:0;font-size:11px;color:#555555;line-height:1.7;">
+                        You're receiving this because you signed up for DesignHive AI.<br>
+                        &copy; ${new Date().getFullYear()} DesignHive AI &mdash; All rights reserved.
+                      </p>
+                    </td>
+                    <td align="right">
+                      <span style="display:inline-block;padding:4px 12px;border-radius:999px;background-color:#1e1e1e;border:1px solid #f5a62330;color:#f5a623;font-size:10px;font-weight:700;letter-spacing:0.1em;">UNSUBSCRIBE</span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
   `;
+}
+
+/* ─────────────────────────────────────────────
+   DEFAULT TEMPLATE BODY
+   Clean, white-background, email-client-safe.
+   Uses amber/gold accent color (#f5a623) for
+   brand consistency. No dark backgrounds in body.
+   ───────────────────────────────────────────── */
+function getDefaultTemplateBody() {
+  return `<p style="font-size:16px;color:#2c2c2c;margin:0 0 12px;">Hello <strong style="color:#111111;">{{name}}</strong>,</p>
+
+<p style="font-size:15px;color:#444444;line-height:1.8;margin:0 0 20px;">
+  Welcome to <strong style="color:#111111;">Design Hive</strong> — your journey starts right now. We're thrilled to have you on board and can't wait to see what you build.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px;">
+  <tr>
+    <td style="border-left:4px solid #f5a623;background-color:#fffbf0;border-radius:0 10px 10px 0;padding:18px 20px;">
+      <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#f5a623;">Your Account Details</p>
+      <p style="margin:0 0 4px;font-size:14px;color:#333333;"><span style="font-weight:600;color:#111111;">Name:</span> {{name}}</p>
+      <p style="margin:0 0 4px;font-size:14px;color:#333333;"><span style="font-weight:600;color:#111111;">Email:</span> {{email}}</p>
+      <p style="margin:0;font-size:14px;color:#333333;"><span style="font-weight:600;color:#111111;">Date:</span> {{date}}</p>
+    </td>
+  </tr>
+</table>
+
+<p style="font-size:15px;color:#444444;line-height:1.8;margin:0 0 20px;">
+  You now have full access to our suite of powerful tools — from building smart campaigns to managing users and tracking delivery in real time. Everything you need to move faster and scale effortlessly is right at your fingertips.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px;">
+  <tr>
+    <td style="background-color:#f9f9f7;border-radius:10px;border:1px solid #eeeeea;padding:20px 24px;">
+      <p style="margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#888888;">Here's what you can do next</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#333333;">&#9654;&nbsp; <strong style="color:#111111;">Explore your dashboard</strong> — get familiar with the layout and tools</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#333333;">&#9654;&nbsp; <strong style="color:#111111;">Launch your first campaign</strong> — reach your audience in minutes</p>
+      <p style="margin:0;font-size:14px;color:#333333;">&#9654;&nbsp; <strong style="color:#111111;">Customize your templates</strong> — make every email feel on-brand</p>
+    </td>
+  </tr>
+</table>
+
+<p style="font-size:15px;color:#444444;line-height:1.8;margin:0 0 8px;">
+  If you ever have a question or run into anything at all, just hit reply — our team is always here and happy to help.
+</p>
+
+<p style="font-size:15px;color:#444444;margin:0;">
+  Looking forward to building something great with you.
+</p>
+
+<p style="font-size:15px;font-weight:700;color:#111111;margin:20px 0 0;">
+  — The Design Hive Team
+</p>`;
 }
 
 function insertVariable(variable) {
@@ -284,78 +452,6 @@ function insertVariable(variable) {
   const index = range ? range.index : quill.getLength();
   quill.insertText(index, variable);
   quill.setSelection(index + variable.length);
-}
-
-function getDefaultTemplateBody() {
-  return `<div style="background-color: #111111; padding: 40px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #1a1a1a; border-radius: 16px; overflow: hidden; border-top: 4px solid #f5a623; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
-        <!-- Header -->
-        <tr>
-            <td align="center" style="padding: 40px 0 20px;">
-                <h2 style="color: #f5a623; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: 1px;">DESIGN HIVE</h2>
-            </td>
-        </tr>
-
-        <!-- Hero -->
-        <tr>
-            <td align="center" style="padding: 0 40px 30px;">
-                <h1 style="color: #ffffff; font-size: 32px; font-weight: 700; margin: 0;">Welcome Aboard 🚀</h1>
-            </td>
-        </tr>
-
-        <!-- Body -->
-        <tr>
-            <td style="padding: 0 40px 30px;">
-                <p style="color: #ffffff; font-size: 16px; margin: 0 0 20px;">Hello <strong>{{name}}</strong>,</p>
-                <p style="color: #cccccc; font-size: 15px; line-height: 1.6; margin: 0 0 20px;">
-                    Your journey with Design Hive has officially started. We're excited to have you with us.
-                </p>
-                
-                <div style="background: rgba(245, 166, 35, 0.05); border: 1px solid rgba(245, 166, 35, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
-                    <h4 style="color: #f5a623; margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Your Account Details</h4>
-                    <p style="color: #ffffff; margin: 0; font-size: 14px;"><strong>Name:</strong> {{name}}</p>
-                    <p style="color: #ffffff; margin: 5px 0 0; font-size: 14px;"><strong>Email:</strong> {{email}}</p>
-                </div>
-
-                <p style="color: #cccccc; font-size: 15px; line-height: 1.6; margin: 0 0 30px;">
-                    You now have access to powerful tools designed to help you move faster, build smarter, and scale effortlessly. This is just the beginning — we’ve built this experience to grow with you.
-                </p>
-            </td>
-        </tr>
-
-        <!-- CTA -->
-        <tr>
-            <td align="center" style="padding: 0 40px 40px;">
-                <a href="https://app.designhivestudio.ai/dashboard.html" style="background-color: #f5a623; color: #1a1a1a; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 700; font-size: 16px; display: inline-block;">
-                    Go to Dashboard
-                </a>
-            </td>
-        </tr>
-
-        <!-- Next Steps -->
-        <tr>
-            <td style="padding: 30px 40px; background-color: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05);">
-                <h4 style="color: #ffffff; margin: 0 0 15px; font-size: 15px;">What you can do next:</h4>
-                <ul style="color: #cccccc; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                    <li>Explore your dashboard</li>
-                    <li>Start your first project</li>
-                    <li>Customize your workflow</li>
-                </ul>
-            </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-            <td align="center" style="padding: 30px 40px; color: #666666; font-size: 12px; line-height: 1.6;">
-                <p style="margin: 0 0 10px;">If you ever need help, just reply to this email — we’ve got your back.</p>
-                <p style="color: #999999; margin: 0; font-weight: 700;">— The Design Hive Team</p>
-                <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
-                    <p style="margin: 0;">You're receiving this email because you signed up for Design Hive.</p>
-                </div>
-            </td>
-        </tr>
-    </table>
-</div>`;
 }
 
 function stripHtml(html) {
