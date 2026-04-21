@@ -53,12 +53,42 @@ function initLayout() {
   const topbar = document.getElementById('topbar');
   if (topbar) {
     topbar.innerHTML = `
-      <div class="page-title-group">
-        <div class="page-title">${meta.title}</div>
-        <div class="page-subtitle">${meta.subtitle}</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="mobile-menu-btn" id="mobile-toggle">
+          <i data-lucide="menu" style="width:20px;height:20px"></i>
+        </button>
+        <div class="page-title-group">
+          <div class="page-title">${meta.title}</div>
+          <div class="page-subtitle">${meta.subtitle}</div>
+        </div>
       </div>
       <span class="admin-badge">Admin</span>
     `;
+
+    // Add Overlay
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'sidebar-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    // Toggle Logic
+    const toggleBtn = document.getElementById('mobile-toggle');
+    const closeSidebar = () => document.body.classList.remove('sidebar-open');
+    
+    toggleBtn?.addEventListener('click', () => {
+      document.body.classList.toggle('sidebar-open');
+    });
+
+    overlay.addEventListener('click', closeSidebar);
+    
+    // Close sidebar on nav link click (for mobile)
+    sidebar?.addEventListener('click', (e) => {
+      if (e.target.closest('.nav-link')) {
+        closeSidebar();
+      }
+    });
   }
 
   if (typeof lucide !== 'undefined') {
