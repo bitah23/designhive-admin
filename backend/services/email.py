@@ -1,4 +1,5 @@
 import base64
+import os
 from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -7,6 +8,28 @@ from email import encoders
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import gmail, supabase, GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME
+
+
+def _looks_like_full_email_document(html: str) -> bool:
+    value = (html or "").lower()
+    return "<html" in value and "email-wrapper" in value and "hero-card" in value
+
+
+def _load_default_template_html() -> str:
+    template_path = os.path.join(os.path.dirname(__file__), "..", "..", "index.html")
+    with open(template_path, "r", encoding="utf-8") as fh:
+        html = fh.read()
+
+    return (
+        html
+        .replace("John Doe", "{{name}}")
+        .replace("john@example.com", "{{email}}")
+        .replace("Pro Member", "{{date}}")
+    )
+
+
+def _resolve_template_html(body: str) -> str:
+    return body if _looks_like_full_email_document(body) else _load_default_template_html()
 
 
 def _replace_variables(text: str, user: dict) -> str:
@@ -46,6 +69,7 @@ def _sanitize_body_html(body: str) -> str:
         html
         .replace('src="/assets/brand/header_logo_v4.png"', 'src="https://admin.designhivestudio.ai/assets/brand/header_logo_v4.png"')
         .replace('src="images/header_logo_v4.png"', 'src="https://admin.designhivestudio.ai/assets/brand/header_logo_v4.png"')
+        .replace('href="/dashboard.html"', 'href="https://admin.designhivestudio.ai/dashboard.html"')
     )
 
 def _build_raw(to: str, subject: str, html_body: str, attachments: list = None) -> str:
@@ -66,8 +90,9 @@ def _build_raw(to: str, subject: str, html_body: str, attachments: list = None) 
 
 
 def _send_one(template: dict, user: dict) -> dict:
-    # 1. Replace variables in original content
-    raw_body = _replace_variables(template["body"], user)
+    # 1. Resolve the template HTML that should actually be sent
+    template_html = _resolve_template_html(template["body"])
+    raw_body = _replace_variables(template_html, user)
     subject = _replace_variables(template["subject"], user)
     
     # 2. Wrap the content in the branded design layout
