@@ -19,9 +19,7 @@ def _load_default_template_html() -> str:
     services_dir = os.path.abspath(os.path.dirname(__file__))
     candidate_paths = [
         os.path.join(services_dir, "..", "..", "index.html"),
-        os.path.join(services_dir, "..", "index.html"),
         os.path.join(os.getcwd(), "index.html"),
-        os.path.join(os.getcwd(), "frontend", "index.html"),
     ]
 
     template_path = next((path for path in candidate_paths if os.path.isfile(path)), None)
@@ -43,6 +41,10 @@ def _load_default_template_html() -> str:
 
 def _resolve_template_html(body: str) -> str:
     return body if _looks_like_full_email_document(body) else _load_default_template_html()
+
+
+def get_default_template_html() -> str:
+    return _load_default_template_html()
 
 
 def _replace_variables(text: str, user: dict) -> str:

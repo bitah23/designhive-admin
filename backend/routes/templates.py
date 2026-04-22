@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from config import supabase
 from deps import get_current_admin
 from models import TemplateCreate, TemplateUpdate
+from services.email import get_default_template_html
 
 router = APIRouter()
 
@@ -10,6 +11,11 @@ router = APIRouter()
 def list_templates(admin=Depends(get_current_admin)):
     result = supabase.table("email_templates").select("*").order("created_at", desc=True).execute()
     return result.data
+
+
+@router.get("/default-html")
+def default_template_html(admin=Depends(get_current_admin)):
+    return {"body": get_default_template_html()}
 
 
 @router.post("")

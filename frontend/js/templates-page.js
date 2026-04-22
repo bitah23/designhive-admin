@@ -10,6 +10,8 @@ let quill;
 let templates = [];
 let editingId = null;
 let htmlMode = false;
+let defaultTemplateBody = '';
+let defaultTemplateBodyPromise = null;
 
 /* ── DOM refs ─────────────────────────────────────────────────────── */
 const templatesGrid = document.getElementById('templates-grid');
@@ -40,7 +42,7 @@ document.querySelectorAll('.variable-chip').forEach(btn => {
 /* ── Boot ─────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
   initQuill();
-  await loadTemplates();
+  await Promise.all([ensureDefaultTemplateBody(), loadTemplates()]);
   redrawIcons();
 });
 
@@ -325,6 +327,30 @@ function resolveTemplateBody(body) {
      · Variables: {{name}}  {{email}}  {{date}}
    ═══════════════════════════════════════════════════════════════════ */
 function getDefaultTemplateBody() {
+  return defaultTemplateBody || getEmbeddedDefaultTemplateBody();
+}
+
+async function ensureDefaultTemplateBody() {
+  if (defaultTemplateBody) return defaultTemplateBody;
+  if (defaultTemplateBodyPromise) return defaultTemplateBodyPromise;
+
+  defaultTemplateBodyPromise = api.get('/templates/default-html')
+    .then(response => {
+      defaultTemplateBody = response?.body || getEmbeddedDefaultTemplateBody();
+      return defaultTemplateBody;
+    })
+    .catch(() => {
+      defaultTemplateBody = getEmbeddedDefaultTemplateBody();
+      return defaultTemplateBody;
+    })
+    .finally(() => {
+      defaultTemplateBodyPromise = null;
+    });
+
+  return defaultTemplateBodyPromise;
+}
+
+function getEmbeddedDefaultTemplateBody() {
   return `
 <!DOCTYPE HTML
   PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
