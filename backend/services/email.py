@@ -18,9 +18,28 @@ def _replace_variables(text: str, user: dict) -> str:
     )
 
 
+def _sanitize_body_html(body: str) -> str:
+    """Force pasted template images to stay responsive and visually bounded."""
+    import re
+
+    def repl(match):
+        attrs = match.group(1) or ""
+        cleaned = re.sub(r"\s+width\s*=\s*['\"][^'\"]*['\"]", "", attrs, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s+height\s*=\s*['\"][^'\"]*['\"]", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s+style\s*=\s*['\"][^'\"]*['\"]", "", cleaned, flags=re.IGNORECASE)
+        return (
+            f'<img{cleaned} width="100%" '
+            'style="display:block;max-width:100%;width:100%;height:auto;max-height:280px;'
+            'object-fit:contain;margin:16px auto;" alt="">'
+        )
+
+    return re.sub(r"<img(\s[^>]*)?>", repl, body or "", flags=re.IGNORECASE)
+
+
 def _wrap_template(subject: str, body: str) -> str:
     """Wraps email body in a monochrome, email-client-safe layout."""
     logo_url = "https://admin.designhivestudio.ai/assets/brand/logo.png"
+    safe_body = _sanitize_body_html(body)
     
     template_html = """
     <!DOCTYPE html>
@@ -53,16 +72,16 @@ def _wrap_template(subject: str, body: str) -> str:
         </div>
         <table role="presentation" class="page-bg" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F7F7F7;">
             <tr>
-                <td align="center" style="padding:24px 12px;">
+                <td align="center" style="padding:28px 12px;">
                     <table role="presentation" class="card-bg" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; width:100%; background-color:#FFFFFF; border:1px solid #E3E3E3;">
                         <tr>
-                            <td style="padding:28px 28px 18px;">
+                            <td style="padding:0;">
                                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                                     <tr>
-                                        <td valign="middle">
-                                            <img src="{{LOGO_URL}}" width="112" height="32" alt="Design Hive" style="width:112px; height:32px; color:#111111; font-size:14px; font-weight:700;">
+                                        <td valign="middle" style="padding:20px 28px; background-color:#000000;">
+                                            <img src="{{LOGO_URL}}" width="112" height="32" alt="Design Hive" style="width:112px; height:32px; color:#FFFFFF; font-size:14px; font-weight:700;">
                                         </td>
-                                        <td class="text-muted" align="right" valign="middle" style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#555555; font-weight:700;">
+                                        <td align="right" valign="middle" style="padding:20px 28px; background-color:#000000; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#D0D0D0; font-weight:700;">
                                             Admin Dispatch
                                         </td>
                                     </tr>
@@ -70,19 +89,19 @@ def _wrap_template(subject: str, body: str) -> str:
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:0 28px 20px;">
+                            <td style="padding:28px 28px 18px; background-color:#FFFFFF;">
                                 <h1 class="text-main" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:36px; line-height:1.1; font-weight:900; color:#1A1A1A;">
                                     {{SUBJECT}}
                                 </h1>
                             </td>
                         </tr>
                         <tr>
-                            <td class="body-copy text-main" style="padding:0 28px 12px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:1.5; color:#1A1A1A; text-align:left;">
+                            <td class="body-copy text-main" style="padding:0 28px 18px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:1.6; color:#1A1A1A; text-align:left; background-color:#FFFFFF;">
                                 {{BODY}}
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:6px 28px 28px;">
+                            <td style="padding:0 28px 28px; background-color:#FFFFFF;">
                                 <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                                     <tr>
                                         <td class="btn-dark" bgcolor="#000000" style="background-color:#000000; border:1px solid #000000;">
@@ -104,7 +123,10 @@ def _wrap_template(subject: str, body: str) -> str:
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:18px 28px 26px;">
+                            <td style="padding:20px 28px 24px; background-color:#F7F7F7;">
+                                <p style="margin:0 0 8px; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.6; color:#4A4A4A; font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">
+                                    Design Hive Support
+                                </p>
                                 <p class="text-muted" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.6; color:#666666;">
                                     You are receiving this email because you signed up for Design Hive.<br>
                                     Need help? Contact support@designhive.ai
@@ -122,7 +144,7 @@ def _wrap_template(subject: str, body: str) -> str:
         template_html
         .replace("{{LOGO_URL}}", logo_url)
         .replace("{{SUBJECT}}", subject)
-        .replace("{{BODY}}", body)
+        .replace("{{BODY}}", safe_body)
     )
 
 

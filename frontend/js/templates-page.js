@@ -284,23 +284,23 @@ function buildPreviewEmail(template) {
       .replace(/\s+width\s*=\s*["'][^"']*["']/gi, '')
       .replace(/\s+height\s*=\s*["'][^"']*["']/gi, '')
       .replace(/\s+style\s*=\s*["'][^"']*["']/gi, '');
-    return `<img${cleaned} width="100%" style="max-width:100%;height:auto;display:block;margin:0 auto;" alt="">`;
+    return `<img${cleaned} width="100%" style="display:block;max-width:100%;width:100%;height:auto;max-height:280px;object-fit:contain;margin:16px auto;" alt="">`;
   });
 
   return /* html */`
 <div style="margin:0;padding:0;background-color:#F7F7F7;font-family:Arial,Helvetica,sans-serif;">
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F7F7F7;padding:24px 12px;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F7F7F7;padding:28px 12px;">
     <tr>
       <td align="center">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#FFFFFF;border:1px solid #E3E3E3;">
           <tr>
-            <td style="padding:28px 28px 18px;">
+            <td style="padding:0;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <td style="font-size:20px;line-height:1;font-weight:900;color:#000000;letter-spacing:0.08em;text-transform:uppercase;">
+                  <td style="padding:20px 28px;background:#000000;font-size:20px;line-height:1;font-weight:900;color:#FFFFFF;letter-spacing:0.08em;text-transform:uppercase;">
                     DESIGN HIVE
                   </td>
-                  <td align="right" style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#555555;">
+                  <td align="right" style="padding:20px 28px;background:#000000;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#D0D0D0;">
                     Admin Dispatch
                   </td>
                 </tr>
@@ -308,19 +308,19 @@ function buildPreviewEmail(template) {
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 20px;">
+            <td style="padding:28px 28px 18px;background:#FFFFFF;">
               <h1 style="margin:0;font-size:36px;line-height:1.1;font-weight:900;color:#1A1A1A;">
                 ${escapeHtml(template.subject)}
               </h1>
             </td>
           </tr>
           <tr>
-            <td style="padding:0 28px 12px;font-size:16px;line-height:1.5;color:#1A1A1A;text-align:left;word-wrap:break-word;overflow-wrap:break-word;">
+            <td style="padding:0 28px 18px;background:#FFFFFF;font-size:16px;line-height:1.6;color:#1A1A1A;text-align:left;word-wrap:break-word;overflow-wrap:break-word;">
               ${body}
             </td>
           </tr>
           <tr>
-            <td style="padding:6px 28px 28px;">
+            <td style="padding:0 28px 28px;background:#FFFFFF;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td bgcolor="#000000" style="background-color:#000000;border:1px solid #000000;">
@@ -340,7 +340,10 @@ function buildPreviewEmail(template) {
             </td>
           </tr>
           <tr>
-            <td style="padding:18px 28px 26px;">
+            <td style="padding:20px 28px 24px;background:#F7F7F7;">
+              <p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:#4A4A4A;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">
+                Design Hive Support
+              </p>
               <p style="margin:0;font-size:12px;line-height:1.6;color:#666666;">
                 Sent from Design Hive on ${today}.<br>
                 Need help? Contact support@designhive.ai
