@@ -137,21 +137,25 @@ function renderTemplateGrid() {
 function openTemplateModal(id) {
   editingId = id;
   const t = id ? templates.find(item => item.id === id) : null;
-  const body = t?.body || getDefaultTemplateBody();
+  const body = resolveTemplateBody(t?.body);
+  const useHtmlMode = looksLikeFullEmailDocument(body);
 
   document.getElementById('modal-template-title').textContent = t ? 'Edit Template' : 'New Template';
   document.getElementById('t-title').value = t?.title || '';
   document.getElementById('t-subject').value = t?.subject || '';
 
-  /* always start in visual mode */
-  htmlMode = false;
-  htmlEditor.style.display = 'none';
-  quillWrap.style.display = '';
-  toggleModeBtn.innerHTML = '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
+  htmlMode = useHtmlMode;
+  htmlEditor.style.display = useHtmlMode ? '' : 'none';
+  quillWrap.style.display = useHtmlMode ? 'none' : '';
+  toggleModeBtn.innerHTML = useHtmlMode
+    ? '<i data-lucide="eye" style="width:12px;height:12px"></i> Visual Mode'
+    : '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
   saveTemplateBtn.innerHTML = `<i data-lucide="save" style="width:14px;height:14px"></i> ${t ? 'Save Changes' : 'Save Template'}`;
 
   quill.setContents([]);
-  quill.clipboard.dangerouslyPasteHTML(body);
+  if (!useHtmlMode) {
+    quill.clipboard.dangerouslyPasteHTML(body);
+  }
   htmlEditor.value = body;
 
   templateModal.classList.remove('hidden');
@@ -271,7 +275,7 @@ function buildPreviewEmail(template) {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  let body = (template.body || '')
+  let body = resolveTemplateBody(template.body)
     .replace(/\{\{name\}\}/g, 'John Doe')
     .replace(/\{\{email\}\}/g, 'john@example.com')
     .replace(/\{\{date\}\}/g, today);
@@ -297,6 +301,15 @@ function buildPreviewEmail(template) {
   });
 
   return body;
+}
+
+function looksLikeFullEmailDocument(html) {
+  const value = String(html || '').toLowerCase();
+  return value.includes('<html') && value.includes('email-wrapper') && value.includes('hero-card');
+}
+
+function resolveTemplateBody(body) {
+  return looksLikeFullEmailDocument(body) ? body : getDefaultTemplateBody();
 }
 
 /* ═══════════════════════════════════════════════════════════════════
