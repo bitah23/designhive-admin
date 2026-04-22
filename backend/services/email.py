@@ -16,7 +16,20 @@ def _looks_like_full_email_document(html: str) -> bool:
 
 
 def _load_default_template_html() -> str:
-    template_path = os.path.join(os.path.dirname(__file__), "..", "..", "index.html")
+    services_dir = os.path.abspath(os.path.dirname(__file__))
+    candidate_paths = [
+        os.path.join(services_dir, "..", "..", "index.html"),
+        os.path.join(services_dir, "..", "index.html"),
+        os.path.join(os.getcwd(), "index.html"),
+        os.path.join(os.getcwd(), "frontend", "index.html"),
+    ]
+
+    template_path = next((path for path in candidate_paths if os.path.isfile(path)), None)
+    if not template_path:
+        raise FileNotFoundError(
+            f"Default email template not found. Checked: {', '.join(os.path.normpath(path) for path in candidate_paths)}"
+        )
+
     with open(template_path, "r", encoding="utf-8") as fh:
         html = fh.read()
 
