@@ -29,17 +29,18 @@ def _sanitize_body_html(body: str) -> str:
         cleaned = re.sub(r"\s+style\s*=\s*['\"][^'\"]*['\"]", "", cleaned, flags=re.IGNORECASE)
         return (
             f'<img{cleaned} width="100%" '
-            'style="display:block;max-width:100%;width:100%;height:auto;max-height:280px;'
-            'object-fit:contain;margin:16px auto;" alt="">'
+            'style="display:block;max-width:100%;width:100%;height:auto;max-height:260px;'
+            'object-fit:contain;margin:16px auto;" alt="Design Hive visual">'
         )
 
     return re.sub(r"<img(\s[^>]*)?>", repl, body or "", flags=re.IGNORECASE)
 
 
-def _wrap_template(subject: str, body: str) -> str:
-    """Wraps email body in a monochrome, email-client-safe layout."""
-    logo_url = "https://admin.designhivestudio.ai/assets/brand/logo.png"
+def _wrap_template(subject: str, body: str, recipient_name: str = "", recipient_email: str = "") -> str:
+    """Wrap email body in the polished Design Hive welcome layout."""
     safe_body = _sanitize_body_html(body)
+    logo_url = "https://admin.designhivestudio.ai/assets/brand/header_logo_v4.png"
+    today = str(date.today())
     
     template_html = """
     <!DOCTYPE html>
@@ -47,90 +48,100 @@ def _wrap_template(subject: str, body: str) -> str:
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="color-scheme" content="light dark">
-        <meta name="supported-color-schemes" content="light dark">
         <style>
-            body { margin: 0; padding: 0; background-color: #F7F7F7; font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
+            body { margin: 0; padding: 0; background-color: #07090f; font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
             table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
             img { border: 0; display: block; line-height: 100%; outline: none; text-decoration: none; }
-            .body-copy p { margin: 0 0 16px; }
-            @media (prefers-color-scheme: dark) {
-                body { background-color: #1A1A1A !important; }
-                .page-bg { background-color: #1A1A1A !important; }
-                .card-bg { background-color: #111111 !important; border-color: #2A2A2A !important; }
-                .text-main { color: #FFFFFF !important; }
-                .text-muted { color: #C9C9C9 !important; }
-                .divider { border-color: #2A2A2A !important; }
-                .btn-dark { background-color: #000000 !important; border-color: #000000 !important; }
-                .btn-dark a { color: #FFFFFF !important; }
-            }
         </style>
     </head>
-    <body style="margin:0; padding:0; background-color:#F7F7F7;">
+    <body style="margin:0; padding:0; background-color:#07090f;">
         <div style="display:none; font-size:1px; color:#F7F7F7; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">
             Welcome to Design Hive. Your account is ready, and your dashboard is waiting.
         </div>
-        <table role="presentation" class="page-bg" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F7F7F7;">
+        <table role="presentation" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#07090f;">
             <tr>
-                <td align="center" style="padding:28px 12px;">
-                    <table role="presentation" class="card-bg" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; width:100%; background-color:#FFFFFF; border:1px solid #E3E3E3;">
+                <td align="center" style="padding:40px 12px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:620px; width:100%;">
+                        <tr>
+                            <td align="center" style="padding:0 0 24px;">
+                                <img src="{{LOGO_URL}}" alt="Design Hive Logo" width="520" style="display:block; width:100%; max-width:520px; height:auto; margin:0 auto;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:0 0 16px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(160deg,#131b2e 0%,#0f1520 60%,#0c1119 100%); border:1px solid rgba(255,159,28,0.12); border-radius:20px; overflow:hidden;">
+                                    <tr>
+                                        <td style="height:3px; background:linear-gradient(90deg,transparent 0%,#ff9f1c 40%,#ffc84a 60%,transparent 100%); font-size:0; line-height:0;">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding:44px 36px 38px;">
+                                            <div style="display:inline-block; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:#ff9f1c; background:rgba(255,159,28,0.1); border:1px solid rgba(255,159,28,0.25); padding:6px 18px; border-radius:30px; margin-bottom:24px; font-family:Arial, Helvetica, sans-serif;">
+                                                New Member
+                                            </div>
+                                            <div style="margin:0 0 12px; font-family:Georgia, 'Times New Roman', serif; font-size:52px; line-height:1.05; font-weight:700; color:#ffffff;">
+                                                {{SUBJECT}}
+                                            </div>
+                                            <div style="margin:0 0 30px; font-size:17px; line-height:1.6; color:rgba(255,255,255,0.62); font-family:Arial, Helvetica, sans-serif;">
+                                                Hello, {{NAME}} - your journey officially starts now.
+                                            </div>
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:460px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,159,28,0.2); border-radius:12px; margin:0 auto 30px;">
+                                                <tr>
+                                                    <td style="width:3px; background:linear-gradient(180deg,#ff9f1c,#ffc84a); font-size:0; line-height:0;">&nbsp;</td>
+                                                    <td style="padding:22px 24px; text-align:left;">
+                                                        <div style="font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:#ff9f1c; margin-bottom:14px; font-family:Arial, Helvetica, sans-serif;">Your Account</div>
+                                                        <div style="font-size:15px; line-height:1.6; color:#ffffff; margin-bottom:8px; font-family:Arial, Helvetica, sans-serif;"><span style="display:inline-block; width:70px; color:rgba(255,255,255,0.45); font-size:12px;">Name</span>{{NAME}}</div>
+                                                        <div style="font-size:15px; line-height:1.6; color:#ffffff; margin-bottom:8px; font-family:Arial, Helvetica, sans-serif;"><span style="display:inline-block; width:70px; color:rgba(255,255,255,0.45); font-size:12px;">Email</span>{{EMAIL}}</div>
+                                                        <div style="font-size:15px; line-height:1.6; color:#ff9f1c; font-family:Arial, Helvetica, sans-serif;"><span style="display:inline-block; width:70px; color:rgba(255,255,255,0.45); font-size:12px;">Date</span>{{TODAY}}</div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+                                                <tr>
+                                                    <td bgcolor="#ffb84a" style="border-radius:50px; background:linear-gradient(135deg,#ff9f1c 0%,#ffb84a 100%);">
+                                                        <a href="https://admin.designhivestudio.ai/dashboard.html" style="display:inline-block; padding:17px 38px; border-radius:50px; color:#07090f; text-decoration:none; font-size:15px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; font-family:Arial, Helvetica, sans-serif;">
+                                                            Go to Dashboard
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <div style="font-size:12px; line-height:1.6; color:rgba(255,255,255,0.25); margin-top:14px; letter-spacing:0.05em; font-family:Arial, Helvetica, sans-serif;">No credit card required &middot; Cancel anytime</div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:0 0 16px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#FFFFFF; border:1px solid rgba(255,159,28,0.14); border-radius:20px; overflow:hidden;">
+                                    <tr>
+                                        <td style="padding:34px 32px 30px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:1.7; color:#1f2937; text-align:left; background-color:#FFFFFF;">
+                                            {{BODY}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
                         <tr>
                             <td style="padding:0;">
-                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:linear-gradient(160deg,#131b2e 0%,#0f1520 100%); border:1px solid rgba(255,255,255,0.06); border-radius:20px; overflow:hidden;">
                                     <tr>
-                                        <td valign="middle" style="padding:20px 28px; background-color:#000000;">
-                                            <img src="{{LOGO_URL}}" width="112" height="32" alt="Design Hive" style="width:112px; height:32px; color:#FFFFFF; font-size:14px; font-weight:700;">
-                                        </td>
-                                        <td align="right" valign="middle" style="padding:20px 28px; background-color:#000000; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#D0D0D0; font-weight:700;">
-                                            Admin Dispatch
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding:28px 28px 18px; background-color:#FFFFFF;">
-                                <h1 class="text-main" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:36px; line-height:1.1; font-weight:900; color:#1A1A1A;">
-                                    {{SUBJECT}}
-                                </h1>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="body-copy text-main" style="padding:0 28px 18px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:1.6; color:#1A1A1A; text-align:left; background-color:#FFFFFF;">
-                                {{BODY}}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding:0 28px 28px; background-color:#FFFFFF;">
-                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td class="btn-dark" bgcolor="#000000" style="background-color:#000000; border:1px solid #000000;">
-                                            <a href="https://admin.designhivestudio.ai/dashboard.html" style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:44px; min-height:44px; font-weight:700; color:#FFFFFF; text-decoration:none; padding:0 30px;">
-                                                Access your Design Hive Dashboard
-                                            </a>
+                                        <td style="padding:30px 32px; text-align:center;">
+                                            <div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.8; color:rgba(255,255,255,0.5);">
+                                                You are receiving this because you signed up for Design Hive.<br>
+                                                <a href="#" style="color:rgba(255,159,28,0.72); text-decoration:none;">Unsubscribe</a>
+                                                &nbsp;&middot;&nbsp;
+                                                <a href="#" style="color:rgba(255,159,28,0.72); text-decoration:none;">Privacy Policy</a>
+                                                &nbsp;&middot;&nbsp;
+                                                <a href="#" style="color:rgba(255,159,28,0.72); text-decoration:none;">View in Browser</a>
+                                            </div>
+                                            <div style="width:60px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,159,28,0.3),transparent); margin:22px auto;"></div>
+                                            <div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; line-height:1.8; color:rgba(255,255,255,0.26);">
+                                                Sent from Design Hive on {{TODAY}}.<br>
+                                                Need help? Contact support@designhive.ai
+                                            </div>
                                         </td>
                                     </tr>
                                 </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="divider" style="padding:0 28px;">
-                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-                                    <tr>
-                                        <td style="border-top:1px solid #E8E8E8; font-size:0; line-height:0;">&nbsp;</td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding:20px 28px 24px; background-color:#F7F7F7;">
-                                <p style="margin:0 0 8px; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.6; color:#4A4A4A; font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">
-                                    Design Hive Support
-                                </p>
-                                <p class="text-muted" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.6; color:#666666;">
-                                    You are receiving this email because you signed up for Design Hive.<br>
-                                    Need help? Contact support@designhive.ai
-                                </p>
                             </td>
                         </tr>
                     </table>
@@ -144,6 +155,9 @@ def _wrap_template(subject: str, body: str) -> str:
         template_html
         .replace("{{LOGO_URL}}", logo_url)
         .replace("{{SUBJECT}}", subject)
+        .replace("{{NAME}}", recipient_name)
+        .replace("{{EMAIL}}", recipient_email)
+        .replace("{{TODAY}}", today)
         .replace("{{BODY}}", safe_body)
     )
 
@@ -173,7 +187,12 @@ def _send_one(template: dict, user: dict) -> dict:
     
     # 2. Wrap the content in the branded design layout
     # (Matches buildPreviewEmail from frontend)
-    html_body = _wrap_template(subject, raw_body)
+    html_body = _wrap_template(
+        subject,
+        raw_body,
+        user.get("name") or "",
+        user.get("email") or "",
+    )
 
     try:
         raw = _build_raw(user["email"], subject, html_body)

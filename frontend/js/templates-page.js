@@ -269,6 +269,7 @@ function buildPreviewEmail(template) {
   const today = new Date().toLocaleDateString('en-AU', {
     day: 'numeric', month: 'long', year: 'numeric'
   });
+  const previewLogo = '/assets/brand/header_logo_v4.png';
 
   let body = (template.body || '')
     .replace(/\{\{name\}\}/g, 'John Doe')
@@ -284,70 +285,108 @@ function buildPreviewEmail(template) {
       .replace(/\s+width\s*=\s*["'][^"']*["']/gi, '')
       .replace(/\s+height\s*=\s*["'][^"']*["']/gi, '')
       .replace(/\s+style\s*=\s*["'][^"']*["']/gi, '');
-    return `<img${cleaned} width="100%" style="display:block;max-width:100%;width:100%;height:auto;max-height:280px;object-fit:contain;margin:16px auto;" alt="">`;
+    return `<img${cleaned} width="100%" style="display:block;max-width:100%;width:100%;height:auto;max-height:260px;object-fit:contain;margin:16px auto;" alt="Design Hive visual">`;
   });
 
   return /* html */`
-<div style="margin:0;padding:0;background-color:#F7F7F7;font-family:Arial,Helvetica,sans-serif;">
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F7F7F7;padding:28px 12px;">
+<style>
+  .dh-preview * { box-sizing:border-box; line-height:inherit; }
+  .dh-preview {
+    margin:0;
+    padding:0;
+    background-color:#07090f;
+    font-family:'DM Sans',Arial,Helvetica,sans-serif;
+  }
+  .dh-preview table,
+  .dh-preview td,
+  .dh-preview tr { border-collapse:collapse; vertical-align:top; }
+  .dh-preview a { color:inherit; }
+</style>
+<div class="dh-preview">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#07090f;padding:40px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#FFFFFF;border:1px solid #E3E3E3;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:620px;">
+          <tr>
+            <td align="center" style="padding:0 0 24px;">
+              <img src="${previewLogo}" alt="Design Hive Logo" style="display:block;width:100%;max-width:520px;height:auto;margin:0 auto;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 0 16px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(160deg,#131b2e 0%,#0f1520 60%,#0c1119 100%);border:1px solid rgba(255,159,28,0.12);border-radius:20px;overflow:hidden;box-shadow:0 24px 56px rgba(0,0,0,0.42);">
+                <tr>
+                  <td style="height:3px;background:linear-gradient(90deg,transparent 0%,#ff9f1c 40%,#ffc84a 60%,transparent 100%);font-size:0;line-height:0;">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:44px 36px 38px;">
+                    <div style="display:inline-block;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:#ff9f1c;background:rgba(255,159,28,0.1);border:1px solid rgba(255,159,28,0.25);padding:6px 18px;border-radius:30px;margin-bottom:24px;">
+                      New Member
+                    </div>
+                    <div style="font-family:'Cormorant Garamond','Times New Roman',serif;font-size:52px;font-weight:700;line-height:1.05;color:#ffffff;margin:0 0 12px;">
+                      ${escapeHtml(template.subject)}
+                    </div>
+                    <div style="font-size:17px;color:rgba(255,255,255,0.62);font-weight:300;margin:0 0 30px;">
+                      Hello, <span style="color:rgba(255,255,255,0.92);font-weight:500;">John Doe</span> - your journey officially starts now.
+                    </div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:460px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,159,28,0.2);border-radius:12px;margin:0 auto 30px;">
+                      <tr>
+                        <td style="width:3px;background:linear-gradient(180deg,#ff9f1c,#ffc84a);font-size:0;line-height:0;">&nbsp;</td>
+                        <td style="padding:22px 24px;text-align:left;">
+                          <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#ff9f1c;margin-bottom:14px;">Your Account</div>
+                          <div style="font-size:15px;color:#ffffff;margin-bottom:8px;"><span style="display:inline-block;width:70px;color:rgba(255,255,255,0.45);font-family:'Space Mono','Courier New',monospace;font-size:12px;">Name</span>John Doe</div>
+                          <div style="font-size:15px;color:#ffffff;margin-bottom:8px;"><span style="display:inline-block;width:70px;color:rgba(255,255,255,0.45);font-family:'Space Mono','Courier New',monospace;font-size:12px;">Email</span>john@example.com</div>
+                          <div style="font-size:15px;color:#ff9f1c;"><span style="display:inline-block;width:70px;color:rgba(255,255,255,0.45);font-family:'Space Mono','Courier New',monospace;font-size:12px;">Date</span>${escapeHtml(today)}</div>
+                        </td>
+                      </tr>
+                    </table>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+                      <tr>
+                        <td bgcolor="#ffb84a" style="border-radius:50px;background:linear-gradient(135deg,#ff9f1c 0%,#ffb84a 100%);box-shadow:0 8px 32px rgba(255,159,28,0.35);">
+                          <a href="/dashboard.html" style="display:inline-block;padding:17px 38px;border-radius:50px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.04em;text-transform:uppercase;color:#07090f;">
+                            Go to Dashboard
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                    <div style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:14px;letter-spacing:0.05em;">No credit card required &middot; Cancel anytime</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 0 16px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#ffffff;border:1px solid rgba(255,159,28,0.14);border-radius:20px;overflow:hidden;box-shadow:0 20px 48px rgba(0,0,0,0.24);">
+                <tr>
+                  <td style="padding:34px 32px 30px;background:#ffffff;font-size:16px;line-height:1.7;color:#1f2937;text-align:left;word-wrap:break-word;overflow-wrap:break-word;">
+                    ${body}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
           <tr>
             <td style="padding:0;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:linear-gradient(160deg,#131b2e 0%,#0f1520 100%);border:1px solid rgba(255,255,255,0.06);border-radius:20px;overflow:hidden;box-shadow:0 20px 48px rgba(0,0,0,0.3);">
                 <tr>
-                  <td style="padding:20px 28px;background:#000000;font-size:20px;line-height:1;font-weight:900;color:#FFFFFF;letter-spacing:0.08em;text-transform:uppercase;">
-                    DESIGN HIVE
-                  </td>
-                  <td align="right" style="padding:20px 28px;background:#000000;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#D0D0D0;">
-                    Admin Dispatch
+                  <td style="padding:30px 32px;text-align:center;">
+                    <div style="font-size:12px;line-height:1.8;color:rgba(255,255,255,0.5);">
+                      You are receiving this because you signed up for Design Hive.<br>
+                      <a href="#" style="color:rgba(255,159,28,0.72);text-decoration:none;">Unsubscribe</a>
+                      &nbsp;&middot;&nbsp;
+                      <a href="#" style="color:rgba(255,159,28,0.72);text-decoration:none;">Privacy Policy</a>
+                      &nbsp;&middot;&nbsp;
+                      <a href="#" style="color:rgba(255,159,28,0.72);text-decoration:none;">View in Browser</a>
+                    </div>
+                    <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,159,28,0.3),transparent);margin:22px auto;"></div>
+                    <div style="font-size:11px;line-height:1.8;color:rgba(255,255,255,0.26);">
+                      Sent from Design Hive on ${escapeHtml(today)}.<br>
+                      Need help? Contact support@designhive.ai
+                    </div>
                   </td>
                 </tr>
               </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:28px 28px 18px;background:#FFFFFF;">
-              <h1 style="margin:0;font-size:36px;line-height:1.1;font-weight:900;color:#1A1A1A;">
-                ${escapeHtml(template.subject)}
-              </h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 28px 18px;background:#FFFFFF;font-size:16px;line-height:1.6;color:#1A1A1A;text-align:left;word-wrap:break-word;overflow-wrap:break-word;">
-              ${body}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 28px 28px;background:#FFFFFF;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td bgcolor="#000000" style="background-color:#000000;border:1px solid #000000;">
-                    <a href="/dashboard.html" style="display:inline-block;min-height:44px;line-height:44px;padding:0 30px;color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:700;">
-                      Access your Design Hive Dashboard
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 28px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                <tr><td style="border-top:1px solid #E8E8E8;font-size:0;line-height:0;">&nbsp;</td></tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:20px 28px 24px;background:#F7F7F7;">
-              <p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:#4A4A4A;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">
-                Design Hive Support
-              </p>
-              <p style="margin:0;font-size:12px;line-height:1.6;color:#666666;">
-                Sent from Design Hive on ${today}.<br>
-                Need help? Contact support@designhive.ai
-              </p>
             </td>
           </tr>
         </table>
