@@ -90,16 +90,15 @@ def _build_raw(to: str, subject: str, html_body: str, attachments: list = None) 
 
 
 def _send_one(template: dict, user: dict) -> dict:
-    # 1. Resolve the template HTML that should actually be sent
-    template_html = _resolve_template_html(template["body"])
-    raw_body = _replace_variables(template_html, user)
-    subject = _replace_variables(template["subject"], user)
-    
-    # 2. Wrap the content in the branded design layout
-    # (Matches buildPreviewEmail from frontend)
-    html_body = _sanitize_body_html(raw_body)
-
     try:
+        # 1. Resolve the template HTML that should actually be sent
+        template_html = _resolve_template_html(template.get("body", ""))
+        raw_body = _replace_variables(template_html, user)
+        subject = _replace_variables(template.get("subject", ""), user)
+
+        # 2. Keep email HTML safe for remote clients
+        html_body = _sanitize_body_html(raw_body)
+
         raw = _build_raw(user["email"], subject, html_body)
         gmail.users().messages().send(userId="me", body={"raw": raw}).execute()
         supabase.table("email_logs").insert({
