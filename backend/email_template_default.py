@@ -80,7 +80,10 @@ DEFAULT_EMAIL_TEMPLATE = """<!DOCTYPE HTML
     <div class="email-container">
       <div class="header">
         <div class="header-logo-wrap" style="background: none; border: none; backdrop-filter: none; padding: 0;">
-          <img src="/assets/brand/header_logo_v4.png" style="height: 78px; width: auto; max-width: 300px; display: block; margin: 0 auto;" alt="Design Hive Logo">
+          <a href="https://designhivestudio.ai" target="_blank"
+             style="text-decoration:none;border:0;display:block;">
+            <img src="/assets/brand/header_logo_v4.png" style="height:78px;width:auto;max-width:300px;display:block;margin:0 auto;border:0;" alt="Design Hive Logo">
+          </a>
         </div>
       </div>
       <div class="hero-card">

@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import gmail, supabase, GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME
 from email_template_default import DEFAULT_EMAIL_TEMPLATE
+from email_direct_template import build_direct_email_html
 
 
 def _looks_like_full_email_document(html: str) -> bool:
@@ -119,5 +120,6 @@ def send_bulk_emails(template: dict, users: list) -> list:
 
 
 def send_direct_email(to: str, subject: str, html_body: str, attachments: list = None):
-    raw = _build_raw(to, subject, html_body, attachments)
+    branded_html = build_direct_email_html(html_body)
+    raw = _build_raw(to, subject, branded_html, attachments)
     gmail.users().messages().send(userId="me", body={"raw": raw}).execute()
