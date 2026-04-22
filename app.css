@@ -1108,8 +1108,8 @@ tbody tr.is-selected td {
 /* Hard-cap every image inside the preview so nothing escapes  */
 .email-preview-card img {
   max-width: 100% !important;
-  height: auto !important;
-  display: block !important;
+  height: auto    !important;
+  display: block  !important;
 }
 
 .ql-toolbar.ql-snow,
@@ -1147,7 +1147,6 @@ tbody tr.is-selected td {
   0% {
     background-position: 200% 0;
   }
-
   100% {
     background-position: -200% 0;
   }
@@ -1194,30 +1193,26 @@ tbody tr.is-selected td {
   #sidebar {
     position: fixed !important;
     top: 0 !important;
-    left: -280px !important;
-    /* Hide by default */
+    left: -280px !important; /* Hide by default */
     bottom: 0 !important;
     width: 280px !important;
     height: 100vh !important;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    z-index: 1001 !important;
-    /* Above topbar */
-    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5) !important;
+    z-index: 1001 !important; /* Above topbar */
+    box-shadow: 20px 0 50px rgba(0,0,0,0.5) !important;
     display: flex !important;
   }
 
   .sidebar-open #sidebar {
     transform: translateX(280px) !important;
-    left: -280px !important;
-    /* Keep it at -280 and use transform */
+    left: -280px !important; /* Keep it at -280 and use transform */
   }
 
   .sidebar-logo-copy,
   .nav-link span,
   .sidebar-nav .label-upper,
   .sidebar-footer .nav-link span {
-    display: inline;
-    /* Show labels in mobile drawer */
+    display: inline; /* Show labels in mobile drawer */
   }
 
   .nav-link {
@@ -1242,8 +1237,7 @@ tbody tr.is-selected td {
   }
 
   .mobile-menu-btn {
-    display: flex !important;
-    /* Force show toggle */
+    display: flex !important; /* Force show toggle */
     align-items: center !important;
     justify-content: center !important;
     width: 42px !important;
@@ -1267,7 +1261,7 @@ tbody tr.is-selected td {
   .page-title {
     font-size: 0.9rem;
   }
-
+  
   .page-subtitle {
     font-size: 0.7rem;
     white-space: nowrap;
@@ -1286,20 +1280,16 @@ tbody tr.is-selected td {
 .welcome-overlay {
   position: fixed;
   inset: 0;
-  z-index: 99999;
-  /* Boosted z-index */
-  background:
+  z-index: 99999; /* Boosted z-index */
+  background: 
     radial-gradient(circle at top left, rgba(239, 201, 76, 0.15), transparent 30%),
     radial-gradient(circle at bottom right, rgba(169, 35, 69, 0.2), transparent 30%),
-    rgba(0, 0, 0, 0.8);
-  /* Slightly more transparent backdrop */
+    rgba(0, 0, 0, 0.8); /* Slightly more transparent backdrop */
   backdrop-filter: blur(20px);
   display: flex;
-  align-items: flex-start;
-  /* Centered horizontally, start at top */
+  align-items: flex-start; /* Centered horizontally, start at top */
   justify-content: center;
-  padding-top: 60px;
-  /* A bit at the top */
+  padding-top: 60px; /* A bit at the top */
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1352,17 +1342,8 @@ tbody tr.is-selected td {
 }
 
 @keyframes pulse-glow {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-
-  50% {
-    transform: scale(1.2);
-    opacity: 0.8;
-  }
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.8; }
 }
 
 .welcome-title {

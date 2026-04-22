@@ -7,24 +7,24 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 let quill;
-let templates = [];
-let editingId = null;
-let htmlMode = false;
+let templates  = [];
+let editingId  = null;
+let htmlMode   = false;
 
 /* ── DOM refs ─────────────────────────────────────────────────────── */
-const templatesGrid = document.getElementById('templates-grid');
-const templateModal = document.getElementById('template-modal');
-const previewModal = document.getElementById('preview-modal');
-const templateForm = document.getElementById('template-form');
-const toggleModeBtn = document.getElementById('toggle-mode-btn');
-const htmlEditor = document.getElementById('html-editor');
-const quillWrap = document.getElementById('quill-wrap');
+const templatesGrid   = document.getElementById('templates-grid');
+const templateModal   = document.getElementById('template-modal');
+const previewModal    = document.getElementById('preview-modal');
+const templateForm    = document.getElementById('template-form');
+const toggleModeBtn   = document.getElementById('toggle-mode-btn');
+const htmlEditor      = document.getElementById('html-editor');
+const quillWrap       = document.getElementById('quill-wrap');
 const saveTemplateBtn = document.getElementById('save-template-btn');
 
 /* ── Global window bindings (used by inline onclick attrs) ────────── */
 window.openTemplateModal = openTemplateModal;
-window.openPreview = openPreview;
-window.deleteTemplate = deleteTemplate;
+window.openPreview       = openPreview;
+window.deleteTemplate    = deleteTemplate;
 
 /* ── Event listeners ─────────────────────────────────────────────── */
 document.getElementById('new-template-btn').addEventListener('click', () => openTemplateModal(null));
@@ -136,18 +136,18 @@ function renderTemplateGrid() {
    ═══════════════════════════════════════════════════════════════════ */
 function openTemplateModal(id) {
   editingId = id;
-  const t = id ? templates.find(item => item.id === id) : null;
+  const t    = id ? templates.find(item => item.id === id) : null;
   const body = t?.body || getDefaultTemplateBody();
 
   document.getElementById('modal-template-title').textContent = t ? 'Edit Template' : 'New Template';
-  document.getElementById('t-title').value = t?.title || '';
+  document.getElementById('t-title').value   = t?.title   || '';
   document.getElementById('t-subject').value = t?.subject || '';
 
   /* always start in visual mode */
   htmlMode = false;
-  htmlEditor.style.display = 'none';
-  quillWrap.style.display = '';
-  toggleModeBtn.innerHTML = '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
+  htmlEditor.style.display  = 'none';
+  quillWrap.style.display   = '';
+  toggleModeBtn.innerHTML   = '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
   saveTemplateBtn.innerHTML = `<i data-lucide="save" style="width:14px;height:14px"></i> ${t ? 'Save Changes' : 'Save Template'}`;
 
   quill.setContents([]);
@@ -166,15 +166,15 @@ function closeTemplateModal() {
 function toggleEditorMode() {
   htmlMode = !htmlMode;
   if (htmlMode) {
-    htmlEditor.value = quill.root.innerHTML;
-    quillWrap.style.display = 'none';
-    htmlEditor.style.display = '';
-    toggleModeBtn.innerHTML = '<i data-lucide="eye" style="width:12px;height:12px"></i> Visual Mode';
+    htmlEditor.value          = quill.root.innerHTML;
+    quillWrap.style.display   = 'none';
+    htmlEditor.style.display  = '';
+    toggleModeBtn.innerHTML   = '<i data-lucide="eye" style="width:12px;height:12px"></i> Visual Mode';
   } else {
     quill.clipboard.dangerouslyPasteHTML(htmlEditor.value);
-    htmlEditor.style.display = 'none';
-    quillWrap.style.display = '';
-    toggleModeBtn.innerHTML = '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
+    htmlEditor.style.display  = 'none';
+    quillWrap.style.display   = '';
+    toggleModeBtn.innerHTML   = '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
   }
   redrawIcons();
 }
@@ -183,12 +183,12 @@ function toggleEditorMode() {
 async function saveTemplate(event) {
   event.preventDefault();
   const payload = {
-    title: document.getElementById('t-title').value.trim(),
+    title:   document.getElementById('t-title').value.trim(),
     subject: document.getElementById('t-subject').value.trim(),
-    body: htmlMode ? htmlEditor.value : quill.root.innerHTML
+    body:    htmlMode ? htmlEditor.value : quill.root.innerHTML
   };
 
-  saveTemplateBtn.disabled = true;
+  saveTemplateBtn.disabled  = true;
   saveTemplateBtn.innerHTML = '<span class="spinner"></span><span>Saving…</span>';
 
   try {
@@ -206,7 +206,7 @@ async function saveTemplate(event) {
   } catch (error) {
     Toast.error(error.response?.data?.detail || error.message || 'Failed to save template.');
   } finally {
-    saveTemplateBtn.disabled = false;
+    saveTemplateBtn.disabled  = false;
     saveTemplateBtn.innerHTML = `<i data-lucide="save" style="width:14px;height:14px"></i> ${editingId ? 'Save Changes' : 'Save Template'}`;
     redrawIcons();
   }
@@ -216,14 +216,14 @@ async function saveTemplate(event) {
 async function deleteTemplate(id) {
   const confirmed = await Swal.fire({
     title: 'Delete this template?',
-    text: 'This action cannot be undone.',
-    icon: 'warning',
-    showCancelButton: true,
+    text:  'This action cannot be undone.',
+    icon:  'warning',
+    showCancelButton:  true,
     confirmButtonText: 'Delete',
     confirmButtonColor: getCssVar('--danger'),
-    cancelButtonColor: 'transparent',
+    cancelButtonColor:  'transparent',
     background: getCssVar('--bg-card'),
-    color: getCssVar('--text-primary'),
+    color:      getCssVar('--text-primary'),
     customClass: { popup: 'swal-dark' }
   });
   if (!confirmed.isConfirmed) return;
@@ -272,9 +272,9 @@ function buildPreviewEmail(template) {
   });
 
   let body = (template.body || '')
-    .replace(/\{\{name\}\}/g, 'John Doe')
+    .replace(/\{\{name\}\}/g,  'John Doe')
     .replace(/\{\{email\}\}/g, 'john@example.com')
-    .replace(/\{\{date\}\}/g, today);
+    .replace(/\{\{date\}\}/g,  today);
 
   /* ── 2. Sanitise any <img> tags in the stored body ────────────
      Remove explicit width/height attrs and force responsive sizing.
@@ -282,9 +282,9 @@ function buildPreviewEmail(template) {
      layout when a legacy template body is pasted in.             */
   body = body.replace(/<img(\s[^>]*)?>/gi, (_match, attrs) => {
     const cleaned = (attrs || '')
-      .replace(/\s+width\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s+width\s*=\s*["'][^"']*["']/gi,  '')
       .replace(/\s+height\s*=\s*["'][^"']*["']/gi, '')
-      .replace(/\s+style\s*=\s*["'][^"']*["']/gi, '');
+      .replace(/\s+style\s*=\s*["'][^"']*["']/gi,  '');
     return `<img${cleaned} width="100%" style="max-width:100%;height:auto;display:block;margin:0 auto;" alt="">`;
   });
 
@@ -936,7 +936,7 @@ function getDefaultTemplateBody() {
 function insertVariable(variable) {
   if (htmlMode) {
     const start = htmlEditor.selectionStart ?? htmlEditor.value.length;
-    const end = htmlEditor.selectionEnd ?? htmlEditor.value.length;
+    const end   = htmlEditor.selectionEnd   ?? htmlEditor.value.length;
     htmlEditor.value =
       htmlEditor.value.slice(0, start) + variable + htmlEditor.value.slice(end);
     htmlEditor.focus();
@@ -964,10 +964,10 @@ function getCssVar(name) {
 
 function escapeHtml(value) {
   return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;');
 }
 
 function escapeAttr(value) {
