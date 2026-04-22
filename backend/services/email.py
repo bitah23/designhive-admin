@@ -19,7 +19,7 @@ def _replace_variables(text: str, user: dict) -> str:
 
 
 def _wrap_template(subject: str, body: str) -> str:
-    """Wraps the email body in the DesignHive branded layout (table-based for compatibility)."""
+    """Wraps email body in a monochrome, email-client-safe layout."""
     logo_url = "https://admin.designhivestudio.ai/assets/brand/logo.png"
     
     template_html = """
@@ -27,89 +27,88 @@ def _wrap_template(subject: str, body: str) -> str:
     <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="color-scheme" content="light dark">
+        <meta name="supported-color-schemes" content="light dark">
         <style>
-            body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-font-smoothing: antialiased; }
-            .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-            .header { background: linear-gradient(135deg, #fff6db, #ffffff); padding: 30px; }
-            .hero { background: linear-gradient(135deg, #8d173c, #b62453); padding: 30px; border-radius: 20px; color: #ffffff; }
-            .content { padding: 30px; color: #243041; line-height: 1.8; font-size: 15px; }
-            .footer { background-color: #111827; padding: 30px; color: #d5d9e5; border-radius: 0 0 20px 20px; }
-            .badge { padding: 6px 12px; border-radius: 20px; background: #f5e5a4; color: #7b183a; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-            .btn { display: inline-block; padding: 12px 24px; border-radius: 30px; background-color: #8d173c; color: #ffffff; text-decoration: none; font-weight: 700; margin-top: 20px; }
+            body { margin: 0; padding: 0; background-color: #F7F7F7; font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
+            table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+            img { border: 0; display: block; line-height: 100%; outline: none; text-decoration: none; }
+            .body-copy p { margin: 0 0 16px; }
+            @media (prefers-color-scheme: dark) {
+                body { background-color: #1A1A1A !important; }
+                .page-bg { background-color: #1A1A1A !important; }
+                .card-bg { background-color: #111111 !important; border-color: #2A2A2A !important; }
+                .text-main { color: #FFFFFF !important; }
+                .text-muted { color: #C9C9C9 !important; }
+                .divider { border-color: #2A2A2A !important; }
+                .btn-dark { background-color: #000000 !important; border-color: #000000 !important; }
+                .btn-dark a { color: #FFFFFF !important; }
+            }
         </style>
     </head>
-    <body style="background-color: #f3f4f6; padding: 20px 0;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 24px; overflow: hidden; border: 1px solid #e5e7eb;">
-            <!-- Header -->
+    <body style="margin:0; padding:0; background-color:#F7F7F7;">
+        <div style="display:none; font-size:1px; color:#F7F7F7; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">
+            Welcome to Design Hive. Your account is ready, and your dashboard is waiting.
+        </div>
+        <table role="presentation" class="page-bg" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#F7F7F7;">
             <tr>
-                <td class="header" style="padding: 28px 28px 0; background: linear-gradient(135deg, #fff6db, #ffffff);">
-                    <table width="100%" cellpadding="0" cellspacing="0">
+                <td align="center" style="padding:24px 12px;">
+                    <table role="presentation" class="card-bg" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; width:100%; background-color:#FFFFFF; border:1px solid #E3E3E3;">
                         <tr>
-                            <td><img src="{{LOGO_URL}}" alt="Design Hive" style="width: 128px; height: auto; display: block;"></td>
-                            <td align="right"><span class="badge" style="padding: 8px 12px; border-radius: 999px; background: #f5e5a4; color: #7b183a; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;">Admin Dispatch</span></td>
-                        </tr>
-                    </table>
-                    <div style="height: 24px;">&nbsp;</div>
-                </td>
-            </tr>
-            <!-- Hero -->
-            <tr>
-                <td style="padding: 0 28px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" class="hero" style="background: linear-gradient(135deg, #8d173c, #b62453); border-radius: 24px; color: #ffffff;">
-                        <tr>
-                            <td style="padding: 28px;">
-                                <div style="font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; opacity: .82; margin-bottom: 12px;">DesignHive AI</div>
-                                <h1 style="margin: 0 0 10px; font-size: 32px; line-height: 1.1; color: #ffffff;">{{SUBJECT}}</h1>
-                                <p style="margin: 0; font-size: 15px; line-height: 1.7; opacity: .9;">A more polished, dashboard-aware email with stronger hierarchy, cleaner content pacing, and a real footer your team can ship confidently.</p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            <!-- Message -->
-            <tr>
-                <td class="content" style="padding: 28px;">
-                    <div style="font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #8d173c; margin-bottom: 12px;">Message</div>
-                    <div style="font-size: 15px; line-height: 1.8; color: #243041;">
-                        {{BODY}}
-                    </div>
-                </td>
-            </tr>
-            <!-- Shortcut -->
-            <tr>
-                <td style="padding: 0 28px 28px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background: #f7f2e4; border: 1px solid #eadfbc; border-radius: 18px;">
-                        <tr>
-                            <td style="padding: 18px 20px;">
-                                <div style="font-size: 13px; font-weight: 700; color: #8d173c; margin-bottom: 8px;">Dashboard shortcut</div>
-                                <a href="https://admin.designhivestudio.ai/dashboard.html" style="display: inline-block; padding: 12px 18px; border-radius: 999px; background: #8d173c; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px;">Open Dashboard</a>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            <!-- Footer -->
-            <tr>
-                <td style="padding: 0 28px 28px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" class="footer" style="background: #111827; border-radius: 18px; color: #d5d9e5;">
-                        <tr>
-                            <td style="padding: 20px;">
-                                <table width="100%" cellpadding="0" cellspacing="0">
+                            <td style="padding:28px 28px 18px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                                     <tr>
-                                        <td>
-                                            <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">DesignHive AI</div>
-                                            <div style="font-size: 12px; line-height: 1.6; max-width: 280px;">Campaign workflows, template previews, user targeting, and delivery tracking.</div>
+                                        <td valign="middle">
+                                            <img src="{{LOGO_URL}}" width="112" height="32" alt="Design Hive" style="width:112px; height:32px; color:#111111; font-size:14px; font-weight:700;">
                                         </td>
-                                        <td align="right" style="font-size: 12px; line-height: 1.8; vertical-align: top;">
-                                            <div>support@designhive.ai</div>
-                                            <div>admin.designhive.ai</div>
+                                        <td class="text-muted" align="right" valign="middle" style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#555555; font-weight:700;">
+                                            Admin Dispatch
                                         </td>
                                     </tr>
                                 </table>
-                                <div style="margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); font-size: 12px; line-height: 1.8; color: #9ca3af;">
-                                    Thanks for building with us.<br>
-                                    The DesignHive AI team
-                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:0 28px 20px;">
+                                <h1 class="text-main" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:36px; line-height:1.1; font-weight:900; color:#1A1A1A;">
+                                    {{SUBJECT}}
+                                </h1>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="body-copy text-main" style="padding:0 28px 12px; font-family:Arial, Helvetica, sans-serif; font-size:16px; line-height:1.5; color:#1A1A1A; text-align:left;">
+                                {{BODY}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px 28px 28px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td class="btn-dark" bgcolor="#000000" style="background-color:#000000; border:1px solid #000000;">
+                                            <a href="https://admin.designhivestudio.ai/dashboard.html" style="display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:44px; min-height:44px; font-weight:700; color:#FFFFFF; text-decoration:none; padding:0 30px;">
+                                                Access your Design Hive Dashboard
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="divider" style="padding:0 28px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td style="border-top:1px solid #E8E8E8; font-size:0; line-height:0;">&nbsp;</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:18px 28px 26px;">
+                                <p class="text-muted" style="margin:0; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.6; color:#666666;">
+                                    You are receiving this email because you signed up for Design Hive.<br>
+                                    Need help? Contact support@designhive.ai
+                                </p>
                             </td>
                         </tr>
                     </table>

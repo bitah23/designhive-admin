@@ -266,7 +266,6 @@ function closePreviewModal() {
      · Dark hero banner + white body = max readability in all clients
    ═══════════════════════════════════════════════════════════════════ */
 function buildPreviewEmail(template) {
-  /* ── 1. Sample data substitution ─────────────────────────────── */
   const today = new Date().toLocaleDateString('en-AU', {
     day: 'numeric', month: 'long', year: 'numeric'
   });
@@ -288,409 +287,70 @@ function buildPreviewEmail(template) {
     return `<img${cleaned} width="100%" style="max-width:100%;height:auto;display:block;margin:0 auto;" alt="">`;
   });
 
-  /* ── 3. Inline SVG honeycomb logo (correct size, always works) ─ */
-  const svgLogo = /* html */`
-    <svg width="38" height="38" viewBox="0 0 110 126"
-         xmlns="http://www.w3.org/2000/svg" style="display:block;">
-      <!-- top-left hex -->
-      <polygon points="28,4 54,19 54,49 28,64 2,49 2,19"
-               fill="#f5a623" stroke="#0d0d0d" stroke-width="3"/>
-      <polygon points="28,13 46,23 46,43 28,53 10,43 10,23"
-               fill="#ffc547"/>
-      <circle cx="22" cy="25" r="4.5" fill="rgba(255,255,255,.5)"/>
-      <!-- top-right hex -->
-      <polygon points="82,4 108,19 108,49 82,64 56,49 56,19"
-               fill="#f5a623" stroke="#0d0d0d" stroke-width="3"/>
-      <polygon points="82,13 100,23 100,43 82,53 64,43 64,23"
-               fill="#ffc547"/>
-      <!-- bottom-centre hex -->
-      <polygon points="55,67 81,82 81,112 55,127 29,112 29,82"
-               fill="#f5a623" stroke="#0d0d0d" stroke-width="3"/>
-      <polygon points="55,76 73,86 73,106 55,116 37,106 37,86"
-               fill="#ffc547"/>
-    </svg>`;
-
-  /* ── 4. Build the full email wrapper ────────────────────────── */
   return /* html */`
-<div style="margin:0;padding:0;background-color:#e8e4d8;
-            font-family:'Segoe UI',Tahoma,Arial,Helvetica,sans-serif;">
-
-  <!--[if mso]>
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-         width="100%" style="background-color:#e8e4d8;">
-  <tr><td align="center"><![endif]-->
-
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-         width="100%"
-         style="background-color:#e8e4d8;padding:32px 12px 40px;">
+<div style="margin:0;padding:0;background-color:#F7F7F7;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#F7F7F7;padding:24px 12px;">
     <tr>
       <td align="center">
-
-        <!-- ╔══════════════════════════════════════════╗
-             ║  OUTER CARD  max-width 600px             ║
-             ╚══════════════════════════════════════════╝ -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-               style="max-width:600px;width:100%;
-                      border-radius:20px;overflow:hidden;
-                      box-shadow:0 12px 48px rgba(0,0,0,0.18);
-                      mso-table-lspace:0pt;mso-table-rspace:0pt;">
-
-          <!-- ┌──────────────────────────────────────┐
-               │  SECTION 1 — TOP BAR / NAVIGATION    │
-               └──────────────────────────────────────┘ -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#FFFFFF;border:1px solid #E3E3E3;">
           <tr>
-            <td style="background-color:#0d0d0d;padding:16px 28px;">
-              <table role="presentation" cellpadding="0" cellspacing="0"
-                     border="0" width="100%"
-                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
+            <td style="padding:28px 28px 18px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <!-- Logo mark + wordmark -->
-                  <td style="vertical-align:middle;">
-                    <table role="presentation" cellpadding="0" cellspacing="0"
-                           border="0"
-                           style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                      <tr>
-                        <td style="vertical-align:middle;padding-right:10px;
-                                    line-height:0;">${svgLogo}</td>
-                        <td style="vertical-align:middle;">
-                          <span style="font-size:16px;font-weight:900;
-                                       color:#f5a623;letter-spacing:0.12em;
-                                       text-transform:uppercase;
-                                       font-family:Arial,Helvetica,sans-serif;">
-                            DESIGN HIVE
-                          </span>
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="font-size:20px;line-height:1;font-weight:900;color:#000000;letter-spacing:0.08em;text-transform:uppercase;">
+                    DESIGN HIVE
                   </td>
-                  <!-- Admin badge -->
-                  <td align="right" style="vertical-align:middle;">
-                    <span style="display:inline-block;padding:5px 14px;
-                                 border-radius:999px;background-color:#f5a623;
-                                 color:#0d0d0d;font-size:9px;font-weight:900;
-                                 letter-spacing:0.22em;text-transform:uppercase;
-                                 font-family:Arial,Helvetica,sans-serif;">
-                      Admin Dispatch
-                    </span>
+                  <td align="right" style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#555555;">
+                    Admin Dispatch
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
-
-          <!-- ┌──────────────────────────────────────┐
-               │  SECTION 2 — HERO BANNER             │
-               └──────────────────────────────────────┘ -->
           <tr>
-            <td style="background:linear-gradient(150deg,#161616 0%,#231d06 55%,#161616 100%);
-                        padding:48px 32px 42px;">
-              <!-- Overline label -->
-              <p style="margin:0 0 14px;
-                         font-size:10px;font-weight:800;
-                         letter-spacing:0.28em;text-transform:uppercase;
-                         color:#f5a623;
-                         font-family:Arial,Helvetica,sans-serif;">
-                DesignHive AI &nbsp;·&nbsp; Welcome
-              </p>
-              <!-- Subject / headline -->
-              <h1 style="margin:0 0 18px;
-                          font-size:30px;line-height:1.18;font-weight:900;
-                          color:#ffffff;max-width:420px;
-                          font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
+            <td style="padding:0 28px 20px;">
+              <h1 style="margin:0;font-size:36px;line-height:1.1;font-weight:900;color:#1A1A1A;">
                 ${escapeHtml(template.subject)}
               </h1>
-              <!-- Dispatch meta line -->
-              <p style="margin:0 0 28px;
-                         font-size:13px;line-height:1.7;
-                         color:#b0a070;max-width:390px;
-                         font-family:Arial,Helvetica,sans-serif;">
-                Sent via your DesignHive admin dashboard &mdash; ${today}
-              </p>
-              <!-- Decorative amber rule -->
-              <table role="presentation" cellpadding="0" cellspacing="0"
-                     border="0"
-                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 12px;font-size:16px;line-height:1.5;color:#1A1A1A;text-align:left;word-wrap:break-word;overflow-wrap:break-word;">
+              ${body}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 28px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="width:52px;height:4px;background-color:#f5a623;
-                              border-radius:3px;"></td>
-                  <td style="width:14px;"></td>
-                  <td style="width:20px;height:4px;
-                              background-color:rgba(245,166,35,0.4);
-                              border-radius:3px;"></td>
-                  <td style="width:10px;"></td>
-                  <td style="width:10px;height:4px;
-                              background-color:rgba(245,166,35,0.18);
-                              border-radius:3px;"></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- ┌──────────────────────────────────────┐
-               │  SECTION 3 — AMBER DATE STRIP        │
-               └──────────────────────────────────────┘ -->
-          <tr>
-            <td style="background-color:#f5a623;padding:9px 32px;">
-              <p style="margin:0;font-size:10px;font-weight:900;
-                         color:#0d0d0d;letter-spacing:0.18em;
-                         text-transform:uppercase;
-                         font-family:Arial,Helvetica,sans-serif;">
-                ${today}
-              </p>
-            </td>
-          </tr>
-
-          <!-- ┌──────────────────────────────────────┐
-               │  SECTION 4 — MAIN BODY (white)       │
-               │  All user content goes here.         │
-               │  Images are sanitised above so they  │
-               │  cannot blow out the column width.   │
-               └──────────────────────────────────────┘ -->
-          <tr>
-            <td style="background-color:#ffffff;padding:40px 32px 32px;">
-              <div style="font-size:15px;line-height:1.9;color:#2a2a2a;
-                           font-family:'Segoe UI',Arial,Helvetica,sans-serif;
-                           max-width:100%;word-wrap:break-word;
-                           overflow-wrap:break-word;">
-                ${body}
-              </div>
-            </td>
-          </tr>
-
-          <!-- ┌──────────────────────────────────────┐
-               │  SECTION 5 — BULLETPROOF CTA BLOCK  │
-               └──────────────────────────────────────┘ -->
-          <tr>
-            <td style="background-color:#ffffff;
-                        padding:0 32px 40px;">
-              <table role="presentation" cellpadding="0" cellspacing="0"
-                     border="0"
-                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr>
-                  <!-- Primary CTA: black bg, amber text -->
-                  <td style="border-radius:10px;background-color:#111111;">
-                    <a href="/dashboard.html"
-                       style="display:inline-block;
-                              min-height:48px;line-height:48px;
-                              padding:0 32px;
-                              border-radius:10px;
-                              background-color:#111111;
-                              color:#f5a623;
-                              text-decoration:none;
-                              font-weight:800;font-size:13px;
-                              letter-spacing:0.08em;
-                              text-transform:uppercase;
-                              white-space:nowrap;
-                              font-family:Arial,Helvetica,sans-serif;">
-                      Open Dashboard &nbsp;&rarr;
-                    </a>
-                  </td>
-                  <td style="width:14px;"></td>
-                  <!-- Secondary CTA: outlined -->
-                  <td>
-                    <a href="#"
-                       style="display:inline-block;
-                              min-height:46px;line-height:44px;
-                              padding:0 24px;
-                              border-radius:10px;
-                              border:2px solid #d8d4c8;
-                              background-color:#ffffff;
-                              color:#666666;
-                              text-decoration:none;
-                              font-weight:700;font-size:13px;
-                              letter-spacing:0.04em;
-                              white-space:nowrap;
-                              font-family:Arial,Helvetica,sans-serif;">
-                      View Online
+                  <td bgcolor="#000000" style="background-color:#000000;border:1px solid #000000;">
+                    <a href="/dashboard.html" style="display:inline-block;min-height:44px;line-height:44px;padding:0 30px;color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:700;">
+                      Access your Design Hive Dashboard
                     </a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
-
-          <!-- ┌──────────────────────────────────────┐
-               │  SECTION 6 — FEATURE TILES (3-up)   │
-               └──────────────────────────────────────┘ -->
           <tr>
-            <td style="background-color:#f7f6f0;
-                        padding:26px 32px 30px;
-                        border-top:1px solid #e8e4d8;">
-              <p style="margin:0 0 16px;font-size:9px;font-weight:900;
-                          letter-spacing:0.24em;text-transform:uppercase;
-                          color:#aaaaaa;
-                          font-family:Arial,Helvetica,sans-serif;">
-                What's waiting for you
+            <td style="padding:0 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr><td style="border-top:1px solid #E8E8E8;font-size:0;line-height:0;">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px 28px 26px;">
+              <p style="margin:0;font-size:12px;line-height:1.6;color:#666666;">
+                Sent from Design Hive on ${today}.<br>
+                Need help? Contact support@designhive.ai
               </p>
-              <table role="presentation" cellpadding="0" cellspacing="0"
-                     border="0" width="100%"
-                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr>
-                  <!-- Tile: Campaigns -->
-                  <td width="31%" valign="top"
-                      style="background-color:#ffffff;border-radius:12px;
-                              border:1px solid #e4e0d4;padding:18px 12px;
-                              text-align:center;">
-                    <div style="width:40px;height:40px;margin:0 auto 10px;
-                                 border-radius:10px;background-color:#111111;
-                                 font-size:18px;line-height:40px;
-                                 text-align:center;">
-                      📊
-                    </div>
-                    <p style="margin:0 0 5px;font-size:11px;font-weight:800;
-                                color:#111111;letter-spacing:0.06em;
-                                text-transform:uppercase;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      Campaigns
-                    </p>
-                    <p style="margin:0;font-size:11px;color:#999999;
-                                line-height:1.55;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      Build &amp; launch targeted outreach
-                    </p>
-                  </td>
-                  <td width="3%"></td>
-                  <!-- Tile: Users -->
-                  <td width="31%" valign="top"
-                      style="background-color:#ffffff;border-radius:12px;
-                              border:1px solid #e4e0d4;padding:18px 12px;
-                              text-align:center;">
-                    <div style="width:40px;height:40px;margin:0 auto 10px;
-                                 border-radius:10px;background-color:#f5a623;
-                                 font-size:18px;line-height:40px;
-                                 text-align:center;">
-                      👤
-                    </div>
-                    <p style="margin:0 0 5px;font-size:11px;font-weight:800;
-                                color:#111111;letter-spacing:0.06em;
-                                text-transform:uppercase;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      Users
-                    </p>
-                    <p style="margin:0;font-size:11px;color:#999999;
-                                line-height:1.55;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      Manage audience &amp; segments
-                    </p>
-                  </td>
-                  <td width="3%"></td>
-                  <!-- Tile: Templates -->
-                  <td width="31%" valign="top"
-                      style="background-color:#ffffff;border-radius:12px;
-                              border:1px solid #e4e0d4;padding:18px 12px;
-                              text-align:center;">
-                    <div style="width:40px;height:40px;margin:0 auto 10px;
-                                 border-radius:10px;background-color:#111111;
-                                 font-size:18px;line-height:40px;
-                                 text-align:center;">
-                      📝
-                    </div>
-                    <p style="margin:0 0 5px;font-size:11px;font-weight:800;
-                                color:#111111;letter-spacing:0.06em;
-                                text-transform:uppercase;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      Templates
-                    </p>
-                    <p style="margin:0;font-size:11px;color:#999999;
-                                line-height:1.55;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      Design &amp; preview every email
-                    </p>
-                  </td>
-                </tr>
-              </table>
             </td>
           </tr>
-
-          <!-- ┌──────────────────────────────────────┐
-               │  SECTION 7 — FOOTER                  │
-               └──────────────────────────────────────┘ -->
-          <tr>
-            <td style="background-color:#0d0d0d;
-                        border-radius:0 0 20px 20px;
-                        padding:28px 32px 26px;">
-              <!-- Brand + contact row -->
-              <table role="presentation" cellpadding="0" cellspacing="0"
-                     border="0" width="100%"
-                     style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
-                <tr>
-                  <td valign="top">
-                    <p style="margin:0 0 4px;font-size:13px;font-weight:900;
-                                color:#f5a623;letter-spacing:0.07em;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      DesignHive AI
-                    </p>
-                    <p style="margin:0;font-size:11px;color:#5a5a5a;
-                                line-height:1.75;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      Campaign workflows &middot; Template previews<br>
-                      User targeting &middot; Delivery tracking
-                    </p>
-                  </td>
-                  <td align="right" valign="top">
-                    <p style="margin:0 0 3px;font-size:11px;color:#5a5a5a;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      support@designhive.ai
-                    </p>
-                    <p style="margin:0;font-size:11px;color:#5a5a5a;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      admin.designhive.ai
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Amber gradient divider -->
-              <table role="presentation" cellpadding="0" cellspacing="0"
-                     border="0" width="100%" style="margin-top:20px;">
-                <tr>
-                  <td style="height:1px;
-                              background:linear-gradient(to right,
-                                transparent 0%,
-                                rgba(245,166,35,0.35) 30%,
-                                rgba(245,166,35,0.35) 70%,
-                                transparent 100%);"></td>
-                </tr>
-              </table>
-
-              <!-- Copyright + unsubscribe row -->
-              <table role="presentation" cellpadding="0" cellspacing="0"
-                     border="0" width="100%" style="margin-top:18px;">
-                <tr>
-                  <td valign="middle">
-                    <p style="margin:0;font-size:10px;color:#3d3d3d;
-                                line-height:1.8;
-                                font-family:Arial,Helvetica,sans-serif;">
-                      You're receiving this because you signed up for DesignHive AI.<br>
-                      &copy; ${new Date().getFullYear()} DesignHive AI — All rights reserved.
-                    </p>
-                  </td>
-                  <td align="right" valign="middle">
-                    <a href="#"
-                       style="display:inline-block;padding:5px 14px;
-                              border-radius:999px;
-                              border:1px solid #2e2e2e;
-                              color:#5a5a5a;text-decoration:none;
-                              font-size:9px;font-weight:700;
-                              letter-spacing:0.16em;text-transform:uppercase;
-                              font-family:Arial,Helvetica,sans-serif;">
-                      Unsubscribe
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
         </table>
-        <!-- /OUTER CARD -->
-
       </td>
     </tr>
   </table>
-
-  <!--[if mso]></td></tr></table><![endif]-->
-
 </div>`;
 }
 
@@ -708,225 +368,42 @@ function buildPreviewEmail(template) {
    ═══════════════════════════════════════════════════════════════════ */
 function getDefaultTemplateBody() {
   return `
-<!-- ── GREETING ───────────────────────────────────────────────── -->
-<p style="margin:0 0 6px;
-           font-size:11px;font-weight:800;letter-spacing:0.22em;
-           text-transform:uppercase;color:#f5a623;
-           font-family:Arial,Helvetica,sans-serif;">
-  Welcome aboard
+<p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#666666;font-family:Arial,Helvetica,sans-serif;">
+  Welcome
 </p>
-<p style="margin:0 0 22px;
-           font-size:24px;font-weight:800;line-height:1.2;color:#111111;
-           font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-  Hello, {{name}} 👋
+<p style="margin:0 0 20px;font-size:26px;font-weight:900;line-height:1.2;color:#1A1A1A;font-family:Arial,Helvetica,sans-serif;">
+  Hello, {{name}}
 </p>
 
-<!-- ── INTRO ──────────────────────────────────────────────────── -->
-<p style="margin:0 0 22px;
-           font-size:15px;line-height:1.85;color:#444444;
-           font-family:Arial,Helvetica,sans-serif;">
-  Your account is live and everything is ready to go. We built
-  <strong style="color:#111111;">DesignHive AI</strong> to help you move faster,
-  communicate smarter, and scale without friction — and we're genuinely
-  excited to see what you create.
+<p style="margin:0 0 18px;font-size:16px;line-height:1.5;color:#2A2A2A;font-family:Arial,Helvetica,sans-serif;">
+  Welcome to Design Hive. Your account is now active, and your workspace is ready to use.
 </p>
 
-<!-- ── ACCOUNT DETAILS CARD ───────────────────────────────────── -->
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"
-       width="100%"
-       style="margin:0 0 26px;
-              mso-table-lspace:0pt;mso-table-rspace:0pt;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
   <tr>
-    <td style="background-color:#fffbf0;
-                border-left:5px solid #f5a623;
-                border-radius:0 14px 14px 0;
-                padding:20px 24px;">
-      <p style="margin:0 0 12px;
-                 font-size:9px;font-weight:900;letter-spacing:0.24em;
-                 text-transform:uppercase;color:#f5a623;
-                 font-family:Arial,Helvetica,sans-serif;">
-        Your Account Details
+    <td style="background:#F7F7F7;border:1px solid #E6E6E6;padding:16px;">
+      <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#555555;font-family:Arial,Helvetica,sans-serif;">
+        Account Details
       </p>
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-             style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
-        <tr>
-          <td style="padding:4px 20px 4px 0;
-                      font-size:11px;font-weight:700;color:#999999;
-                      text-transform:uppercase;letter-spacing:0.1em;
-                      font-family:Arial,Helvetica,sans-serif;">
-            Name
-          </td>
-          <td style="padding:4px 0;
-                      font-size:14px;font-weight:600;color:#111111;
-                      font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-            {{name}}
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:4px 20px 4px 0;
-                      font-size:11px;font-weight:700;color:#999999;
-                      text-transform:uppercase;letter-spacing:0.1em;
-                      font-family:Arial,Helvetica,sans-serif;">
-            Email
-          </td>
-          <td style="padding:4px 0;
-                      font-size:14px;font-weight:600;color:#111111;
-                      font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-            {{email}}
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:4px 20px 4px 0;
-                      font-size:11px;font-weight:700;color:#999999;
-                      text-transform:uppercase;letter-spacing:0.1em;
-                      font-family:Arial,Helvetica,sans-serif;">
-            Date
-          </td>
-          <td style="padding:4px 0;
-                      font-size:14px;font-weight:600;color:#111111;
-                      font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-            {{date}}
-          </td>
-        </tr>
-      </table>
+      <p style="margin:0 0 8px;font-size:15px;line-height:1.5;color:#1A1A1A;font-family:Arial,Helvetica,sans-serif;"><strong>Name:</strong> {{name}}</p>
+      <p style="margin:0 0 8px;font-size:15px;line-height:1.5;color:#1A1A1A;font-family:Arial,Helvetica,sans-serif;"><strong>Email:</strong> {{email}}</p>
+      <p style="margin:0;font-size:15px;line-height:1.5;color:#1A1A1A;font-family:Arial,Helvetica,sans-serif;"><strong>Date:</strong> {{date}}</p>
     </td>
   </tr>
 </table>
 
-<!-- ── BODY PARAGRAPH ─────────────────────────────────────────── -->
-<p style="margin:0 0 26px;
-           font-size:15px;line-height:1.85;color:#444444;
-           font-family:Arial,Helvetica,sans-serif;">
-  From here you can launch campaigns, manage your entire user list,
-  and design beautiful email templates — all from one dashboard.
-  Every tool you need is already set up and waiting for you.
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5;color:#2A2A2A;font-family:Arial,Helvetica,sans-serif;">
+  What you can do next:
 </p>
+<p style="margin:0 0 10px;font-size:16px;line-height:1.5;color:#2A2A2A;font-family:Arial,Helvetica,sans-serif;">- Explore your dashboard</p>
+<p style="margin:0 0 10px;font-size:16px;line-height:1.5;color:#2A2A2A;font-family:Arial,Helvetica,sans-serif;">- Launch your first campaign</p>
+<p style="margin:0 0 18px;font-size:16px;line-height:1.5;color:#2A2A2A;font-family:Arial,Helvetica,sans-serif;">- Customize your templates</p>
 
-<!-- ── NEXT STEPS CARD ────────────────────────────────────────── -->
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"
-       width="100%"
-       style="margin:0 0 28px;
-              mso-table-lspace:0pt;mso-table-rspace:0pt;">
-  <tr>
-    <td style="background-color:#f7f7f3;
-                border-radius:14px;border:1px solid #e6e6e0;
-                padding:24px 26px;">
-      <p style="margin:0 0 16px;
-                 font-size:9px;font-weight:900;letter-spacing:0.24em;
-                 text-transform:uppercase;color:#aaaaaa;
-                 font-family:Arial,Helvetica,sans-serif;">
-        Here's what to do next
-      </p>
-
-      <!-- Step 1 -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-             width="100%"
-             style="margin-bottom:14px;
-                    mso-table-lspace:0pt;mso-table-rspace:0pt;">
-        <tr>
-          <td width="34" valign="top" style="padding-top:1px;">
-            <span style="display:inline-block;
-                          width:26px;height:26px;line-height:26px;
-                          border-radius:7px;background-color:#111111;
-                          color:#f5a623;font-size:11px;font-weight:900;
-                          text-align:center;
-                          font-family:Arial,Helvetica,sans-serif;">
-              1
-            </span>
-          </td>
-          <td valign="top" style="padding-left:4px;">
-            <p style="margin:0 0 3px;
-                       font-size:14px;font-weight:700;color:#111111;
-                       font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-              Explore your dashboard
-            </p>
-            <p style="margin:0;font-size:13px;color:#777777;line-height:1.6;
-                       font-family:Arial,Helvetica,sans-serif;">
-              Get familiar with the layout, metrics, and navigation.
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <!-- Step 2 -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-             width="100%"
-             style="margin-bottom:14px;
-                    mso-table-lspace:0pt;mso-table-rspace:0pt;">
-        <tr>
-          <td width="34" valign="top" style="padding-top:1px;">
-            <span style="display:inline-block;
-                          width:26px;height:26px;line-height:26px;
-                          border-radius:7px;background-color:#f5a623;
-                          color:#111111;font-size:11px;font-weight:900;
-                          text-align:center;
-                          font-family:Arial,Helvetica,sans-serif;">
-              2
-            </span>
-          </td>
-          <td valign="top" style="padding-left:4px;">
-            <p style="margin:0 0 3px;
-                       font-size:14px;font-weight:700;color:#111111;
-                       font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-              Launch your first campaign
-            </p>
-            <p style="margin:0;font-size:13px;color:#777777;line-height:1.6;
-                       font-family:Arial,Helvetica,sans-serif;">
-              Reach your audience in minutes with a polished, targeted send.
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <!-- Step 3 -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
-             width="100%"
-             style="mso-table-lspace:0pt;mso-table-rspace:0pt;">
-        <tr>
-          <td width="34" valign="top" style="padding-top:1px;">
-            <span style="display:inline-block;
-                          width:26px;height:26px;line-height:26px;
-                          border-radius:7px;background-color:#111111;
-                          color:#f5a623;font-size:11px;font-weight:900;
-                          text-align:center;
-                          font-family:Arial,Helvetica,sans-serif;">
-              3
-            </span>
-          </td>
-          <td valign="top" style="padding-left:4px;">
-            <p style="margin:0 0 3px;
-                       font-size:14px;font-weight:700;color:#111111;
-                       font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-              Customise your templates
-            </p>
-            <p style="margin:0;font-size:13px;color:#777777;line-height:1.6;
-                       font-family:Arial,Helvetica,sans-serif;">
-              Make every email feel on-brand using the visual editor.
-            </p>
-          </td>
-        </tr>
-      </table>
-
-    </td>
-  </tr>
-</table>
-
-<!-- ── CLOSING ────────────────────────────────────────────────── -->
-<p style="margin:0 0 6px;
-           font-size:15px;line-height:1.85;color:#444444;
-           font-family:Arial,Helvetica,sans-serif;">
-  If you have any questions at all, just hit reply — we're always
-  around and happy to help.
+<p style="margin:0;font-size:16px;line-height:1.5;color:#2A2A2A;font-family:Arial,Helvetica,sans-serif;">
+  Need help? Reply to this email and our team will assist you.
 </p>
-<p style="margin:0;
-           font-size:15px;color:#444444;
-           font-family:Arial,Helvetica,sans-serif;">
-  Looking forward to building something great together.
-</p>
-<p style="margin:24px 0 0;
-           font-size:15px;font-weight:800;color:#111111;
-           font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
-  — The Design Hive Team
+<p style="margin:16px 0 0;font-size:16px;font-weight:700;line-height:1.5;color:#1A1A1A;font-family:Arial,Helvetica,sans-serif;">
+  - The Design Hive Team
 </p>`;
 }
 

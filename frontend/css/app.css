@@ -1087,8 +1087,8 @@ tbody tr.is-selected td {
 }
 
 .email-preview-shell {
-  /* Warm neutral — matches the email outer wrapper background */
-  background: #e8e4d8;
+  /* Neutral monochrome background to match email wrapper */
+  background: #F7F7F7;
   border-radius: 16px;
   padding: 0;
   overflow: hidden;
