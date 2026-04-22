@@ -1095,21 +1095,22 @@ tbody tr.is-selected td {
 }
 
 .email-preview-card {
-  /* Email table handles its own dimensions, bg, and shadow    */
+  width: 100%;
+  min-height: 720px;
   max-width: 100%;
   margin: 0;
-  background: transparent;
+  background: #ffffff;
   border-radius: 0;
+  border: 0;
   color: inherit;
   box-shadow: none;
-  overflow: visible;
+  overflow: hidden;
 }
 
-/* Hard-cap every image inside the preview so nothing escapes  */
-.email-preview-card img {
-  max-width: 100% !important;
-  height: auto !important;
-  display: block !important;
+@media (max-width: 767px) {
+  .email-preview-card {
+    min-height: 640px;
+  }
 }
 
 .ql-toolbar.ql-snow,

@@ -244,11 +244,12 @@ async function deleteTemplate(id) {
 function openPreview(id) {
   const t = templates.find(item => item.id === id);
   if (!t) return;
-  document.getElementById('preview-content').innerHTML = buildPreviewEmail(t);
+  document.getElementById('preview-content').srcdoc = buildPreviewEmail(t);
   previewModal.classList.remove('hidden');
 }
 
 function closePreviewModal() {
+  document.getElementById('preview-content').srcdoc = '';
   previewModal.classList.add('hidden');
 }
 
