@@ -1,5 +1,4 @@
 import base64
-import os
 from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -8,6 +7,7 @@ from email import encoders
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import gmail, supabase, GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME
+from email_template_default import DEFAULT_EMAIL_TEMPLATE
 
 
 def _looks_like_full_email_document(html: str) -> bool:
@@ -16,27 +16,7 @@ def _looks_like_full_email_document(html: str) -> bool:
 
 
 def _load_default_template_html() -> str:
-    services_dir = os.path.abspath(os.path.dirname(__file__))
-    candidate_paths = [
-        os.path.join(services_dir, "..", "..", "index.html"),
-        os.path.join(os.getcwd(), "index.html"),
-    ]
-
-    template_path = next((path for path in candidate_paths if os.path.isfile(path)), None)
-    if not template_path:
-        raise FileNotFoundError(
-            f"Default email template not found. Checked: {', '.join(os.path.normpath(path) for path in candidate_paths)}"
-        )
-
-    with open(template_path, "r", encoding="utf-8") as fh:
-        html = fh.read()
-
-    return (
-        html
-        .replace("John Doe", "{{name}}")
-        .replace("john@example.com", "{{email}}")
-        .replace("Pro Member", "{{date}}")
-    )
+    return DEFAULT_EMAIL_TEMPLATE
 
 
 def _resolve_template_html(body: str) -> str:
