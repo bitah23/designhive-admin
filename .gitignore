@@ -36,6 +36,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Google OAuth client secret files
+client_secret_*.json
+
 # Custom Exclusions
 email-automation/database_schema.sql
 designhive/
