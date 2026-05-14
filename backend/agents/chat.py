@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 
-import anthropic
+from anthropic import Anthropic
 
 from config import supabase
 from agents.segmentation import segment_users as _segment_users
@@ -19,7 +19,17 @@ from services.email import send_bulk_emails as _send_bulk
 
 logger = logging.getLogger(__name__)
 
-_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
+_client: Anthropic | None = None
+
+
+def _get_client() -> Anthropic:
+    global _client
+    if _client is None:
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is not configured")
+        _client = Anthropic(api_key=api_key)
+    return _client
 
 _SYSTEM_PROMPT = (
     "You are the DesignHive Admin AI assistant — a natural language interface for an email marketing platform.\n\n"
@@ -264,8 +274,10 @@ def chat(message: str) -> dict:
     messages = [{"role": "user", "content": message}]
     action_taken = None
 
+    client = _get_client()
+
     for _ in range(10):  # safety cap on tool-call rounds
-        response = _client.messages.create(
+        response = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=2048,
             system=_SYSTEM_PROMPT,

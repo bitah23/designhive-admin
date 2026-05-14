@@ -4,15 +4,25 @@ import os
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-import anthropic
+from anthropic import Anthropic
 
 from config import MOCK_MODE, supabase
 from agents.segmentation import segment_users
 
 logger = logging.getLogger(__name__)
 
-_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
 _CACHE_TTL = int(os.getenv("SUGGESTIONS_CACHE_TTL", "3600"))
+_anthropic: Anthropic | None = None
+
+
+def _get_client() -> Anthropic:
+    global _anthropic
+    if _anthropic is None:
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is not configured")
+        _anthropic = Anthropic(api_key=api_key)
+    return _anthropic
 
 _cache: dict = {"data": None, "expires_at": None, "generated_at": None}
 
@@ -145,7 +155,7 @@ Return ONLY valid JSON — a flat array with no markdown fences, no extra text. 
 
 
 def _generate(signals: dict) -> list:
-    response = _client.messages.create(
+    response = _get_client().messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1024,
         messages=[{"role": "user", "content": _PROMPT.format(signals=json.dumps(signals, indent=2, default=str))}],

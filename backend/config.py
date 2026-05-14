@@ -5,7 +5,7 @@ from supabase import create_client, Client
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-load_dotenv(Path(__file__).with_name(".env"))
+load_dotenv(Path(__file__).with_name(".env"), override=True)
 
 APP_ENV = os.getenv("APP_ENV", "development")
 MOCK_MODE = os.getenv("MOCK_MODE", "false").lower() == "true"

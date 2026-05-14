@@ -135,7 +135,7 @@ async function loadReengagementConfig() {
       `Mode: ${data.mode}\nThreshold: ${data.threshold_days} days inactive\n` +
       `Template ID: ${data.template_id || 'not set'}\n` +
       `Drip Sequence: ${data.drip_sequence_id || 'not set'}\n` +
-      `Runs daily at: ${data.hour_utc}:00 UTC`
+      `Runs daily at: ${data.run_hour_utc}:00 UTC`
     );
   } catch (err) {
     showResult('reengagement-result', err?.response?.data?.detail || 'Failed to load config.', true);
@@ -152,7 +152,7 @@ async function runReengagement() {
     const data = await api.post('/agents/reengagement/run', {});
     const lines = [
       `Mode: ${data.mode}`,
-      `Inactive users found: ${data.inactive_users_found}`,
+      `Inactive users targeted: ${data.targeted ?? data.inactive_users_found ?? 0}`,
     ];
     if (data.sent !== undefined)   lines.push(`Sent: ${data.sent}`);
     if (data.failed !== undefined) lines.push(`Failed: ${data.failed}`);
