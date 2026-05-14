@@ -106,3 +106,8 @@ class WebhookPayload(BaseModel):
     type: str
     table: str
     record: WebhookRecord
+
+
+# Chat Interface (Agent 9)
+class ChatRequest(BaseModel):
+    message: str

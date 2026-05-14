@@ -28,9 +28,9 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 | 5 | [Welcome Sequence](#5-welcome-sequence-agent) | `done` | `backend/agents/welcome_sequence.py` |
 | 6 | [Re-engagement Agent](#6-re-engagement-agent) | `done` | `backend/agents/reengagement.py` |
 | 7 | [Failure Recovery](#7-failure-recovery-agent) | `done` | `backend/agents/failure_recovery.py` |
-| 8 | [Campaign Reporter](#8-campaign-reporter-agent) | `planned` | `backend/agents/reporter.py` |
-| 9 | [Chat Interface](#9-chat-interface-agent) | `planned` | `backend/agents/chat.py` |
-| 10 | [Suggestion Agent](#10-suggestion-agent) | `planned` | `backend/agents/suggestions.py` |
+| 8 | [Campaign Reporter](#8-campaign-reporter-agent) | `done` | `backend/agents/reporter.py` |
+| 9 | [Chat Interface](#9-chat-interface-agent) | `done` | `backend/agents/chat.py` |
+| 10 | [Suggestion Agent](#10-suggestion-agent) | `done` | `backend/agents/suggestions.py` |
 
 ---
 
@@ -275,8 +275,8 @@ REENGAGEMENT_DRIP_SEQUENCE_ID = <uuid>   # used when mode = drip
 
 ## 8. Campaign Reporter Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/reporter.py`
+**Status:** `done`  
+**Files:** `backend/agents/reporter.py` · `backend/routes/agents.py` · `backend/routes/email.py` · `backend/agents/scheduler.py`
 
 **What it does:** After any bulk send completes, generates a structured summary and optionally sends it to the admin via email.
 
@@ -292,48 +292,57 @@ REENGAGEMENT_DRIP_SEQUENCE_ID = <uuid>   # used when mode = drip
 **Trigger:** Called at the end of every bulk send in `routes/email.py` and by the Campaign Scheduler (#3) after each scheduled run.
 
 **Delivery options:**
-- API response (always — returned inline with the send result)
+- API response (always — returned inline with the send result as `"report": {...}`)
 - Email to admin (optional, configurable via `REPORTER_EMAIL_ADMIN = true/false` in config)
 
-**Future:** Could write report rows to a `campaign_reports` table for historical tracking on the Dashboard page.
+**Endpoints:**
+- `GET /api/agents/report?limit=20` — returns recent completed/failed scheduled campaigns with their result summaries
 
 **Integration points:**
-- Called by `routes/email.py:POST /email/send`
-- Called by Campaign Scheduler (#3)
+- Called by `routes/email.py:POST /email/send` (inline with bulk send result)
+- Called by Campaign Scheduler (#3) `_execute()` after each run — also enriches `result_summary` with `success_rate`
 
-**DB tables used:** `email_logs`, `email_templates`
+**Environment variables:**
+```env
+REPORTER_EMAIL_ADMIN=false          # Set to true to email report to admin after each send
+REPORTER_ADMIN_EMAIL=info@...       # Admin address to receive reports
+```
+
+**DB tables used:** `email_logs`, `email_templates`, `scheduled_campaigns`
 
 ---
 
 ## 9. Chat Interface Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/chat.py`  
+**Status:** `done`  
+**Files:** `backend/agents/chat.py` · `backend/routes/agents.py` · `backend/models.py` · `frontend/js/layout.js`  
 **Requires:** Claude API (`claude-sonnet-4-6`)
 
-**What it does:** Accepts a plain-English instruction from an admin and maps it to a platform action — essentially a natural language interface to the entire system.
+**What it does:** Accepts a plain-English instruction from an admin and maps it to a platform action — a natural language interface to the entire system. Uses Claude's tool use (function calling) API with an agentic loop (up to 10 tool calls per message).
 
 **Example inputs → actions:**
 
 | Input | Action |
 |---|---|
-| "Send the welcome email to all new users from this week" | Segment by `new_users`, send template matching "welcome" |
-| "Schedule the promo campaign for Friday at 10 AM" | Create a scheduled campaign for next Friday |
-| "Show me how many emails failed yesterday" | Query `email_logs` and return summary |
-| "Enroll all inactive users in the re-engagement drip" | Run re-engagement agent in drip mode |
-| "Generate a re-engagement email about our new design toolkit" | Call Content Generation Agent (#2) |
+| "Send the welcome email to all new users from this week" | Calls `list_templates` → `send_campaign_now` |
+| "Schedule the promo campaign for Friday at 10 AM" | Calls `list_templates` → `schedule_campaign` |
+| "Show me how many emails failed yesterday" | Calls `get_email_stats` with `since_days=1` |
+| "Run the re-engagement agent" | Calls `run_reengagement` |
+| "Generate a re-engagement email about our new design toolkit" | Calls `generate_content` |
+
+**Available tools (10):** `list_templates`, `segment_users`, `send_campaign_now`, `schedule_campaign`, `generate_content`, `run_reengagement`, `run_failure_recovery`, `get_email_stats`, `list_scheduled_campaigns`, `get_campaign_report`
 
 **Architecture:**
-- Claude receives a system prompt describing all available platform actions and their API signatures
-- Claude responds with a structured JSON action object (tool use / function calling)
-- The backend executes the action and returns the result to Claude
-- Claude formats a human-readable response
+- `chat()` builds a messages array and enters an agentic loop
+- Each loop: Claude responds with `tool_use` blocks → backend executes → result appended as `tool_result` → repeat
+- Loop exits on `end_turn` (Claude's final text reply) or after 10 rounds
+- `action_taken` captures the first tool call + result for the frontend
 
 **Endpoint:** `POST /api/agents/chat`  
 **Request:** `{ "message": "..." }`  
-**Response:** `{ "reply": "...", "action_taken": { ... } }`
+**Response:** `{ "reply": "...", "action_taken": { "tool": "...", "input": {...}, "result": {...} } }`
 
-**Frontend:** A chat drawer or modal accessible from the sidebar — admin types a message, gets a reply with what was done.
+**Frontend:** Chat drawer slides in from the right, accessible via "AI Assistant" button at the bottom of every page's sidebar. Supports Enter to send, Shift+Enter for newline, auto-growing textarea.
 
 **DB tables used:** Varies by action taken
 
@@ -341,45 +350,57 @@ REENGAGEMENT_DRIP_SEQUENCE_ID = <uuid>   # used when mode = drip
 
 ## 10. Suggestion Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/suggestions.py`  
+**Status:** `done`  
+**Files:** `backend/agents/suggestions.py` · `backend/routes/agents.py` · `frontend/dashboard.html` · `frontend/js/dashboard-page.js`  
 **Requires:** Claude API (`claude-sonnet-4-6`)
 
-**What it does:** Analyses past send history and user activity to recommend who to email, when to email them, and which template to use. Surfaces proactive suggestions without the admin having to ask.
+**What it does:** Gathers analytics from the DB (last 90 days of email logs, user counts, template performance, scheduled campaigns), feeds them to Claude, and receives 3–6 structured, actionable suggestions. Results are cached in memory for 1 hour.
 
-**Signals it analyses:**
-- Which templates have the highest success rates
-- Time-of-day and day-of-week patterns in successful sends
-- Users who haven't been emailed recently
-- Users who signed up recently but haven't received anything beyond the welcome
-- Templates that haven't been used in a long time
+**Signals gathered:**
+- Template success rates (sent vs failed per template, last 90 days)
+- Day-of-week + hour-of-day patterns in successful sends (top 5 time slots)
+- Inactive users (no email in 30 days)
+- New users (last 7 days)
+- Never-emailed users
+- Unused templates (no sends in last 90 days)
+- Upcoming scheduled campaigns
 
-**Output (surfaced on the Dashboard):**
+**Output:**
 ```json
 [
   {
     "type": "timing",
-    "message": "Your best send rate is on Tuesdays at 10 AM. Your next campaign is scheduled for Monday at 8 PM — consider shifting it.",
-    "confidence": 0.84
+    "message": "Your best send rate is on Tuesdays at 10 AM — 94% success across 38 sends.",
+    "confidence": 0.84,
+    "suggested_action": null
   },
   {
     "type": "audience",
     "message": "47 users signed up in the last 7 days and haven't received the Getting Started email.",
-    "suggested_action": { "segment": "new_users", "template_id": "..." }
+    "confidence": 0.92,
+    "suggested_action": { "segment": "new_users", "template_id": "<uuid>" }
   },
   {
     "type": "re-engagement",
-    "message": "23 users haven't been emailed in over 30 days. Consider running the re-engagement campaign.",
+    "message": "23 users haven't been emailed in over 30 days.",
+    "confidence": 0.88,
     "suggested_action": { "agent": "reengagement" }
   }
 ]
 ```
 
-**Trigger:** Runs on demand (`GET /api/agents/suggestions`) and optionally on a daily schedule, caching results in a `agent_suggestions` table.
+**Endpoints:**
+- `GET /api/agents/suggestions` — returns cached or fresh suggestions
+- `GET /api/agents/suggestions?refresh=true` — forces a fresh Claude analysis
 
-**Integration points:**
-- Reads `email_logs`, `profiles`, `scheduled_campaigns`
-- Suggestions with `suggested_action` can be executed with one click on the frontend (calls the relevant agent endpoint)
+**Frontend:** "AI Suggestions" card on the Dashboard, loaded on page open. Each suggestion shows type, message, confidence %, and an optional "Apply" button that either redirects to the Campaign page (pre-filled) or triggers the relevant agent endpoint directly.
+
+**Cache:** In-memory, 1-hour TTL (configurable via `SUGGESTIONS_CACHE_TTL` env var).
+
+**Environment variables:**
+```env
+SUGGESTIONS_CACHE_TTL=3600   # seconds before cache expires (default 1 hour)
+```
 
 **DB tables used:** `email_logs`, `profiles`, `email_templates`, `scheduled_campaigns`
 

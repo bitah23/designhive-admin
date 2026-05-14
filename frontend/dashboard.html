@@ -31,6 +31,21 @@
           <div class="card dashboard-stat-card skeleton"></div>
         </div>
 
+        <div class="card mb-4" id="suggestions-card" style="display:none">
+          <div class="flex-between" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <i data-lucide="sparkles" style="width:16px;height:16px;color:var(--gold)"></i>
+              <span style="color:var(--text-primary);font-weight:700">AI Suggestions</span>
+              <span id="suggestions-count" style="font-size:12px;color:var(--text-muted)"></span>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="refresh-suggestions-btn">
+              <i data-lucide="refresh-cw" style="width:13px;height:13px"></i>
+              Refresh
+            </button>
+          </div>
+          <div id="suggestions-list" style="padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+
         <div class="card">
           <div class="flex-between" style="padding:18px 20px;border-bottom:1px solid var(--border)">
             <span style="color:var(--text-primary);font-weight:700">All Templates / Campaigns</span>

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from config import WEBHOOK_SECRET
 from deps import get_current_admin
 from models import (
+    ChatRequest,
     ContentGenRequest,
     CreateDripSequenceRequest,
     EnrollUserRequest,
@@ -13,6 +14,9 @@ from models import (
 )
 from agents.segmentation import segment_users
 from agents.content_gen import generate_email_content
+from agents.reporter import get_campaign_history
+from agents.chat import chat as agent_chat
+from agents.suggestions import get_suggestions
 from agents.scheduler import (
     create_scheduled_campaign,
     list_scheduled_campaigns,
@@ -90,6 +94,45 @@ def cancel_campaign(job_id: str, admin=Depends(get_current_admin)):
         return cancel_scheduled_campaign(job_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Campaign Reporter
+# ---------------------------------------------------------------------------
+
+@router.get("/report")
+def campaign_report(
+    limit: int = Query(default=20, ge=1, le=100),
+    admin=Depends(get_current_admin),
+):
+    return get_campaign_history(limit=limit)
+
+
+# ---------------------------------------------------------------------------
+# Chat Interface (Agent 9)
+# ---------------------------------------------------------------------------
+
+@router.post("/chat")
+def chat(body: ChatRequest, admin=Depends(get_current_admin)):
+    try:
+        return agent_chat(body.message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat agent error: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Suggestion Agent (Agent 10)
+# ---------------------------------------------------------------------------
+
+@router.get("/suggestions")
+def suggestions(
+    refresh: bool = Query(default=False),
+    admin=Depends(get_current_admin),
+):
+    try:
+        return get_suggestions(force_refresh=refresh)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Suggestions agent error: {str(e)}")
 
 
 # ---------------------------------------------------------------------------

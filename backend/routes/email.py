@@ -3,6 +3,7 @@ from config import supabase
 from deps import get_current_admin
 from models import SendBulkRequest, SendDirectRequest
 from services.email import send_bulk_emails, send_direct_email
+from agents.reporter import generate_report
 
 router = APIRouter()
 
@@ -18,7 +19,8 @@ def bulk_send(body: SendBulkRequest, admin=Depends(get_current_admin)):
         raise HTTPException(status_code=404, detail="No users found")
 
     results = send_bulk_emails(template, users)
-    return {"message": "Done", "results": results}
+    report = generate_report(template, results, total_targeted=len(users))
+    return {"message": "Done", "results": results, "report": report}
 
 
 @router.post("/send-direct")

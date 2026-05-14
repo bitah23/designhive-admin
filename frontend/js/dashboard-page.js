@@ -1,4 +1,8 @@
-document.addEventListener('DOMContentLoaded', loadDashboard);
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  loadSuggestions();
+  document.getElementById('refresh-suggestions-btn')?.addEventListener('click', () => loadSuggestions(true));
+});
 
 async function loadDashboard() {
   try {
@@ -21,6 +25,127 @@ async function loadDashboard() {
     renderTemplateTable(templates);
   } catch (error) {
     Toast.error(error.response?.data?.detail || error.message || 'Failed to load dashboard.');
+  }
+}
+
+async function loadSuggestions(forceRefresh = false) {
+  const card = document.getElementById('suggestions-card');
+  const list = document.getElementById('suggestions-list');
+  const countEl = document.getElementById('suggestions-count');
+  const refreshBtn = document.getElementById('refresh-suggestions-btn');
+
+  if (!card || !list) return;
+
+  if (forceRefresh && refreshBtn) {
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i data-lucide="loader-2" style="width:13px;height:13px"></i> Loading…';
+    redrawIcons();
+  }
+
+  try {
+    const url = forceRefresh ? '/agents/suggestions?refresh=true' : '/agents/suggestions';
+    const data = await api.get(url);
+    const suggestions = data.suggestions || [];
+
+    if (!suggestions.length) {
+      card.style.display = 'none';
+      return;
+    }
+
+    card.style.display = '';
+    if (countEl) countEl.textContent = `${suggestions.length} insight${suggestions.length !== 1 ? 's' : ''}${data.cached ? ' · cached' : ''}`;
+
+    list.innerHTML = suggestions.map((s, i) => {
+      const icon = {
+        timing:       'clock',
+        audience:     'users',
+        'reengagement': 're-engagement',
+        'reengagement': 'user-x',
+        template:     'file-text',
+        general:      'lightbulb',
+      }[s.type] || 'lightbulb';
+
+      const typeIcons = {
+        timing:        'clock',
+        audience:      'users',
+        'reengagement':'user-x',
+        template:      'file-text',
+        general:       'lightbulb',
+      };
+
+      const actionBtn = s.suggested_action
+        ? `<button class="btn btn-outline btn-sm" onclick="applySuggestion(${i})" data-idx="${i}">Apply</button>`
+        : '';
+
+      const confidencePct = Math.round((s.confidence || 0) * 100);
+
+      return `
+        <div class="suggestion-item" style="
+          display:flex;align-items:flex-start;gap:14px;
+          padding:14px 16px;border-radius:8px;
+          background:var(--bg-card-alt);border:1px solid var(--border);
+        ">
+          <div style="
+            width:32px;height:32px;border-radius:8px;flex-shrink:0;
+            background:var(--gold-dim);display:flex;align-items:center;justify-content:center;margin-top:1px;
+          ">
+            <i data-lucide="${typeIcons[s.type] || 'lightbulb'}" style="width:15px;height:15px;color:var(--gold)"></i>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px">${escapeHtml(s.type)}</div>
+            <div style="color:var(--text-primary);font-size:14px;line-height:1.5">${escapeHtml(s.message)}</div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;color:var(--text-muted)">Confidence: ${confidencePct}%</span>
+              ${actionBtn}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    window._suggestions = suggestions;
+    redrawIcons();
+  } catch (err) {
+    // Silently skip — suggestions are non-critical
+    console.warn('Suggestions failed:', err);
+  } finally {
+    if (refreshBtn) {
+      refreshBtn.disabled = false;
+      refreshBtn.innerHTML = '<i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Refresh';
+      redrawIcons();
+    }
+  }
+}
+
+async function applySuggestion(idx) {
+  const s = (window._suggestions || [])[idx];
+  if (!s || !s.suggested_action) return;
+
+  const action = s.suggested_action;
+
+  if (action.agent === 'reengagement') {
+    try {
+      await api.post('/agents/reengagement/run', {});
+      Toast.success('Re-engagement agent triggered successfully.');
+    } catch (err) {
+      Toast.error(err?.response?.data?.detail || 'Failed to run re-engagement agent.');
+    }
+    return;
+  }
+
+  if (action.agent === 'failure_recovery') {
+    try {
+      await api.post('/agents/failure-recovery/run', {});
+      Toast.success('Failure recovery agent triggered successfully.');
+    } catch (err) {
+      Toast.error(err?.response?.data?.detail || 'Failed to run failure recovery.');
+    }
+    return;
+  }
+
+  if (action.segment && action.template_id) {
+    window.location.href = `/campaign.html?template=${encodeURIComponent(action.template_id)}&segment=${encodeURIComponent(action.segment)}`;
+    return;
   }
 }
 

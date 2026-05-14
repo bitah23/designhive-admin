@@ -7,6 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from config import MOCK_MODE, supabase
 from agents.segmentation import segment_users
 from services.email import send_bulk_emails as _send_bulk
+from agents.reporter import generate_report
 
 logger = logging.getLogger(__name__)
 
@@ -100,12 +101,18 @@ def _execute(job: dict):
             return
 
         results = _send_bulk(template, users)
-        sent = sum(1 for r in results if r.get("status") == "sent")
-        failed = len(results) - sent
+        report = generate_report(template, results, total_targeted=len(users))
+        sent = report["sent"]
+        failed = report["failed"]
 
         supabase.table("scheduled_campaigns").update({
             "status": "sent",
-            "result_summary": {"sent": sent, "failed": failed, "total": len(results)},
+            "result_summary": {
+                "sent": sent,
+                "failed": failed,
+                "total": report["total_targeted"],
+                "success_rate": report["success_rate"],
+            },
         }).eq("id", job_id).execute()
         logger.info(f"Campaign {job_id}: sent={sent} failed={failed}")
 
