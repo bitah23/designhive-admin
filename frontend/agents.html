@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/js/auth-guard.js"></script>
+  <title>Agents - DesignHive Admin</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside id="sidebar"></aside>
+    <div class="main-area">
+      <div id="topbar"></div>
+      <main class="page-content">
+
+        <div class="page-header">
+          <div>
+            <h1>Agents</h1>
+            <p>Monitor, trigger, and manage all 10 automated agents.</p>
+          </div>
+        </div>
+
+        <!-- ── Agents 1–3: Segmentation, Content Gen, Scheduler ── -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px">
+
+          <!-- Agent 1: Segmentation -->
+          <div class="card agent-card" id="agent-1">
+            <div class="agent-card-header">
+              <div class="agent-num">01</div>
+              <div>
+                <div class="agent-title">Smart Segmentation</div>
+                <div class="agent-desc">Preview audience size before a send.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <select id="seg-rule" class="form-control" style="flex:1;min-width:160px">
+                  <option value="all">All users</option>
+                  <option value="new_users">New users (7 days)</option>
+                  <option value="inactive">Inactive (30 days)</option>
+                  <option value="never_emailed">Never emailed</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="testSegment()">Preview</button>
+              </div>
+              <div id="seg-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 2: Content Gen -->
+          <div class="card agent-card" id="agent-2">
+            <div class="agent-card-header">
+              <div class="agent-num">02</div>
+              <div>
+                <div class="agent-title">Content Generation</div>
+                <div class="agent-desc">AI-generated email subject + body from a brief.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <textarea id="content-brief" class="form-control" rows="2"
+                placeholder="Brief: e.g. Re-engage inactive users, offer a free template pack."></textarea>
+              <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                <select id="content-tone" class="form-control" style="width:auto">
+                  <option value="friendly">Friendly</option>
+                  <option value="professional">Professional</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="testContentGen()">Generate</button>
+              </div>
+              <div id="content-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 3: Campaign Scheduler -->
+          <div class="card agent-card" id="agent-3">
+            <div class="agent-card-header">
+              <div class="agent-num">03</div>
+              <div>
+                <div class="agent-title">Campaign Scheduler</div>
+                <div class="agent-desc">Scheduled campaigns queue and status.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <button class="btn btn-outline btn-sm w-full" onclick="loadScheduled()">Load Scheduled Campaigns</button>
+              <div id="scheduled-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 4: Drip Sequences -->
+          <div class="card agent-card" id="agent-4">
+            <div class="agent-card-header">
+              <div class="agent-num">04</div>
+              <div>
+                <div class="agent-title">Drip Sequences</div>
+                <div class="agent-desc">Multi-step email sequences and enrollments.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-outline btn-sm" onclick="loadDrip()">List Sequences</button>
+                <button class="btn btn-outline btn-sm" onclick="loadEnrollments()">List Enrollments</button>
+              </div>
+              <div id="drip-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 5: Welcome Sequence -->
+          <div class="card agent-card" id="agent-5">
+            <div class="agent-card-header">
+              <div class="agent-num">05</div>
+              <div>
+                <div class="agent-title">Welcome Sequence</div>
+                <div class="agent-desc">Automatically enrolls new users via DB trigger.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <p style="color:var(--text-muted);font-size:13px;margin:0 0 10px">
+                Triggered automatically by Supabase when a new user signs up.
+                To test: create a new user in your app and check the Drip Enrollments list.
+              </p>
+              <button class="btn btn-outline btn-sm w-full" onclick="loadEnrollments('welcome')">Check Recent Enrollments</button>
+              <div id="welcome-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 6: Re-engagement -->
+          <div class="card agent-card" id="agent-6">
+            <div class="agent-card-header">
+              <div class="agent-num">06</div>
+              <div>
+                <div class="agent-title">Re-engagement Agent</div>
+                <div class="agent-desc">Emails inactive users. Runs daily at 9 AM UTC.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-outline btn-sm" onclick="loadReengagementConfig()">View Config</button>
+                <button class="btn btn-primary btn-sm" onclick="runReengagement()">Run Now</button>
+              </div>
+              <div id="reengagement-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 7: Failure Recovery -->
+          <div class="card agent-card" id="agent-7">
+            <div class="agent-card-header">
+              <div class="agent-num">07</div>
+              <div>
+                <div class="agent-title">Failure Recovery</div>
+                <div class="agent-desc">Retries failed sends with exponential backoff.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <button class="btn btn-primary btn-sm w-full" onclick="runFailureRecovery()">Run Now</button>
+              <div id="recovery-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 8: Campaign Reporter -->
+          <div class="card agent-card" id="agent-8">
+            <div class="agent-card-header">
+              <div class="agent-num">08</div>
+              <div>
+                <div class="agent-title">Campaign Reporter</div>
+                <div class="agent-desc">Report generated after every bulk send.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <button class="btn btn-outline btn-sm w-full" onclick="loadCampaignReport()">Load Recent Reports</button>
+              <div id="reporter-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 9: Chat Interface -->
+          <div class="card agent-card" id="agent-9">
+            <div class="agent-card-header">
+              <div class="agent-num">09</div>
+              <div>
+                <div class="agent-title">Chat Interface</div>
+                <div class="agent-desc">Natural language control for the whole platform.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <p style="color:var(--text-muted);font-size:13px;margin:0 0 10px">
+                The AI Assistant is available on every page via the sidebar button.
+                Test it by typing a natural language command below.
+              </p>
+              <div style="display:flex;gap:8px">
+                <input id="chat-test-input" class="form-control" type="text"
+                  placeholder="e.g. How many emails were sent this month?"
+                  onkeydown="if(event.key==='Enter')testChat()">
+                <button class="btn btn-primary btn-sm" onclick="testChat()" style="white-space:nowrap">Ask</button>
+              </div>
+              <div id="chat-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+          <!-- Agent 10: Suggestions -->
+          <div class="card agent-card" id="agent-10">
+            <div class="agent-card-header">
+              <div class="agent-num">10</div>
+              <div>
+                <div class="agent-title">Suggestion Agent</div>
+                <div class="agent-desc">AI-driven insights from your send history.</div>
+              </div>
+              <span class="agent-badge">done</span>
+            </div>
+            <div class="agent-body">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-outline btn-sm" onclick="loadSuggestions(false)">Load (Cached)</button>
+                <button class="btn btn-primary btn-sm" onclick="loadSuggestions(true)">Generate Fresh</button>
+              </div>
+              <div id="suggestions-result" class="agent-result" style="display:none"></div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="/js/axios.min.js"></script>
+  <script src="/js/api.js?v=2"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/agents-page.js"></script>
+
+  <style>
+    .agent-card { overflow:hidden }
+    .agent-card-header {
+      display:flex;align-items:flex-start;gap:14px;
+      padding:16px 20px;border-bottom:1px solid var(--border);
+    }
+    .agent-num {
+      font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.08em;
+      background:var(--gold-dim);border-radius:6px;padding:3px 7px;flex-shrink:0;margin-top:1px;
+    }
+    .agent-title { font-weight:700;color:var(--text-primary);font-size:14px;margin-bottom:3px }
+    .agent-desc  { font-size:12px;color:var(--text-muted);line-height:1.4 }
+    .agent-badge {
+      margin-left:auto;flex-shrink:0;font-size:10px;font-weight:700;
+      padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em;
+      background:var(--success-dim);color:var(--success);border:1px solid rgba(74,222,128,.18);
+    }
+    .agent-body  { padding:16px 20px;display:flex;flex-direction:column;gap:10px }
+    .agent-result {
+      background:var(--bg-input);border:1px solid var(--border);border-radius:8px;
+      padding:10px 12px;font-size:12px;color:var(--text-muted);
+      white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;
+      line-height:1.5;
+    }
+    .form-control {
+      width:100%;background:var(--bg-input);border:1px solid var(--border);
+      border-radius:8px;color:var(--text-primary);padding:9px 12px;
+    }
+    .form-control:focus { outline:none;border-color:var(--gold) }
+    select.form-control { cursor:pointer }
+  </style>
+</body>
+</html>

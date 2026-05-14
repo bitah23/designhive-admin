@@ -3,6 +3,7 @@ const NAV = [
   { href: '/users.html', icon: 'users', label: 'Users' },
   { href: '/templates.html', icon: 'file-text', label: 'Templates' },
   { href: '/campaign.html', icon: 'send', label: 'Campaign' },
+  { href: '/agents.html', icon: 'bot', label: 'Agents' },
   { href: '/logs.html', icon: 'history', label: 'Logs' },
   { href: '/settings.html', icon: 'settings', label: 'Settings' }
 ];
@@ -12,6 +13,7 @@ const PAGE_META = {
   '/users.html': { title: 'Users', subtitle: 'Search recipients and send direct outreach' },
   '/templates.html': { title: 'Email Templates', subtitle: 'Create, preview, edit, and remove reusable email content' },
   '/campaign.html': { title: 'Campaign', subtitle: 'Choose one template and a recipient segment, then send' },
+  '/agents.html': { title: 'Agents', subtitle: 'Monitor, trigger, and manage all 10 automated agents' },
   '/logs.html': { title: 'Email Logs', subtitle: 'Inspect send history, statuses, timestamps, and errors' },
   '/settings.html': { title: 'Settings', subtitle: 'Manage admins and update account security' }
 };
