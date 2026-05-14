@@ -95,7 +95,9 @@ img {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  position: relative;
+  position: sticky;
+  top: 0;
+  height: 100vh;
   z-index: 2;
 }
 
@@ -147,6 +149,7 @@ img {
 .sidebar-nav {
   flex: 1;
   padding: 16px 12px;
+  overflow-y: auto;
 }
 
 .sidebar-footer {
@@ -499,6 +502,16 @@ img {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+select {
+  color-scheme: dark;
+}
+
+select option,
+select optgroup {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
 }
 
 .form-control {

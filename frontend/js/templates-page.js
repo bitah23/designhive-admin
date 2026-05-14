@@ -31,6 +31,7 @@ window.toggleAiPanel = toggleAiPanel;
 window.closeAiPanel = closeAiPanel;
 window.generateWithAI = generateWithAI;
 window.toggleAiCtaInput = toggleAiCtaInput;
+window.approveTemplate = approveTemplate;
 
 /* ── Event listeners ─────────────────────────────────────────────── */
 document.getElementById('new-template-btn').addEventListener('click', () => openTemplateModal(null));
@@ -108,11 +109,28 @@ function renderTemplateGrid() {
     return;
   }
 
-  templatesGrid.innerHTML = templates.map(t => `
-    <div class="card template-card">
+  templatesGrid.innerHTML = templates.map(t => {
+    const isDraft = t.status === 'draft';
+    const draftBadge = isDraft
+      ? `<span style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+                      padding:2px 8px;border-radius:20px;
+                      background:rgba(255,159,28,0.15);color:var(--gold);border:1px solid rgba(255,159,28,0.3);
+                      margin-left:8px">Draft</span>`
+      : '';
+    const approveBtn = isDraft
+      ? `<button class="btn btn-primary btn-sm" style="width:100%;margin-top:10px"
+                 onclick="approveTemplate('${escapeAttr(t.id)}', this)">
+           <i data-lucide="check" style="width:13px;height:13px"></i>
+           Approve &amp; Send
+         </button>`
+      : '';
+    return `
+    <div class="card template-card" style="${isDraft ? 'border-color:rgba(255,159,28,0.3)' : ''}">
       <div class="flex-between mb-2">
         <div style="min-width:0;padding-right:10px">
-          <div class="t-title">${escapeHtml(t.title)}</div>
+          <div class="t-title" style="display:flex;align-items:center">
+            ${escapeHtml(t.title)}${draftBadge}
+          </div>
           <div class="t-subject">${escapeHtml(t.subject)}</div>
         </div>
         <div class="t-actions flex-shrink-0">
@@ -131,8 +149,9 @@ function renderTemplateGrid() {
         </div>
       </div>
       <div class="t-preview">${escapeHtml(stripHtml(t.body))}</div>
-    </div>
-  `).join('');
+      ${approveBtn}
+    </div>`;
+  }).join('');
 
   redrawIcons();
 }
@@ -219,6 +238,23 @@ async function saveTemplate(event) {
     saveTemplateBtn.disabled = false;
     saveTemplateBtn.innerHTML = `<i data-lucide="save" style="width:14px;height:14px"></i> ${editingId ? 'Save Changes' : 'Save Template'}`;
     redrawIcons();
+  }
+}
+
+/* ── Approve (draft → approved + send campaign) ───────────────────── */
+async function approveTemplate(id, btnEl) {
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Sending…'; }
+  try {
+    await api.post(`/templates/${id}/approve`, {});
+    Toast.success('Template approved — campaign is being sent!');
+    await loadTemplates();
+  } catch (err) {
+    Toast.error(err?.response?.data?.detail || 'Approval failed.');
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.innerHTML = '<i data-lucide="check" style="width:13px;height:13px"></i> Approve &amp; Send';
+      redrawIcons();
+    }
   }
 }
 

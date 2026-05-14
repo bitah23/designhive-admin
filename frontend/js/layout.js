@@ -44,10 +44,6 @@ function initLayout() {
         ${navHTML}
       </nav>
       <div class="sidebar-footer">
-        <button class="nav-link" type="button" id="chat-open-btn" style="color:var(--text-gold)">
-          <i data-lucide="bot" style="width:16px;height:16px;flex-shrink:0"></i>
-          <span>AI Assistant</span>
-        </button>
         <button class="nav-link logout" type="button" onclick="logout()">
           <i data-lucide="log-out" style="width:16px;height:16px;flex-shrink:0"></i>
           <span>Sign Out</span>
@@ -344,7 +340,6 @@ function initChat() {
 function init() {
   initLayout();
   showWelcomeMessage();
-  initChat();
 }
 
 if (document.readyState === 'loading') {

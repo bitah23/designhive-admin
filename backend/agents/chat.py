@@ -44,7 +44,9 @@ _SYSTEM_PROMPT = (
     "1. When the admin names a template (e.g. 'welcome email'), call list_templates first to resolve its ID.\n"
     "2. After executing an action, reply with a concise, friendly summary including key numbers.\n"
     "3. If required info is missing (e.g. no send time given for scheduling), ask — don't guess.\n"
-    "4. Never expose raw UUIDs in your reply unless specifically asked.\n\n"
+    "4. Never expose raw UUIDs in your reply unless specifically asked.\n"
+    "5. When generating NEW email content, always call generate_content then save_template — never call send_campaign_now with freshly generated content. The admin must review and approve from the dashboard first; approval triggers the send automatically.\n"
+    "6. When the admin approves a template (message contains 'approved template' and a template id), call send_campaign_now using that exact template id and the specified segment.\n\n"
     f"Today's date (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
 )
 
@@ -160,6 +162,29 @@ _TOOLS = [
             },
         },
     },
+    {
+        "name": "save_template",
+        "description": (
+            "Save a generated email as a DRAFT template awaiting admin approval. "
+            "Use this after generate_content — never send freshly generated content directly. "
+            "The admin reviews it on the dashboard and clicks Approve, which triggers the send automatically."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title":          {"type": "string", "description": "Short descriptive name, e.g. 'Black Friday 50% Off'"},
+                "subject":        {"type": "string", "description": "Email subject line"},
+                "body":           {"type": "string", "description": "Full HTML email body"},
+                "segment_rule":   {
+                    "type": "string",
+                    "enum": ["all", "new_users", "inactive", "never_emailed", "custom_date_range"],
+                    "description": "Segment to send to once approved",
+                },
+                "segment_params": {"type": "object", "description": "Optional segment params"},
+            },
+            "required": ["title", "subject", "body", "segment_rule"],
+        },
+    },
 ]
 
 
@@ -185,8 +210,8 @@ def _execute_tool(name: str, inputs: dict) -> str:
 
         elif name == "send_campaign_now":
             params = inputs.get("segment_params") or {}
-            user_ids = _segment_users(inputs["segment_rule"], params)
-            if not user_ids:
+            users = _segment_users(inputs["segment_rule"], params)
+            if not users:
                 return json.dumps({"sent": 0, "failed": 0, "note": "No users matched the segment"})
             tmpl_res = (
                 supabase.table("email_templates")
@@ -197,15 +222,9 @@ def _execute_tool(name: str, inputs: dict) -> str:
             if not tmpl_res.data:
                 return json.dumps({"error": f"Template {inputs['template_id']} not found"})
             template = tmpl_res.data[0]
-            profiles = (
-                supabase.table(TABLE_PROFILES)
-                .select("id,name,email")
-                .in_("id", user_ids)
-                .execute()
-            )
-            results = _send_bulk(template, profiles.data)
+            results = _send_bulk(template, users)
             from agents.reporter import generate_report
-            report = generate_report(template, results, total_targeted=len(user_ids))
+            report = generate_report(template, results, total_targeted=len(users))
             return json.dumps(report)
 
         elif name == "schedule_campaign":
@@ -258,6 +277,25 @@ def _execute_tool(name: str, inputs: dict) -> str:
             limit = inputs.get("limit", 10)
             return json.dumps(_get_report(limit=limit))
 
+        elif name == "save_template":
+            row = supabase.table("email_templates").insert({
+                "title":            inputs["title"],
+                "subject":          inputs["subject"],
+                "body":             inputs["body"],
+                "status":           "draft",
+                "pending_campaign": {
+                    "segment_rule":   inputs["segment_rule"],
+                    "segment_params": inputs.get("segment_params") or {},
+                },
+            }).execute()
+            saved = row.data[0] if row.data else {}
+            return json.dumps({
+                "id":      saved.get("id"),
+                "title":   saved.get("title"),
+                "status":  "draft",
+                "message": "Draft saved. Admin will see it in the dashboard — campaign fires on approval.",
+            })
+
         else:
             return json.dumps({"error": f"Unknown tool: {name}"})
 
@@ -275,8 +313,9 @@ def chat(message: str) -> dict:
     action_taken = None
 
     client = _get_client()
+    logger.info("Chat request: %.120s", message)
 
-    for _ in range(10):  # safety cap on tool-call rounds
+    for round_num in range(10):  # safety cap on tool-call rounds
         response = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=2048,
@@ -285,6 +324,7 @@ def chat(message: str) -> dict:
             messages=messages,
         )
 
+        logger.debug("Round %d stop_reason=%s", round_num, response.stop_reason)
         messages.append({"role": "assistant", "content": response.content})
 
         if response.stop_reason == "end_turn":
@@ -292,13 +332,16 @@ def chat(message: str) -> dict:
                 (block.text for block in response.content if hasattr(block, "text")),
                 "Done.",
             )
+            logger.info("Chat completed after %d round(s)", round_num + 1)
             return {"reply": reply, "action_taken": action_taken}
 
         if response.stop_reason == "tool_use":
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
+                    logger.info("Tool call: %s  input=%s", block.name, json.dumps(block.input)[:200])
                     result_str = _execute_tool(block.name, block.input)
+                    logger.info("Tool result: %s  output=%s", block.name, result_str[:300])
                     if action_taken is None:
                         try:
                             parsed = json.loads(result_str)
@@ -317,6 +360,13 @@ def chat(message: str) -> dict:
             messages.append({"role": "user", "content": tool_results})
             continue
 
+        logger.warning("Unexpected stop_reason=%r on round %d — breaking loop", response.stop_reason, round_num)
         break
 
+    logger.error(
+        "Chat loop exhausted or broke unexpectedly. message=%.120s  rounds=%d  last_stop_reason=%s",
+        message,
+        round_num + 1,
+        getattr(response, "stop_reason", "unknown"),
+    )
     return {"reply": "I was unable to complete the request.", "action_taken": action_taken}

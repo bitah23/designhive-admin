@@ -178,6 +178,26 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 
 **DB tables used:** `drip_sequences` (new), `drip_enrollments` (new), `email_templates`, `profiles`, `email_logs`
 
+**Admin Controls (UI — Agents page):**
+
+The Agent 4 card now shows a **Manage Sequences** button that opens a full modal editor. From there, admins can:
+
+- **View all sequences** — name, step count, total duration in days, active/inactive status
+- **Create a new sequence** — set name, active toggle, and build steps from scratch
+- **Edit an existing sequence's timeline** — reorder, add, or remove steps; change which template each step uses; set the delay (in days) between steps
+- **Delete a sequence** — blocked if active enrollments exist (shows a clear error)
+
+Each step in the timeline editor shows:
+- Step number badge
+- Template dropdown (populated from the live templates table)
+- A delay input: "X days after enrollment" (Step 1) or "X days after previous step" (Steps 2+)
+- A connector arrow between steps showing the configured wait time
+- A remove button (×) on each step
+
+**Files changed (2026-05-15):**
+- `frontend/agents.html` — Agent 4 card body updated; drip manager modal added
+- `frontend/js/agents-page.js` — `openDripManager`, `refreshDripList`, `openDripEditor`, `renderDripSteps`, `addDripStep`, `removeDripStep`, `saveDripSequence`, `deleteDripSequence`, `backToDripList`, `closeDripModal` added
+
 ---
 
 ## 5. Welcome Sequence Agent
@@ -246,17 +266,29 @@ REENGAGEMENT_DRIP_SEQUENCE_ID = <uuid>   # used when mode = drip
 ## 7. Failure Recovery Agent
 
 **Status:** `done`  
-**Files:** `backend/agents/failure_recovery.py` · `backend/routes/agents.py`
+**Files:** `backend/agents/failure_recovery.py` · `backend/routes/agents.py` · `backend/models.py`
 
-**What it does:** Periodically scans `email_logs` for `status = 'failed'` rows and retries the send. Implements exponential backoff — it won't retry a message more than 3 times.
+**What it does:** Periodically scans `email_logs` for `status = 'failed'` rows and retries the send. Implements exponential backoff — configurable retry delays and max retry count.
 
 **New column on `email_logs`:** `retry_count int default 0`
 
-**Retry logic:**
+**Default retry logic (configurable from UI):**
 - Retry 1: 15 minutes after failure
-- Retry 2: 2 hours after first retry
-- Retry 3: 24 hours after second retry
-- After 3 retries: marks as `status = 'permanently_failed'`, stops
+- Retry 2: 120 minutes after first retry
+- Retry 3: 1440 minutes (24 hours) after second retry
+- After max retries: marks as `status = 'permanently_failed'`, stops
+
+**Admin Controls (UI — Agents page):**
+
+The Agent 7 card now shows an auto-loaded config panel. Admins can set:
+- **Max retries** (1–10): how many times to attempt before permanently failing
+- **Retry 1 / 2 / 3 delay** (minutes): the backoff wait time before each attempt
+
+Config is stored in the `agent_config` table (key: `"failure_recovery"`). `_poll()` and `run()` read config fresh from the DB on each invocation — no server restart needed.
+
+**New routes (2026-05-15):**
+- `GET /agents/failure-recovery/config` — returns current config
+- `PATCH /agents/failure-recovery/config` — updates one or more fields
 
 **Flow:**
 1. Queries `email_logs` for rows where `status = 'failed'` and `retry_count < 3`
@@ -438,3 +470,19 @@ WELCOME_SEQUENCE_ID=<uuid>     # Agent 5 (UUID of the Welcome drip sequence in d
 | `email_logs` | Add `retry_count int` column | Agent 7 |
 | `agent_suggestions` | New table (optional cache) | Agent 10 |
 | `agent_config` | New table for runtime config (optional) | Agents 3, 6 |
+
+---
+
+## UI / Admin Control Changelog
+
+Tracks incremental UI improvements that give admins direct control over agents without needing to edit code or `.env`.
+
+| Date | Agent | Change | Files |
+|---|---|---|---|
+| 2026-05-15 | Agent 4 — Drip Sequences | Added **Manage Sequences** modal with visual timeline editor. Admins can create/edit/delete sequences, set per-step templates, and configure delay days between steps directly from the Agents page. | `frontend/agents.html`, `frontend/js/agents-page.js` |
+| 2026-05-15 | Agent 3 — Campaign Scheduler | Replaced raw text dump with a **rich card list**: template name, segment rule, scheduled time, colour-coded status badge. Pending campaigns now show a **Cancel** button that calls the existing `DELETE /api/agents/schedule/{id}` route. No backend changes needed. | `frontend/agents.html`, `frontend/js/agents-page.js` |
+| 2026-05-15 | Agent 5 — Welcome Sequence | Added **config panel** (auto-loaded on page open): enable/disable toggle + drip sequence picker. Config stored in new `agent_config` DB table (key: `"welcome"`). `enroll_new_user()` now reads DB config and respects the `enabled` flag. New routes: `GET /agents/welcome/config`, `PATCH /agents/welcome/config`. | `backend/agents/welcome_sequence.py`, `backend/models.py`, `backend/config.py`, `backend/routes/agents.py`, `frontend/agents.html`, `frontend/js/agents-page.js` |
+| 2026-05-15 | Agent 6 — Re-engagement | Replaced text-dump "View Config" with an **editable config form** (auto-loaded): inactivity threshold (days), mode selector (single/drip), conditional template or drip-sequence picker, daily run hour (UTC). Config stored in `agent_config` table (key: `"reengagement"`). Changing run hour live-reschedules the APScheduler cron job without a restart. New route: `PATCH /agents/reengagement/config`. | `backend/agents/reengagement.py`, `backend/models.py`, `backend/routes/agents.py`, `frontend/agents.html`, `frontend/js/agents-page.js` |
+| 2026-05-15 | Agent 7 — Failure Recovery | Added **backoff config panel** (auto-loaded): max retries (1–10) and three independent retry delay inputs (minutes). Config stored in `agent_config` table (key: `"failure_recovery"`); defaults to `15 min → 120 min → 1440 min`, 3 retries. `_poll()` and `run()` read config fresh from DB each time — no restart needed after saving. New routes: `GET /agents/failure-recovery/config`, `PATCH /agents/failure-recovery/config`. | `backend/agents/failure_recovery.py`, `backend/models.py`, `backend/routes/agents.py`, `frontend/agents.html`, `frontend/js/agents-page.js` |
+
+_All planned admin controls have been implemented._

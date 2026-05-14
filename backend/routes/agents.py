@@ -7,10 +7,13 @@ from models import (
     ContentGenRequest,
     CreateDripSequenceRequest,
     EnrollUserRequest,
+    FailureRecoveryConfigUpdate,
+    ReengagementConfigUpdate,
     ScheduleCampaignRequest,
     SegmentRequest,
     UpdateDripSequenceRequest,
     WebhookPayload,
+    WelcomeConfigUpdate,
 )
 from agents.segmentation import segment_users
 from agents.content_gen import generate_email_content
@@ -31,9 +34,21 @@ from agents.drip import (
     list_enrollments,
     cancel_enrollment,
 )
-from agents.welcome_sequence import enroll_new_user
-from agents.reengagement import run as run_reengagement, get_config as get_reengagement_config
-from agents.failure_recovery import run as run_failure_recovery
+from agents.welcome_sequence import (
+    enroll_new_user,
+    get_config as get_welcome_config,
+    update_config as update_welcome_config,
+)
+from agents.reengagement import (
+    run as run_reengagement,
+    get_config as get_reengagement_config,
+    update_config as update_reengagement_config,
+)
+from agents.failure_recovery import (
+    run as run_failure_recovery,
+    get_config as get_failure_recovery_config,
+    update_config as update_failure_recovery_config,
+)
 
 router = APIRouter()
 
@@ -219,6 +234,22 @@ def trigger_failure_recovery(admin=Depends(get_current_admin)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/failure-recovery/config")
+def failure_recovery_config(admin=Depends(get_current_admin)):
+    return get_failure_recovery_config()
+
+
+@router.patch("/failure-recovery/config")
+def patch_failure_recovery_config(body: FailureRecoveryConfigUpdate, admin=Depends(get_current_admin)):
+    updates = body.model_dump(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    try:
+        return update_failure_recovery_config(updates)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ---------------------------------------------------------------------------
 # Re-engagement
 # ---------------------------------------------------------------------------
@@ -236,9 +267,33 @@ def reengagement_config(admin=Depends(get_current_admin)):
     return get_reengagement_config()
 
 
+@router.patch("/reengagement/config")
+def patch_reengagement_config(body: ReengagementConfigUpdate, admin=Depends(get_current_admin)):
+    updates = body.model_dump(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    try:
+        return update_reengagement_config(updates)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ---------------------------------------------------------------------------
 # Welcome Sequence
 # ---------------------------------------------------------------------------
+
+@router.get("/welcome/config")
+def welcome_config(admin=Depends(get_current_admin)):
+    return get_welcome_config()
+
+
+@router.patch("/welcome/config")
+def patch_welcome_config(body: WelcomeConfigUpdate, admin=Depends(get_current_admin)):
+    updates = body.model_dump(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    return update_welcome_config(updates)
+
 
 @router.post("/welcome-enroll")
 def welcome_enroll(

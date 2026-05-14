@@ -108,6 +108,27 @@ class WebhookPayload(BaseModel):
     record: WebhookRecord
 
 
+# Agent Configs
+class WelcomeConfigUpdate(BaseModel):
+    enabled:     Optional[bool] = None
+    sequence_id: Optional[str]  = None
+
+class ReengagementConfigUpdate(BaseModel):
+    threshold_days:   Optional[int] = None
+    mode:             Optional[str] = None  # "single" | "drip"
+    template_id:      Optional[str] = None
+    drip_sequence_id: Optional[str] = None
+    run_hour_utc:     Optional[int] = None
+
+
 # Chat Interface (Agent 9)
 class ChatRequest(BaseModel):
     message: str
+
+
+# Failure Recovery Config (Agent 7)
+class FailureRecoveryConfigUpdate(BaseModel):
+    retry1_minutes: Optional[int] = None
+    retry2_minutes: Optional[int] = None
+    retry3_minutes: Optional[int] = None
+    max_retries:    Optional[int] = None

@@ -79,13 +79,13 @@
               <div class="agent-num">03</div>
               <div>
                 <div class="agent-title">Campaign Scheduler</div>
-                <div class="agent-desc">Scheduled campaigns queue and status.</div>
+                <div class="agent-desc">View and cancel scheduled campaigns.</div>
               </div>
               <span class="agent-badge">done</span>
             </div>
             <div class="agent-body">
               <button class="btn btn-outline btn-sm w-full" onclick="loadScheduled()">Load Scheduled Campaigns</button>
-              <div id="scheduled-result" class="agent-result" style="display:none"></div>
+              <div id="scheduled-result" style="display:none;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
             </div>
           </div>
 
@@ -95,14 +95,14 @@
               <div class="agent-num">04</div>
               <div>
                 <div class="agent-title">Drip Sequences</div>
-                <div class="agent-desc">Multi-step email sequences and enrollments.</div>
+                <div class="agent-desc">Build and edit multi-step email timelines.</div>
               </div>
               <span class="agent-badge">done</span>
             </div>
             <div class="agent-body">
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn btn-outline btn-sm" onclick="loadDrip()">List Sequences</button>
-                <button class="btn btn-outline btn-sm" onclick="loadEnrollments()">List Enrollments</button>
+                <button class="btn btn-primary btn-sm" onclick="openDripManager()">Manage Sequences</button>
+                <button class="btn btn-outline btn-sm" onclick="loadEnrollments()">View Enrollments</button>
               </div>
               <div id="drip-result" class="agent-result" style="display:none"></div>
             </div>
@@ -114,16 +114,44 @@
               <div class="agent-num">05</div>
               <div>
                 <div class="agent-title">Welcome Sequence</div>
-                <div class="agent-desc">Automatically enrolls new users via DB trigger.</div>
+                <div class="agent-desc">Configure which drip sequence new users enter.</div>
               </div>
               <span class="agent-badge">done</span>
             </div>
             <div class="agent-body">
-              <p style="color:var(--text-muted);font-size:13px;margin:0 0 10px">
-                Triggered automatically by Supabase when a new user signs up.
-                To test: create a new user in your app and check the Drip Enrollments list.
-              </p>
-              <button class="btn btn-outline btn-sm w-full" onclick="loadEnrollments('welcome')">Check Recent Enrollments</button>
+              <!-- Config panel — loaded automatically -->
+              <div id="welcome-config-loading" style="font-size:13px;color:var(--text-muted)">Loading config…</div>
+
+              <div id="welcome-config-form" style="display:none;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between;
+                            background:var(--bg-input);border:1px solid var(--border);
+                            border-radius:8px;padding:10px 12px">
+                  <span style="font-size:13px;color:var(--text-muted)">Enrollment status</span>
+                  <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+                    <input type="checkbox" id="welcome-enabled" style="accent-color:var(--gold);width:15px;height:15px">
+                    Enabled
+                  </label>
+                </div>
+
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text-muted);
+                                 text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">
+                    Welcome Drip Sequence
+                  </label>
+                  <select id="welcome-seq-picker" class="form-control">
+                    <option value="">— Select a drip sequence —</option>
+                  </select>
+                  <p style="font-size:11px;color:var(--text-muted);margin:5px 0 0">
+                    New users will be enrolled in this sequence on signup.
+                  </p>
+                </div>
+
+                <button class="btn btn-primary btn-sm w-full" onclick="saveWelcomeConfig()">Save Config</button>
+              </div>
+
+              <div style="border-top:1px solid var(--border);margin:0 -20px;padding:0 20px;padding-top:10px">
+                <button class="btn btn-outline btn-sm w-full" onclick="loadEnrollments('welcome')">View Recent Enrollments</button>
+              </div>
               <div id="welcome-result" class="agent-result" style="display:none"></div>
             </div>
           </div>
@@ -134,14 +162,76 @@
               <div class="agent-num">06</div>
               <div>
                 <div class="agent-title">Re-engagement Agent</div>
-                <div class="agent-desc">Emails inactive users. Runs daily at 9 AM UTC.</div>
+                <div class="agent-desc">Configure and run the inactive-user emailer.</div>
               </div>
               <span class="agent-badge">done</span>
             </div>
             <div class="agent-body">
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn btn-outline btn-sm" onclick="loadReengagementConfig()">View Config</button>
-                <button class="btn btn-primary btn-sm" onclick="runReengagement()">Run Now</button>
+              <!-- Config panel — auto-loaded -->
+              <div id="reeng-config-loading" style="font-size:13px;color:var(--text-muted)">Loading config…</div>
+
+              <div id="reeng-config-form" style="display:none;flex-direction:column;gap:10px">
+
+                <!-- Threshold -->
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <label style="font-size:13px;color:var(--text-muted);white-space:nowrap">Inactivity threshold</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input type="number" id="reeng-threshold" min="1" max="365"
+                      class="form-control" style="width:70px;text-align:center;padding:7px 8px">
+                    <span style="font-size:12px;color:var(--text-muted)">days</span>
+                  </div>
+                </div>
+
+                <!-- Mode -->
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text-muted);
+                                 text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">
+                    Send Mode
+                  </label>
+                  <select id="reeng-mode" class="form-control" onchange="toggleReengMode()">
+                    <option value="single">Single email</option>
+                    <option value="drip">Drip sequence</option>
+                  </select>
+                </div>
+
+                <!-- Template (single mode) -->
+                <div id="reeng-tmpl-row">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-muted);
+                                 text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">
+                    Template
+                  </label>
+                  <select id="reeng-template" class="form-control">
+                    <option value="">— Select a template —</option>
+                  </select>
+                </div>
+
+                <!-- Drip sequence (drip mode) -->
+                <div id="reeng-drip-row" style="display:none">
+                  <label style="font-size:12px;font-weight:600;color:var(--text-muted);
+                                 text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">
+                    Drip Sequence
+                  </label>
+                  <select id="reeng-sequence" class="form-control">
+                    <option value="">— Select a drip sequence —</option>
+                  </select>
+                </div>
+
+                <!-- Run hour -->
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <label style="font-size:13px;color:var(--text-muted);white-space:nowrap">Daily run time</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input type="number" id="reeng-hour" min="0" max="23"
+                      class="form-control" style="width:70px;text-align:center;padding:7px 8px">
+                    <span style="font-size:12px;color:var(--text-muted)">:00 UTC</span>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary btn-sm w-full" onclick="saveReengagementConfig()">Save Config</button>
+              </div>
+
+              <!-- Divider + run button -->
+              <div style="border-top:1px solid var(--border);margin:0 -20px;padding:0 20px;padding-top:10px">
+                <button class="btn btn-outline btn-sm w-full" onclick="runReengagement()">Run Now</button>
               </div>
               <div id="reengagement-result" class="agent-result" style="display:none"></div>
             </div>
@@ -158,7 +248,58 @@
               <span class="agent-badge">done</span>
             </div>
             <div class="agent-body">
-              <button class="btn btn-primary btn-sm w-full" onclick="runFailureRecovery()">Run Now</button>
+              <!-- Config panel — auto-loaded -->
+              <div id="fr-config-loading" style="font-size:13px;color:var(--text-muted)">Loading config…</div>
+
+              <div id="fr-config-form" style="display:none;flex-direction:column;gap:10px">
+
+                <!-- Max retries -->
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <label style="font-size:13px;color:var(--text-muted);white-space:nowrap">Max retries</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input type="number" id="fr-max-retries" min="1" max="10"
+                      class="form-control" style="width:70px;text-align:center;padding:7px 8px">
+                    <span style="font-size:12px;color:var(--text-muted)">attempts</span>
+                  </div>
+                </div>
+
+                <!-- Retry 1 -->
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <label style="font-size:13px;color:var(--text-muted);white-space:nowrap">Retry 1 delay</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input type="number" id="fr-retry1" min="1"
+                      class="form-control" style="width:70px;text-align:center;padding:7px 8px">
+                    <span style="font-size:12px;color:var(--text-muted)">min</span>
+                  </div>
+                </div>
+
+                <!-- Retry 2 -->
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <label style="font-size:13px;color:var(--text-muted);white-space:nowrap">Retry 2 delay</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input type="number" id="fr-retry2" min="1"
+                      class="form-control" style="width:70px;text-align:center;padding:7px 8px">
+                    <span style="font-size:12px;color:var(--text-muted)">min</span>
+                  </div>
+                </div>
+
+                <!-- Retry 3 -->
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <label style="font-size:13px;color:var(--text-muted);white-space:nowrap">Retry 3 delay</label>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <input type="number" id="fr-retry3" min="1"
+                      class="form-control" style="width:70px;text-align:center;padding:7px 8px">
+                    <span style="font-size:12px;color:var(--text-muted)">min</span>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary btn-sm w-full" onclick="saveFailureRecoveryConfig()">Save Config</button>
+              </div>
+
+              <!-- Divider + run button -->
+              <div style="border-top:1px solid var(--border);margin:0 -20px;padding:0 20px;padding-top:10px">
+                <button id="fr-run-btn" class="btn btn-outline btn-sm w-full" onclick="runFailureRecovery()">Run Now</button>
+              </div>
               <div id="recovery-result" class="agent-result" style="display:none"></div>
             </div>
           </div>
@@ -225,6 +366,62 @@
 
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- ── Drip Sequence Manager Modal ─────────────────────────────────────── -->
+  <div id="drip-modal" style="display:none;position:fixed;inset:0;z-index:1000;
+       background:rgba(0,0,0,.65);backdrop-filter:blur(4px);
+       align-items:center;justify-content:center;padding:24px;">
+
+    <!-- List view -->
+    <div id="drip-list-view" class="card" style="width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column">
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0">
+        <div style="flex:1">
+          <div style="font-weight:700;color:var(--text-primary);font-size:15px">Drip Sequences</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Create or edit multi-step email timelines</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openDripEditor(null)">+ New</button>
+        <button class="btn btn-outline btn-sm" onclick="closeDripModal()">Close</button>
+      </div>
+      <div id="drip-seq-list" style="padding:16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto">
+        <p style="color:var(--text-muted);font-size:13px;margin:0">Loading…</p>
+      </div>
+    </div>
+
+    <!-- Editor view -->
+    <div id="drip-editor-view" style="display:none;width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column" class="card">
+      <div style="padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0">
+        <button class="btn btn-outline btn-sm" onclick="backToDripList()">← Back</button>
+        <span id="drip-editor-title" style="font-weight:700;color:var(--text-primary);font-size:15px;flex:1">Edit Sequence</span>
+      </div>
+
+      <div style="padding:20px;overflow-y:auto;flex:1">
+        <!-- Name + active toggle -->
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
+          <input id="drip-seq-name" class="form-control" placeholder="Sequence name e.g. Onboarding Drip" style="flex:1">
+          <label style="display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            <input type="checkbox" id="drip-seq-active" style="accent-color:var(--gold);width:14px;height:14px"> Active
+          </label>
+        </div>
+
+        <!-- Timeline steps -->
+        <div style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">
+          Timeline Steps
+        </div>
+        <div id="drip-steps-list" style="display:flex;flex-direction:column;gap:0"></div>
+        <button class="btn btn-outline btn-sm w-full" onclick="addDripStep()" style="margin-top:14px">+ Add Step</button>
+      </div>
+
+      <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <button id="drip-delete-btn" class="btn btn-sm"
+          style="color:var(--danger);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2)"
+          onclick="deleteDripSequence()">Delete Sequence</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="backToDripList()">Cancel</button>
+          <button id="drip-save-btn" class="btn btn-primary btn-sm" onclick="saveDripSequence()">Save Changes</button>
+        </div>
+      </div>
     </div>
   </div>
 

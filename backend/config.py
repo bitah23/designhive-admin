@@ -29,12 +29,15 @@ class MockSupabase:
         class Query:
             def select(self, *args): return self
             def insert(self, *args): return self
+            def upsert(self, *args, **kwargs): return self
             def update(self, *args): return self
             def delete(self, *args): return self
             def eq(self, *args): return self
             def neq(self, *args): return self
             def gt(self, *args): return self
             def lt(self, *args): return self
+            def gte(self, *args): return self
+            def lte(self, *args): return self
             def ilike(self, *args): return self
             def in_(self, *args): return self
             def contains(self, *args): return self
