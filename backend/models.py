@@ -41,6 +41,18 @@ class SendDirectRequest(BaseModel):
     attachments: Optional[List[Attachment]] = []
 
 
+# Segmentation
+class SegmentParams(BaseModel):
+    days: Optional[int] = None
+    from_date: Optional[str] = None
+    to_date: Optional[str] = None
+
+class SegmentRequest(BaseModel):
+    rule: str
+    params: Optional[SegmentParams] = None
+    preview_only: bool = False
+
+
 # Admins
 class AdminCreate(BaseModel):
     email: str
