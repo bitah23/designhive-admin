@@ -28,6 +28,8 @@ from agents.drip import (
     cancel_enrollment,
 )
 from agents.welcome_sequence import enroll_new_user
+from agents.reengagement import run as run_reengagement, get_config as get_reengagement_config
+from agents.failure_recovery import run as run_failure_recovery
 
 router = APIRouter()
 
@@ -156,6 +158,39 @@ def cancel_drip_enrollment(enrollment_id: str, admin=Depends(get_current_admin))
         return cancel_enrollment(enrollment_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Welcome Sequence
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Failure Recovery
+# ---------------------------------------------------------------------------
+
+@router.post("/failure-recovery/run")
+def trigger_failure_recovery(admin=Depends(get_current_admin)):
+    try:
+        return run_failure_recovery()
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Re-engagement
+# ---------------------------------------------------------------------------
+
+@router.post("/reengagement/run")
+def trigger_reengagement(admin=Depends(get_current_admin)):
+    try:
+        return run_reengagement()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/reengagement/config")
+def reengagement_config(admin=Depends(get_current_admin)):
+    return get_reengagement_config()
 
 
 # ---------------------------------------------------------------------------

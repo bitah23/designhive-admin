@@ -12,9 +12,15 @@ from routes import auth, templates, users, email, logs, admins, webhooks, agents
 async def lifespan(app: FastAPI):
     from agents.scheduler import start as sched_start, stop as sched_stop
     from agents.drip import start as drip_start, stop as drip_stop
+    from agents.reengagement import start as reeng_start, stop as reeng_stop
+    from agents.failure_recovery import start as recovery_start, stop as recovery_stop
     sched_start()
     drip_start()
+    reeng_start()
+    recovery_start()
     yield
+    recovery_stop()
+    reeng_stop()
     drip_stop()
     sched_stop()
 

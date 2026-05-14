@@ -26,8 +26,8 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 | 3 | [Campaign Scheduler](#3-campaign-scheduler-agent) | `done` | `backend/agents/scheduler.py` |
 | 4 | [Drip Sequences](#4-drip-sequence-agent) | `done` | `backend/agents/drip.py` |
 | 5 | [Welcome Sequence](#5-welcome-sequence-agent) | `done` | `backend/agents/welcome_sequence.py` |
-| 6 | [Re-engagement Agent](#6-re-engagement-agent) | `planned` | `backend/agents/reengagement.py` |
-| 7 | [Failure Recovery](#7-failure-recovery-agent) | `planned` | `backend/agents/failure_recovery.py` |
+| 6 | [Re-engagement Agent](#6-re-engagement-agent) | `done` | `backend/agents/reengagement.py` |
+| 7 | [Failure Recovery](#7-failure-recovery-agent) | `done` | `backend/agents/failure_recovery.py` |
 | 8 | [Campaign Reporter](#8-campaign-reporter-agent) | `planned` | `backend/agents/reporter.py` |
 | 9 | [Chat Interface](#9-chat-interface-agent) | `planned` | `backend/agents/chat.py` |
 | 10 | [Suggestion Agent](#10-suggestion-agent) | `planned` | `backend/agents/suggestions.py` |
@@ -213,8 +213,8 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 
 ## 6. Re-engagement Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/reengagement.py`
+**Status:** `done`  
+**Files:** `backend/agents/reengagement.py` · `backend/routes/agents.py`
 
 **What it does:** Runs on a schedule (e.g. daily at 9 AM), finds users who have been inactive for a configured number of days, and either sends them a one-off re-engagement email or enrolls them in a drip sequence.
 
@@ -245,8 +245,8 @@ REENGAGEMENT_DRIP_SEQUENCE_ID = <uuid>   # used when mode = drip
 
 ## 7. Failure Recovery Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/failure_recovery.py`
+**Status:** `done`  
+**Files:** `backend/agents/failure_recovery.py` · `backend/routes/agents.py`
 
 **What it does:** Periodically scans `email_logs` for `status = 'failed'` rows and retries the send. Implements exponential backoff — it won't retry a message more than 3 times.
 
