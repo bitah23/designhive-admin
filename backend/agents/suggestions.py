@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from anthropic import Anthropic
 
-from config import MOCK_MODE, supabase
+from config import MOCK_MODE, supabase, TABLE_PROFILES, TABLE_EMAIL_LOGS
 from agents.segmentation import segment_users
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def _gather_signals() -> dict:
     since_7  = (now - timedelta(days=7)).isoformat()
 
     logs = (
-        supabase.table("email_logs")
+        supabase.table(TABLE_EMAIL_LOGS)
         .select("template_id,status,timestamp")
         .gte("timestamp", since_90)
         .limit(5000)
@@ -47,9 +47,9 @@ def _gather_signals() -> dict:
     templates = supabase.table("email_templates").select("id,title").execute().data
     template_map = {t["id"]: t["title"] for t in templates}
 
-    total_users = len(supabase.table("profiles").select("id").execute().data)
+    total_users = len(supabase.table(TABLE_PROFILES).select("id").execute().data)
     new_users_7d = len(
-        supabase.table("profiles").select("id").gte("created_at", since_7).execute().data
+        supabase.table(TABLE_PROFILES).select("id").gte("created_at", since_7).execute().data
     )
 
     inactive_count = len(segment_users("inactive", {"days": 30}))

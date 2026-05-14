@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from anthropic import Anthropic
 
-from config import supabase
+from config import supabase, TABLE_PROFILES, TABLE_EMAIL_LOGS
 from agents.segmentation import segment_users as _segment_users
 from agents.content_gen import generate_email_content as _generate_content
 from agents.scheduler import (
@@ -198,7 +198,7 @@ def _execute_tool(name: str, inputs: dict) -> str:
                 return json.dumps({"error": f"Template {inputs['template_id']} not found"})
             template = tmpl_res.data[0]
             profiles = (
-                supabase.table("profiles")
+                supabase.table(TABLE_PROFILES)
                 .select("id,name,email")
                 .in_("id", user_ids)
                 .execute()
@@ -236,7 +236,7 @@ def _execute_tool(name: str, inputs: dict) -> str:
             since_days = inputs.get("since_days", 30)
             since = (datetime.now(timezone.utc) - timedelta(days=since_days)).isoformat()
             rows = (
-                supabase.table("email_logs")
+                supabase.table(TABLE_EMAIL_LOGS)
                 .select("status")
                 .gte("timestamp", since)
                 .execute()

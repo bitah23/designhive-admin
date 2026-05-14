@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from config import supabase
+from config import supabase, TABLE_PROFILES, TABLE_EMAIL_LOGS
 
 
 def segment_users(rule: str, params: dict | None = None) -> list[dict]:
@@ -35,14 +35,14 @@ def _pick(user: dict) -> dict:
 
 
 def _all_users() -> list[dict]:
-    result = supabase.table("profiles").select("id,name,email,created_at").order("created_at", desc=True).execute()
+    result = supabase.table(TABLE_PROFILES).select("id,name,email,created_at").order("created_at", desc=True).execute()
     return [_pick(u) for u in result.data]
 
 
 def _new_users(days: int) -> list[dict]:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     result = (
-        supabase.table("profiles")
+        supabase.table(TABLE_PROFILES)
         .select("id,name,email,created_at")
         .gte("created_at", cutoff)
         .order("created_at", desc=True)
@@ -57,7 +57,7 @@ def _inactive_users(days: int) -> list[dict]:
     all_users = _all_users()
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     logs = (
-        supabase.table("email_logs")
+        supabase.table(TABLE_EMAIL_LOGS)
         .select("user_email")
         .eq("status", "sent")
         .gte("timestamp", cutoff)
@@ -71,7 +71,7 @@ def _never_emailed_users() -> list[dict]:
     # Never received any successful email ever.
     all_users = _all_users()
     logs = (
-        supabase.table("email_logs")
+        supabase.table(TABLE_EMAIL_LOGS)
         .select("user_email")
         .eq("status", "sent")
         .execute()
@@ -84,7 +84,7 @@ def _users_by_date_range(from_date: str, to_date: str) -> list[dict]:
     # Accepts ISO date strings e.g. "2026-01-01". Treats to_date as inclusive end of day.
     to_dt = to_date if "T" in to_date else to_date + "T23:59:59+00:00"
     result = (
-        supabase.table("profiles")
+        supabase.table(TABLE_PROFILES)
         .select("id,name,email,created_at")
         .gte("created_at", from_date)
         .lte("created_at", to_dt)

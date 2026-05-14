@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from config import MOCK_MODE, supabase
+from config import MOCK_MODE, supabase, TABLE_PROFILES, TABLE_EMAIL_LOGS
 from services.email import _send_one
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ def _poll():
     """Scans email_logs for failed rows that are due for a retry."""
     try:
         rows = (
-            supabase.table("email_logs")
+            supabase.table(TABLE_EMAIL_LOGS)
             .select("*")
             .eq("status", "failed")
             .lt("retry_count", _MAX_RETRIES)
@@ -98,7 +98,7 @@ def _retry(row: dict):
 
         # Fetch user by email
         user_res = (
-            supabase.table("profiles")
+            supabase.table(TABLE_PROFILES)
             .select("id,name,email")
             .eq("email", row["user_email"])
             .execute()
@@ -110,7 +110,7 @@ def _retry(row: dict):
         result = _send_one(template, user)
 
         if result.get("status") == "sent":
-            supabase.table("email_logs").update({
+            supabase.table(TABLE_EMAIL_LOGS).update({
                 "status": "sent",
                 "retry_count": retry_count + 1,
                 "timestamp": now_iso,
@@ -131,7 +131,7 @@ def _retry(row: dict):
 def _mark_failed(log_id: str, retry_count: int, now_iso: str, error: str):
     new_count = retry_count + 1
     new_status = "permanently_failed" if new_count >= _MAX_RETRIES else "failed"
-    supabase.table("email_logs").update({
+    supabase.table(TABLE_EMAIL_LOGS).update({
         "status": new_status,
         "retry_count": new_count,
         "timestamp": now_iso,
@@ -150,7 +150,7 @@ def run() -> dict:
     """Manually trigger a recovery scan right now. Returns counts."""
     try:
         rows = (
-            supabase.table("email_logs")
+            supabase.table(TABLE_EMAIL_LOGS)
             .select("*")
             .eq("status", "failed")
             .lt("retry_count", _MAX_RETRIES)

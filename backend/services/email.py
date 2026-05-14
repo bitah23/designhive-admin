@@ -7,7 +7,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from config import gmail, supabase, GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME
+from config import gmail, supabase, GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME, TABLE_EMAIL_LOGS
 from email_template_default import DEFAULT_EMAIL_TEMPLATE
 from email_direct_template import build_direct_email_html
 
@@ -129,14 +129,14 @@ def _send_one(template: dict, user: dict) -> dict:
 
         raw = _build_raw(user["email"], subject, html_body)
         gmail.users().messages().send(userId="me", body={"raw": raw}).execute()
-        supabase.table("email_logs").insert({
+        supabase.table(TABLE_EMAIL_LOGS).insert({
             "user_email": user["email"],
             "template_id": template["id"],
             "status": "sent",
         }).execute()
         return {"email": user["email"], "status": "sent"}
     except Exception as e:
-        supabase.table("email_logs").insert({
+        supabase.table(TABLE_EMAIL_LOGS).insert({
             "user_email": user["email"],
             "template_id": template["id"],
             "status": "failed",

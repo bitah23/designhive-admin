@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from config import MOCK_MODE, supabase
+from config import MOCK_MODE, supabase, TABLE_PROFILES
 from services.email import _send_one
 
 logger = logging.getLogger(__name__)
@@ -114,7 +114,7 @@ def _execute_step(enrollment: dict):
 
         # Fetch user
         user_res = (
-            supabase.table("profiles")
+            supabase.table(TABLE_PROFILES)
             .select("id,name,email")
             .eq("id", enrollment["user_id"])
             .execute()
@@ -239,7 +239,7 @@ def enroll_user(sequence_id: str, user_id: str) -> dict:
         raise ValueError("Sequence has no steps")
 
     user_res = (
-        supabase.table("profiles")
+        supabase.table(TABLE_PROFILES)
         .select("id")
         .eq("id", user_id)
         .execute()
