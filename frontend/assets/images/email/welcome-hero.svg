@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200">
+  <defs>
+    <linearGradient id="wbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffdf8"/>
+      <stop offset="100%" stop-color="#fff8e8"/>
+    </linearGradient>
+    <linearGradient id="hexfill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#efc94c" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#f6d86d" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="200" fill="url(#wbg)"/>
+
+  <!-- Far-left hex  center(78,100) r=24 flat-top -->
+  <polygon points="102,100 90,120.8 66,120.8 54,100 66,79.2 90,79.2"
+           fill="none" stroke="#efc94c" stroke-width="1.5" stroke-opacity="0.22"/>
+
+  <!-- Left hex  center(192,88) r=34 -->
+  <polygon points="226,88 209,117.5 175,117.5 158,88 175,58.5 209,58.5"
+           fill="#efc94c" fill-opacity="0.08" stroke="#efc94c" stroke-width="1.5" stroke-opacity="0.32"/>
+
+  <!-- Center hex  center(300,100) r=52 -->
+  <polygon points="352,100 326,145 274,145 248,100 274,55 326,55"
+           fill="url(#hexfill)" stroke="#efc94c" stroke-width="2" stroke-opacity="0.5"/>
+
+  <!-- Right hex  center(408,88) r=34 -->
+  <polygon points="442,88 425,117.5 391,117.5 374,88 391,58.5 425,58.5"
+           fill="#efc94c" fill-opacity="0.08" stroke="#efc94c" stroke-width="1.5" stroke-opacity="0.32"/>
+
+  <!-- Far-right hex  center(522,100) r=24 -->
+  <polygon points="546,100 534,120.8 510,120.8 498,100 510,79.2 534,79.2"
+           fill="none" stroke="#efc94c" stroke-width="1.5" stroke-opacity="0.22"/>
+
+  <!-- Bottom-left hex  center(218,168) r=20 -->
+  <polygon points="238,168 228,185.3 208,185.3 198,168 208,150.7 228,150.7"
+           fill="#efc94c" fill-opacity="0.07"/>
+
+  <!-- Bottom-right hex  center(382,168) r=20 -->
+  <polygon points="402,168 392,185.3 372,185.3 362,168 372,150.7 392,150.7"
+           fill="#efc94c" fill-opacity="0.07"/>
+
+  <!-- Top-center tiny hex  center(300,28) r=16 -->
+  <polygon points="316,28 308,41.9 292,41.9 284,28 292,14.1 308,14.1"
+           fill="none" stroke="#efc94c" stroke-width="1" stroke-opacity="0.2"/>
+
+  <!-- Center 5-point star at (300,100) -->
+  <path d="M300,78 L306.2,94.8 L324.4,94.8 L310.1,105.4 L315.5,122.5
+           L300,112 L284.5,122.5 L289.9,105.4 L275.6,94.8 L293.8,94.8 Z"
+        fill="#efc94c"/>
+
+  <!-- Small star left  (172,58) -->
+  <path d="M172,48 L174.7,55.9 L183,55.9 L176.7,60.6 L179.1,68.6
+           L172,64 L164.9,68.6 L167.3,60.6 L161,55.9 L169.3,55.9 Z"
+        fill="#efc94c" fill-opacity="0.55"/>
+
+  <!-- Small star right  (428,58) -->
+  <path d="M428,48 L430.7,55.9 L439,55.9 L432.7,60.6 L435.1,68.6
+           L428,64 L420.9,68.6 L423.3,60.6 L417,55.9 L425.3,55.9 Z"
+        fill="#efc94c" fill-opacity="0.55"/>
+
+  <!-- Tiny star bottom-left  (108,162) -->
+  <path d="M108,155 L109.8,160.4 L115.5,160.4 L111,163.4 L112.7,168.8
+           L108,165.8 L103.3,168.8 L105,163.4 L100.5,160.4 L106.2,160.4 Z"
+        fill="#efc94c" fill-opacity="0.38"/>
+
+  <!-- Tiny star bottom-right  (492,162) -->
+  <path d="M492,155 L493.8,160.4 L499.5,160.4 L495,163.4 L496.7,168.8
+           L492,165.8 L487.3,168.8 L489,163.4 L484.5,160.4 L490.2,160.4 Z"
+        fill="#efc94c" fill-opacity="0.38"/>
+
+  <!-- Edge dots -->
+  <circle cx="40" cy="100" r="3.5" fill="#efc94c" fill-opacity="0.2"/>
+  <circle cx="560" cy="100" r="3.5" fill="#efc94c" fill-opacity="0.2"/>
+  <circle cx="300" cy="190" r="2.5" fill="#efc94c" fill-opacity="0.18"/>
+  <circle cx="195" cy="190" r="2" fill="#efc94c" fill-opacity="0.12"/>
+  <circle cx="405" cy="190" r="2" fill="#efc94c" fill-opacity="0.12"/>
+</svg>

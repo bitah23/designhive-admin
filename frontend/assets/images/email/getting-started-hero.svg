@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200">
+  <!-- Background -->
+  <rect width="600" height="200" fill="#f9f9f9"/>
+
+  <!-- Subtle corner decorations -->
+  <circle cx="40"  cy="40"  r="28" fill="#efc94c" fill-opacity="0.05"/>
+  <circle cx="560" cy="160" r="28" fill="#efc94c" fill-opacity="0.05"/>
+  <circle cx="40"  cy="160" r="18" fill="#efc94c" fill-opacity="0.04"/>
+  <circle cx="560" cy="40"  r="18" fill="#efc94c" fill-opacity="0.04"/>
+
+  <!-- Connecting line: circle-edge to circle-edge -->
+  <line x1="192" y1="100" x2="264" y2="100"
+        stroke="#efc94c" stroke-width="2" stroke-dasharray="6,4" stroke-opacity="0.4"/>
+  <line x1="338" y1="100" x2="410" y2="100"
+        stroke="#efc94c" stroke-width="2" stroke-dasharray="6,4" stroke-opacity="0.4"/>
+
+  <!-- ── Step 01 ── -->
+  <!-- Outer glow ring -->
+  <circle cx="150" cy="100" r="50" fill="#efc94c" fill-opacity="0.08"/>
+  <!-- Gold ring -->
+  <circle cx="150" cy="100" r="40" fill="#efc94c"/>
+  <!-- White inner -->
+  <circle cx="150" cy="100" r="31" fill="white"/>
+  <!-- Number -->
+  <text x="150" y="107"
+        text-anchor="middle"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="17" font-weight="900" fill="#1a1a1a">01</text>
+  <!-- Label -->
+  <text x="150" y="158"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="11" font-weight="700" letter-spacing="0.08em" fill="#333333">SET UP</text>
+
+  <!-- ── Step 02 ── -->
+  <circle cx="300" cy="100" r="50" fill="#efc94c" fill-opacity="0.06"/>
+  <circle cx="300" cy="100" r="40" fill="#efc94c" fill-opacity="0.65"/>
+  <circle cx="300" cy="100" r="31" fill="white"/>
+  <text x="300" y="107"
+        text-anchor="middle"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="17" font-weight="900" fill="#1a1a1a">02</text>
+  <text x="300" y="158"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="11" font-weight="700" letter-spacing="0.08em" fill="#555555">EXPLORE</text>
+
+  <!-- ── Step 03 ── -->
+  <circle cx="450" cy="100" r="50" fill="#efc94c" fill-opacity="0.03"/>
+  <circle cx="450" cy="100" r="40" fill="white" stroke="#efc94c" stroke-width="2" stroke-opacity="0.35"/>
+  <circle cx="450" cy="100" r="31" fill="white"/>
+  <text x="450" y="107"
+        text-anchor="middle"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="17" font-weight="700" fill="#c0c0c0">03</text>
+  <text x="450" y="158"
+        text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="11" font-weight="700" letter-spacing="0.08em" fill="#b0b0b0">CREATE</text>
+
+  <!-- Edge dots -->
+  <circle cx="50"  cy="100" r="3" fill="#efc94c" fill-opacity="0.2"/>
+  <circle cx="550" cy="100" r="3" fill="#efc94c" fill-opacity="0.2"/>
+</svg>

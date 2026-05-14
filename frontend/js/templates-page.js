@@ -27,6 +27,10 @@ const saveTemplateBtn = document.getElementById('save-template-btn');
 window.openTemplateModal = openTemplateModal;
 window.openPreview = openPreview;
 window.deleteTemplate = deleteTemplate;
+window.toggleAiPanel = toggleAiPanel;
+window.closeAiPanel = closeAiPanel;
+window.generateWithAI = generateWithAI;
+window.toggleAiCtaInput = toggleAiCtaInput;
 
 /* ── Event listeners ─────────────────────────────────────────────── */
 document.getElementById('new-template-btn').addEventListener('click', () => openTemplateModal(null));
@@ -136,10 +140,10 @@ function renderTemplateGrid() {
 /* ═══════════════════════════════════════════════════════════════════
    TEMPLATE MODAL  (create / edit)
    ═══════════════════════════════════════════════════════════════════ */
-function openTemplateModal(id) {
+async function openTemplateModal(id) {
   editingId = id;
   const t = id ? templates.find(item => item.id === id) : null;
-  const body = resolveTemplateBody(t?.body);
+  const body = t?.body || '';
   const useHtmlMode = looksLikeFullEmailDocument(body);
 
   document.getElementById('modal-template-title').textContent = t ? 'Edit Template' : 'New Template';
@@ -277,7 +281,7 @@ function buildPreviewEmail(template) {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  let body = resolveTemplateBody(template.body)
+  let body = (template.body || '')
     .replace(/\{\{name\}\}/g, 'John Doe')
     .replace(/\{\{email\}\}/g, 'john@example.com')
     .replace(/\{\{date\}\}/g, today);
@@ -307,7 +311,7 @@ function buildPreviewEmail(template) {
 
 function looksLikeFullEmailDocument(html) {
   const value = String(html || '').toLowerCase();
-  return value.includes('<html') && value.includes('email-wrapper') && value.includes('hero-card');
+  return value.includes('<html') && value.includes('</body>');
 }
 
 function resolveTemplateBody(body) {
@@ -568,6 +572,65 @@ function insertVariable(variable) {
   const index = range ? range.index : quill.getLength();
   quill.insertText(index, variable);
   quill.setSelection(index + variable.length);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   AI CONTENT GENERATION
+   ═══════════════════════════════════════════════════════════════════ */
+function toggleAiPanel() {
+  const panel = document.getElementById('ai-gen-panel');
+  const isVisible = panel.style.display !== 'none';
+  panel.style.display = isVisible ? 'none' : 'block';
+  redrawIcons();
+}
+
+function closeAiPanel() {
+  document.getElementById('ai-gen-panel').style.display = 'none';
+}
+
+function toggleAiCtaInput(checked) {
+  const wrap = document.getElementById('ai-cta-text-wrap');
+  if (wrap) wrap.style.opacity = checked ? '1' : '0.4';
+}
+
+async function generateWithAI() {
+  const brief = document.getElementById('ai-brief').value.trim();
+  if (!brief) { Toast.error('Please enter a brief describing the email goal.'); return; }
+
+  const btn = document.getElementById('ai-generate-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating…';
+
+  try {
+    const result = await api.post('/agents/generate-content', {
+      brief,
+      tone: document.getElementById('ai-tone').value,
+      include_cta: document.getElementById('ai-include-cta').checked,
+      cta_text: document.getElementById('ai-cta-text').value.trim() || 'Learn More',
+    });
+
+    // Pre-fill subject
+    document.getElementById('t-subject').value = result.subject;
+
+    // Switch to HTML mode and load the generated body
+    if (!htmlMode) {
+      htmlMode = true;
+      quillWrap.style.display = 'none';
+      htmlEditor.style.display = '';
+      toggleModeBtn.innerHTML = '<i data-lucide="eye" style="width:12px;height:12px"></i> Visual Mode';
+      redrawIcons();
+    }
+    htmlEditor.value = result.body;
+
+    closeAiPanel();
+    Toast.success('Email generated — review the subject and body, then save.');
+  } catch (err) {
+    Toast.error(err.response?.data?.detail || err.message || 'Content generation failed.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="sparkles" style="width:13px;height:13px"></i> Generate';
+    redrawIcons();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

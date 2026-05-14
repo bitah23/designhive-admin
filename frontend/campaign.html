@@ -25,11 +25,27 @@
           <div class="skeleton" style="height:420px"></div>
         </div>
 
-        <div class="flex" style="justify-content:flex-end">
+        <div class="flex" style="justify-content:flex-end;gap:10px">
+          <button class="btn btn-secondary" id="schedule-campaign-btn" type="button"
+                  onclick="openScheduleModal()">
+            <i data-lucide="calendar-plus" style="width:15px;height:15px"></i>
+            Schedule
+          </button>
           <button class="btn btn-primary" id="send-campaign-btn" type="button">
             <i data-lucide="send" style="width:16px;height:16px"></i>
             <span id="send-label">Send Campaign</span>
           </button>
+        </div>
+
+        <!-- Scheduled Campaigns List -->
+        <div class="card mt-4" id="scheduled-campaigns-card" style="display:none">
+          <div style="padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center">
+            <div style="color:var(--text-primary);font-weight:700;font-size:1rem">Scheduled Campaigns</div>
+            <button type="button" class="btn-icon" onclick="loadScheduledCampaigns()" title="Refresh">
+              <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
+            </button>
+          </div>
+          <div id="scheduled-campaigns-body" style="padding:16px 20px 20px"></div>
         </div>
 
         <div class="card mt-4" id="results-card" hidden>
@@ -54,6 +70,40 @@
           </div>
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- Schedule Campaign Modal -->
+  <div class="modal-overlay hidden" id="schedule-modal">
+    <div class="modal-box" style="max-width:460px">
+      <div class="modal-header flex-between">
+        <div class="flex-center gap-2">
+          <div class="sidebar-logo-mark" style="width:40px;height:40px;border-radius:12px;padding:8px">
+            <i data-lucide="calendar-clock" style="width:18px;height:18px;color:var(--gold-strong)"></i>
+          </div>
+          <span class="title">Schedule Campaign</span>
+        </div>
+        <button class="btn-icon" type="button" onclick="closeScheduleModal()" aria-label="Close">
+          <i data-lucide="x" style="width:15px;height:15px"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="sched-summary"></div>
+        <div style="margin-top:16px">
+          <label class="form-label" for="sched-send-at">Send At</label>
+          <input type="datetime-local" id="sched-send-at" class="form-control">
+          <p class="text-muted" style="font-size:12px;margin-top:6px">
+            The campaign will fire automatically at this time, regardless of whether you're logged in.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeScheduleModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="sched-submit-btn" onclick="submitSchedule()">
+          <i data-lucide="calendar-clock" style="width:14px;height:14px"></i>
+          Schedule
+        </button>
+      </div>
     </div>
   </div>
 

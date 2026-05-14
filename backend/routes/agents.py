@@ -1,8 +1,33 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
+from config import WEBHOOK_SECRET
 from deps import get_current_admin
-from models import SegmentRequest
+from models import (
+    ContentGenRequest,
+    CreateDripSequenceRequest,
+    EnrollUserRequest,
+    ScheduleCampaignRequest,
+    SegmentRequest,
+    UpdateDripSequenceRequest,
+    WebhookPayload,
+)
 from agents.segmentation import segment_users
+from agents.content_gen import generate_email_content
+from agents.scheduler import (
+    create_scheduled_campaign,
+    list_scheduled_campaigns,
+    cancel_scheduled_campaign,
+)
+from agents.drip import (
+    create_drip_sequence,
+    list_drip_sequences,
+    update_drip_sequence,
+    delete_drip_sequence,
+    enroll_user,
+    list_enrollments,
+    cancel_enrollment,
+)
+from agents.welcome_sequence import enroll_new_user
 
 router = APIRouter()
 
@@ -20,3 +45,139 @@ def segment(body: SegmentRequest, admin=Depends(get_current_admin)):
         "count": len(users),
         "users": None if body.preview_only else users,
     }
+
+
+@router.post("/generate-content")
+def generate_content(body: ContentGenRequest, admin=Depends(get_current_admin)):
+    try:
+        result = generate_email_content(
+            brief=body.brief,
+            tone=body.tone,
+            include_cta=body.include_cta,
+            cta_text=body.cta_text or "Learn More",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
+    return result
+
+
+@router.post("/schedule")
+def schedule_campaign(body: ScheduleCampaignRequest, admin=Depends(get_current_admin)):
+    try:
+        job = create_scheduled_campaign(
+            template_id=body.template_id,
+            segment_rule=body.segment_rule,
+            segment_params=body.segment_params or {},
+            send_at=body.send_at,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return job
+
+
+@router.get("/schedule")
+def get_schedule(admin=Depends(get_current_admin)):
+    return list_scheduled_campaigns()
+
+
+@router.delete("/schedule/{job_id}")
+def cancel_campaign(job_id: str, admin=Depends(get_current_admin)):
+    try:
+        return cancel_scheduled_campaign(job_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Drip Sequences
+# ---------------------------------------------------------------------------
+
+@router.post("/drip/sequences")
+def create_sequence(body: CreateDripSequenceRequest, admin=Depends(get_current_admin)):
+    try:
+        return create_drip_sequence(
+            name=body.name,
+            steps=[s.model_dump() for s in body.steps],
+            is_active=body.is_active,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/drip/sequences")
+def get_sequences(admin=Depends(get_current_admin)):
+    return list_drip_sequences()
+
+
+@router.patch("/drip/sequences/{seq_id}")
+def patch_sequence(seq_id: str, body: UpdateDripSequenceRequest, admin=Depends(get_current_admin)):
+    updates = body.model_dump(exclude_none=True)
+    if "steps" in updates:
+        updates["steps"] = [s if isinstance(s, dict) else s.model_dump() for s in body.steps]
+    try:
+        return update_drip_sequence(seq_id, updates)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.delete("/drip/sequences/{seq_id}")
+def remove_sequence(seq_id: str, admin=Depends(get_current_admin)):
+    try:
+        return delete_drip_sequence(seq_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Drip Enrollments
+# ---------------------------------------------------------------------------
+
+@router.post("/drip/enroll")
+def enroll(body: EnrollUserRequest, admin=Depends(get_current_admin)):
+    try:
+        return enroll_user(sequence_id=body.sequence_id, user_id=body.user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/drip/enrollments")
+def get_enrollments(
+    sequence_id: str = Query(default=None),
+    admin=Depends(get_current_admin),
+):
+    return list_enrollments(sequence_id=sequence_id)
+
+
+@router.delete("/drip/enrollments/{enrollment_id}")
+def cancel_drip_enrollment(enrollment_id: str, admin=Depends(get_current_admin)):
+    try:
+        return cancel_enrollment(enrollment_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Welcome Sequence
+# ---------------------------------------------------------------------------
+
+@router.post("/welcome-enroll")
+def welcome_enroll(
+    body: WebhookPayload,
+    x_webhook_secret: str = Header(None),
+):
+    """
+    Called by the Supabase DB trigger on new profile inserts.
+    Enrolls the new user in the Welcome drip sequence.
+    Uses the same webhook secret as /api/webhooks/welcome so the same
+    Supabase trigger config can point here instead.
+    """
+    if x_webhook_secret != WEBHOOK_SECRET:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user_id = body.record.id
+    if not user_id:
+        return {"enrolled": False, "reason": "No user ID in payload"}
+
+    return enroll_new_user(user_id)

@@ -1,4 +1,5 @@
 import base64
+import os
 from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -10,18 +11,49 @@ from config import gmail, supabase, GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME
 from email_template_default import DEFAULT_EMAIL_TEMPLATE
 from email_direct_template import build_direct_email_html
 
+_WELCOME_TEMPLATE_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "email-templates", "01-welcome.html")
+)
+
 
 def _looks_like_full_email_document(html: str) -> bool:
     value = (html or "").lower()
-    return "<html" in value and "email-wrapper" in value and "hero-card" in value
+    return "<html" in value and "</body>" in value
 
 
 def _load_default_template_html() -> str:
-    return DEFAULT_EMAIL_TEMPLATE
+    try:
+        with open(_WELCOME_TEMPLATE_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    except (FileNotFoundError, OSError):
+        return DEFAULT_EMAIL_TEMPLATE
+
+
+_FRAGMENT_WRAPPER = """\
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#f2f2f2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2f2f2;">
+<tr><td align="center" style="padding:40px 20px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0"
+       style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;padding:40px 48px;">
+<tr><td style="font-size:16px;line-height:1.75;color:#333333;">{body}</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
 
 
 def _resolve_template_html(body: str) -> str:
-    return body if _looks_like_full_email_document(body) else _load_default_template_html()
+    if _looks_like_full_email_document(body):
+        return body
+    return _FRAGMENT_WRAPPER.format(body=body or "")
 
 
 def get_default_template_html() -> str:

@@ -41,6 +41,42 @@ class SendDirectRequest(BaseModel):
     attachments: Optional[List[Attachment]] = []
 
 
+# Campaign Scheduler
+class ScheduleCampaignRequest(BaseModel):
+    template_id: str
+    segment_rule: str = "all"
+    segment_params: Optional[dict] = None
+    send_at: str  # ISO datetime string
+
+
+# Content Generation
+class ContentGenRequest(BaseModel):
+    brief: str
+    tone: str = "friendly"          # friendly | professional | urgent
+    include_cta: bool = True
+    cta_text: Optional[str] = "Learn More"
+
+
+# Drip Sequences
+class DripStep(BaseModel):
+    template_id: str
+    delay_days: int = 0
+
+class CreateDripSequenceRequest(BaseModel):
+    name: str
+    steps: List[DripStep]
+    is_active: bool = True
+
+class UpdateDripSequenceRequest(BaseModel):
+    name: Optional[str] = None
+    steps: Optional[List[DripStep]] = None
+    is_active: Optional[bool] = None
+
+class EnrollUserRequest(BaseModel):
+    sequence_id: str
+    user_id: str
+
+
 # Segmentation
 class SegmentParams(BaseModel):
     days: Optional[int] = None

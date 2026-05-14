@@ -1,11 +1,25 @@
 import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from routes import auth, templates, users, email, logs, admins, webhooks, agents
 
-app = FastAPI(title="DesignHive Admin API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from agents.scheduler import start as sched_start, stop as sched_stop
+    from agents.drip import start as drip_start, stop as drip_stop
+    sched_start()
+    drip_start()
+    yield
+    drip_stop()
+    sched_stop()
+
+
+app = FastAPI(title="DesignHive Admin API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

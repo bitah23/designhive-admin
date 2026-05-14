@@ -22,10 +22,10 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 | # | Agent | Status | File |
 |---|---|---|---|
 | 1 | [Smart Segmentation](#1-smart-segmentation-agent) | `done` | `backend/agents/segmentation.py` |
-| 2 | [Content Generation](#2-content-generation-agent) | `planned` | `backend/agents/content_gen.py` |
-| 3 | [Campaign Scheduler](#3-campaign-scheduler-agent) | `planned` | `backend/agents/scheduler.py` |
-| 4 | [Drip Sequences](#4-drip-sequence-agent) | `planned` | `backend/agents/drip.py` |
-| 5 | [Welcome Sequence](#5-welcome-sequence-agent) | `planned` | `backend/agents/welcome_sequence.py` |
+| 2 | [Content Generation](#2-content-generation-agent) | `done` | `backend/agents/content_gen.py` |
+| 3 | [Campaign Scheduler](#3-campaign-scheduler-agent) | `done` | `backend/agents/scheduler.py` |
+| 4 | [Drip Sequences](#4-drip-sequence-agent) | `done` | `backend/agents/drip.py` |
+| 5 | [Welcome Sequence](#5-welcome-sequence-agent) | `done` | `backend/agents/welcome_sequence.py` |
 | 6 | [Re-engagement Agent](#6-re-engagement-agent) | `planned` | `backend/agents/reengagement.py` |
 | 7 | [Failure Recovery](#7-failure-recovery-agent) | `planned` | `backend/agents/failure_recovery.py` |
 | 8 | [Campaign Reporter](#8-campaign-reporter-agent) | `planned` | `backend/agents/reporter.py` |
@@ -65,8 +65,8 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 
 ## 2. Content Generation Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/content_gen.py`  
+**Status:** `done`  
+**Files:** `backend/agents/content_gen.py` · `backend/routes/agents.py` · `frontend/templates.html` · `frontend/js/templates-page.js`  
 **Requires:** Claude API (`claude-sonnet-4-6`)
 
 **What it does:** Takes a short brief from the admin (1–3 sentences describing the email goal) and returns a complete email subject line and HTML body, ready to save as a template.
@@ -104,41 +104,48 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 
 ## 3. Campaign Scheduler Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/scheduler.py`
+**Status:** `done`  
+**Files:** `backend/agents/scheduler.py` · `backend/routes/agents.py` · `frontend/campaign.html` · `frontend/js/campaign-page.js`
 
-**What it does:** Stores scheduled campaign jobs and fires them at the configured time. Runs as a background task using APScheduler (or a Supabase cron job via `pg_cron`).
+**What it does:** Stores scheduled campaign jobs and fires them at the configured time. Runs as an APScheduler `BackgroundScheduler` inside the FastAPI process, polling every `SCHEDULER_POLL_INTERVAL` seconds (default 60).
 
-**Scheduled job record (new table: `scheduled_campaigns`):**
+**Scheduled job record (table: `scheduled_campaigns`):**
 
 | Column | Type | Description |
 |---|---|---|
 | `id` | uuid | Primary key |
 | `template_id` | uuid | Which template to send |
 | `segment_rule` | text | Which segmentation rule to use |
+| `segment_params` | jsonb | Optional params for the rule (e.g. `{"days": 30}`) |
 | `send_at` | timestamptz | When to fire |
-| `status` | text | `pending` / `sent` / `failed` / `cancelled` |
+| `status` | text | `pending` / `running` / `sent` / `failed` / `cancelled` |
 | `created_at` | timestamptz | When the job was created |
-| `result_summary` | jsonb | Sent/failed counts after execution |
+| `result_summary` | jsonb | Sent/failed counts after execution, or error message |
+
+**Endpoints:**
+- `POST /api/agents/schedule` — create a scheduled campaign
+- `GET /api/agents/schedule` — list all campaigns (newest first)
+- `DELETE /api/agents/schedule/{id}` — cancel a pending campaign
 
 **Flow:**
-1. Admin creates a scheduled campaign via `POST /api/agents/schedule`
-2. Agent polls `scheduled_campaigns` for rows where `send_at <= now()` and `status = 'pending'`
-3. On match: runs segmentation → fetches template → sends via `send_bulk_emails` → updates `status` and `result_summary`
+1. Admin selects template + segment on Campaign page, clicks "Schedule", picks a datetime
+2. `POST /api/agents/schedule` saves a `pending` row in `scheduled_campaigns`
+3. Scheduler polls every 60 s for rows where `send_at <= now()` and `status = 'pending'`
+4. On match: optimistic lock (sets `running`) → `segment_users()` → fetches template → `send_bulk_emails()` → writes `result_summary`, sets `sent` or `failed`
 
 **Integration points:**
-- Calls the Smart Segmentation Agent (#1) to resolve recipients
-- Calls `services/email.py:send_bulk_emails` to send
-- Will feed results to Campaign Reporter (#8) after each send
+- Calls Smart Segmentation Agent (#1) directly (Python import, no HTTP)
+- Calls `services/email.py:send_bulk_emails`
+- Will call Campaign Reporter (#8) after each send once Agent #8 is built
 
-**DB tables used:** `scheduled_campaigns` (new), `email_templates`, `profiles`, `email_logs`
+**DB tables used:** `scheduled_campaigns`, `email_templates`, `profiles`, `email_logs`
 
 ---
 
 ## 4. Drip Sequence Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/drip.py`
+**Status:** `done`  
+**Files:** `backend/agents/drip.py` · `backend/routes/agents.py` · `backend/models.py`
 
 **What it does:** Enrolls a user in a sequence of emails sent at fixed intervals. Each step in the sequence is a separate template sent N days after the previous one.
 
@@ -175,8 +182,8 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 
 ## 5. Welcome Sequence Agent
 
-**Status:** `planned`  
-**File:** `backend/agents/welcome_sequence.py`
+**Status:** `done`  
+**Files:** `backend/agents/welcome_sequence.py` · `backend/routes/agents.py`
 
 **What it does:** Automatically sends a structured series of welcome emails when a new user signs up. Distinct from the existing single-email webhook — this sends multiple emails across the first week.
 
@@ -394,6 +401,8 @@ ANTHROPIC_API_KEY=...          # Required for agents 2, 9, 10 (Claude API)
 REENGAGEMENT_THRESHOLD_DAYS=30 # Agent 6
 REPORTER_EMAIL_ADMIN=false     # Agent 8
 SCHEDULER_POLL_INTERVAL=60     # Agent 3 (seconds between polls)
+DRIP_POLL_INTERVAL=60          # Agent 4 (seconds between drip polls)
+WELCOME_SEQUENCE_ID=<uuid>     # Agent 5 (UUID of the Welcome drip sequence in drip_sequences)
 ```
 
 ---

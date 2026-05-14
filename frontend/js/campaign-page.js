@@ -11,6 +11,8 @@ let segPreviewCount = null;
 let selectedTemplateId = null;
 const selectedUserIds = new Set();
 
+let scheduledCampaigns = [];
+
 const grid = document.getElementById('campaign-grid');
 const sendButton = document.getElementById('send-campaign-btn');
 const resultsCard = document.getElementById('results-card');
@@ -22,6 +24,11 @@ window.updateSegRule = updateSegRule;
 window.previewSegment = previewSegment;
 window.applySegment = applySegment;
 window.clearSegment = clearSegment;
+window.openScheduleModal = openScheduleModal;
+window.closeScheduleModal = closeScheduleModal;
+window.submitSchedule = submitSchedule;
+window.loadScheduledCampaigns = loadScheduledCampaigns;
+window.cancelScheduledCampaign = cancelScheduledCampaign;
 
 document.getElementById('dismiss-results-btn').addEventListener('click', dismissResults);
 sendButton.addEventListener('click', sendCampaign);
@@ -43,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     renderCampaignUI();
+    loadScheduledCampaigns(); // non-blocking background load
   } catch (error) {
     Toast.error(error.response?.data?.detail || error.message || 'Failed to load campaign.');
   }
@@ -416,6 +424,197 @@ function dismissResults() {
   selectedUserIds.clear();
   resultsCard.hidden = true;
   renderCampaignUI();
+}
+
+// ---------------------------------------------------------------------------
+// Campaign Scheduler
+// ---------------------------------------------------------------------------
+
+function openScheduleModal() {
+  if (!selectedTemplateId) {
+    Toast.warn('Please select a template first.');
+    return;
+  }
+
+  const template = templates.find(t => t.id === selectedTemplateId);
+  const params = buildSegmentParams();
+  const segLabel = getSegmentLabel(segRule, params);
+
+  document.getElementById('sched-summary').innerHTML = `
+    <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:14px 16px">
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Campaign Details</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:10px">
+          <span style="color:var(--text-muted);font-size:13px;width:76px;flex-shrink:0">Template</span>
+          <span style="font-weight:600;font-size:13px">${escapeHtml(template?.title || 'Unknown')}</span>
+        </div>
+        <div style="display:flex;gap:10px">
+          <span style="color:var(--text-muted);font-size:13px;width:76px;flex-shrink:0">Segment</span>
+          <span style="font-size:13px">${escapeHtml(segLabel)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Default to 1 hour from now, minimum 1 minute from now
+  const soon = new Date();
+  soon.setHours(soon.getHours() + 1);
+  const minDt = new Date();
+  minDt.setMinutes(minDt.getMinutes() + 1);
+
+  const sendAtInput = document.getElementById('sched-send-at');
+  sendAtInput.min = minDt.toISOString().slice(0, 16);
+  sendAtInput.value = soon.toISOString().slice(0, 16);
+
+  document.getElementById('schedule-modal').classList.remove('hidden');
+  redrawIcons();
+}
+
+function closeScheduleModal() {
+  document.getElementById('schedule-modal').classList.add('hidden');
+}
+
+async function submitSchedule() {
+  const sendAtVal = document.getElementById('sched-send-at').value;
+  if (!sendAtVal) { Toast.error('Please select a send time.'); return; }
+
+  const sendAt = new Date(sendAtVal);
+  if (sendAt <= new Date()) { Toast.error('Schedule time must be in the future.'); return; }
+
+  const params = buildSegmentParams();
+  const btn = document.getElementById('sched-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Scheduling…';
+
+  try {
+    await api.post('/agents/schedule', {
+      template_id: selectedTemplateId,
+      segment_rule: segRule,
+      segment_params: params,
+      send_at: sendAt.toISOString(),
+    });
+    closeScheduleModal();
+    Toast.success('Campaign scheduled successfully.');
+    await loadScheduledCampaigns();
+  } catch (err) {
+    Toast.error(err.response?.data?.detail || 'Failed to schedule campaign.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="calendar-clock" style="width:14px;height:14px"></i> Schedule';
+    redrawIcons();
+  }
+}
+
+async function loadScheduledCampaigns() {
+  try {
+    scheduledCampaigns = await api.get('/agents/schedule');
+    renderScheduledCampaigns();
+  } catch (err) {
+    console.error('Failed to load scheduled campaigns:', err);
+  }
+}
+
+function renderScheduledCampaigns() {
+  const card = document.getElementById('scheduled-campaigns-card');
+  const body = document.getElementById('scheduled-campaigns-body');
+  if (!card || !body) return;
+
+  if (!scheduledCampaigns.length) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = '';
+
+  const statusBadge = status => ({
+    pending:   '<span class="badge badge-gold">PENDING</span>',
+    running:   '<span class="badge badge-gold">RUNNING</span>',
+    sent:      '<span class="badge badge-green">SENT</span>',
+    failed:    '<span class="badge badge-red">FAILED</span>',
+    cancelled: '<span class="badge badge-neutral">CANCELLED</span>',
+  }[status] || `<span class="badge badge-neutral">${escapeHtml(status.toUpperCase())}</span>`);
+
+  body.innerHTML = scheduledCampaigns.map(job => {
+    const tmpl = templates.find(t => t.id === job.template_id);
+    const tmplName = tmpl?.title || `Template (…${job.template_id.slice(-6)})`;
+    const sendAt = new Date(job.send_at).toLocaleString('en-AU', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    const segLabel = getSegmentLabel(job.segment_rule, job.segment_params || {});
+
+    let resultHtml = '';
+    if (job.result_summary) {
+      const s = job.result_summary;
+      if (s.sent !== undefined) {
+        resultHtml = `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${s.sent} sent · ${s.failed} failed</div>`;
+      } else if (s.error) {
+        resultHtml = `<div style="font-size:12px;color:var(--danger);margin-top:4px">${escapeHtml(s.error)}</div>`;
+      } else if (s.note) {
+        resultHtml = `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${escapeHtml(s.note)}</div>`;
+      }
+    }
+
+    const cancelBtn = job.status === 'pending' ? `
+      <button type="button" class="btn-icon" title="Cancel campaign"
+              onclick="cancelScheduledCampaign('${escapeAttr(job.id)}')">
+        <i data-lucide="x-circle" style="width:15px;height:15px;color:var(--danger)"></i>
+      </button>
+    ` : '';
+
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+                  padding:12px 0;border-bottom:1px solid var(--border)">
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:600;font-size:14px;margin-bottom:4px">${escapeHtml(tmplName)}</div>
+          <div style="font-size:12px;color:var(--text-muted);display:flex;gap:14px;flex-wrap:wrap">
+            <span>
+              <i data-lucide="calendar" style="width:11px;height:11px;vertical-align:middle;margin-right:3px"></i>
+              ${escapeHtml(sendAt)}
+            </span>
+            <span>
+              <i data-lucide="users" style="width:11px;height:11px;vertical-align:middle;margin-right:3px"></i>
+              ${escapeHtml(segLabel)}
+            </span>
+          </div>
+          ${resultHtml}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;padding-top:2px">
+          ${statusBadge(job.status)}
+          ${cancelBtn}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Remove border from last item
+  const items = body.querySelectorAll('[style*="border-bottom"]');
+  if (items.length) items[items.length - 1].style.borderBottom = 'none';
+
+  redrawIcons();
+}
+
+async function cancelScheduledCampaign(id) {
+  const confirmed = await Swal.fire({
+    title: 'Cancel this campaign?',
+    text: 'The scheduled send will not go out.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, cancel it',
+    confirmButtonColor: getCssVar('--danger'),
+    cancelButtonColor: 'transparent',
+    background: getCssVar('--bg-card'),
+    color: getCssVar('--text-primary'),
+  });
+  if (!confirmed.isConfirmed) return;
+
+  try {
+    await api.del(`/agents/schedule/${id}`);
+    Toast.success('Scheduled campaign cancelled.');
+    await loadScheduledCampaigns();
+  } catch (err) {
+    Toast.error(err.response?.data?.detail || 'Failed to cancel campaign.');
+  }
 }
 
 function getCssVar(name) {
