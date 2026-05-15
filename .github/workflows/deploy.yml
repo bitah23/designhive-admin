@@ -43,12 +43,13 @@ jobs:
           GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
           GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
           GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,JWT_SECRET,WEBHOOK_SECRET,GMAIL_SENDER_EMAIL,GMAIL_SENDER_NAME,GMAIL_REFRESH_TOKEN,GMAIL_CLIENT_ID,GMAIL_CLIENT_SECRET,GHCR_TOKEN
+          envs: SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,JWT_SECRET,WEBHOOK_SECRET,GMAIL_SENDER_EMAIL,GMAIL_SENDER_NAME,GMAIL_REFRESH_TOKEN,GMAIL_CLIENT_ID,GMAIL_CLIENT_SECRET,ANTHROPIC_API_KEY,GHCR_TOKEN
           script: |
             cat > /root/app.env << EOF
             SUPABASE_URL=${SUPABASE_URL}
@@ -60,6 +61,9 @@ jobs:
             GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN}
             GMAIL_CLIENT_ID=${GMAIL_CLIENT_ID}
             GMAIL_CLIENT_SECRET=${GMAIL_CLIENT_SECRET}
+            ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+            TABLE_PROFILES=test_profiles
+            TABLE_EMAIL_LOGS=test_email_logs
             EOF
             chmod 600 /root/app.env
 
