@@ -6,8 +6,32 @@ from config import supabase
 
 logger = logging.getLogger(__name__)
 
-_ADMIN_EMAIL = os.getenv("REPORTER_ADMIN_EMAIL", "")
-_EMAIL_ADMIN = os.getenv("REPORTER_EMAIL_ADMIN", "false").lower() == "true"
+_AGENT_KEY = "reporter"
+_DEFAULT_CONFIG = {
+    "email_admin": False,
+    "admin_email": "",
+}
+
+
+def get_config() -> dict:
+    try:
+        row = supabase.table("agent_config").select("config").eq("agent", _AGENT_KEY).execute()
+        if row.data:
+            return {**_DEFAULT_CONFIG, **row.data[0]["config"]}
+    except Exception as exc:
+        logger.warning("Could not read reporter config from DB: %s", exc)
+    return {
+        "email_admin": os.getenv("REPORTER_EMAIL_ADMIN", "false").lower() == "true",
+        "admin_email": os.getenv("REPORTER_ADMIN_EMAIL", ""),
+    }
+
+
+def update_config(data: dict) -> dict:
+    current = get_config()
+    merged = {**current, **data}
+    supabase.table("agent_config").upsert({"agent": _AGENT_KEY, "config": merged}).execute()
+    logger.info("Reporter config updated: %s", merged)
+    return merged
 
 
 def generate_report(
@@ -17,20 +41,8 @@ def generate_report(
     total_targeted: int = None,
     send_admin_email: bool = None,
 ) -> dict:
-    """
-    Build a campaign report from the results of a bulk send.
-
-    Args:
-        template: The email_templates row that was sent.
-        results: List of dicts returned by send_bulk_emails — each has
-                 {"email": str, "status": "sent"|"failed", "error": str (optional)}.
-        total_targeted: Override for total audience size (defaults to len(results)).
-        send_admin_email: Override the REPORTER_EMAIL_ADMIN env var.
-
-    Returns:
-        A structured report dict.
-    """
-    should_email = _EMAIL_ADMIN if send_admin_email is None else send_admin_email
+    config = get_config()
+    should_email = config["email_admin"] if send_admin_email is None else send_admin_email
 
     sent = [r for r in results if r.get("status") == "sent"]
     failed = [r for r in results if r.get("status") != "sent"]
@@ -51,13 +63,13 @@ def generate_report(
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
-    if should_email and _ADMIN_EMAIL:
-        _email_report(report)
+    if should_email and config["admin_email"]:
+        _email_report(report, config["admin_email"])
 
     return report
 
 
-def _email_report(report: dict):
+def _email_report(report: dict, admin_email: str):
     """Send the campaign report to the admin email address."""
     try:
         from services.email import send_direct_email
@@ -97,11 +109,11 @@ def _email_report(report: dict):
         """
 
         send_direct_email(
-            to=_ADMIN_EMAIL,
+            to=admin_email,
             subject=f"[DesignHive] Campaign Report — {report['campaign_name']}",
             html_body=html,
         )
-        logger.info(f"Campaign report emailed to {_ADMIN_EMAIL}")
+        logger.info(f"Campaign report emailed to {admin_email}")
     except Exception as exc:
         logger.error(f"Failed to email campaign report: {exc}")
 

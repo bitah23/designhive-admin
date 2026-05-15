@@ -9,6 +9,7 @@ from models import (
     EnrollUserRequest,
     FailureRecoveryConfigUpdate,
     ReengagementConfigUpdate,
+    ReporterConfigUpdate,
     ScheduleCampaignRequest,
     SegmentRequest,
     UpdateDripSequenceRequest,
@@ -17,7 +18,11 @@ from models import (
 )
 from agents.segmentation import segment_users
 from agents.content_gen import generate_email_content
-from agents.reporter import get_campaign_history
+from agents.reporter import (
+    get_campaign_history,
+    get_config as get_reporter_config,
+    update_config as update_reporter_config,
+)
 from agents.chat import chat as agent_chat
 from agents.suggestions import get_suggestions
 from agents.scheduler import (
@@ -121,6 +126,19 @@ def campaign_report(
     admin=Depends(get_current_admin),
 ):
     return get_campaign_history(limit=limit)
+
+
+@router.get("/reporter/config")
+def reporter_config(admin=Depends(get_current_admin)):
+    return get_reporter_config()
+
+
+@router.patch("/reporter/config")
+def update_reporter_config_route(body: ReporterConfigUpdate, admin=Depends(get_current_admin)):
+    updates = body.model_dump(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    return update_reporter_config(updates)
 
 
 # ---------------------------------------------------------------------------

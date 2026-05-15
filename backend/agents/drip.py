@@ -1,5 +1,4 @@
 import logging
-import os
 from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -25,7 +24,7 @@ def start():
         return
     if _scheduler.running:
         return
-    interval = int(os.getenv("DRIP_POLL_INTERVAL", "60"))
+    interval = 60
     _scheduler.add_job(
         _poll, "interval", seconds=interval,
         id="drip_poll", replace_existing=True,

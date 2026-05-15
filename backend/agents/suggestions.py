@@ -11,7 +11,7 @@ from agents.segmentation import segment_users
 
 logger = logging.getLogger(__name__)
 
-_CACHE_TTL = int(os.getenv("SUGGESTIONS_CACHE_TTL", "3600"))
+_CACHE_TTL = 3600
 _anthropic: Anthropic | None = None
 
 

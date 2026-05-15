@@ -132,3 +132,9 @@ class FailureRecoveryConfigUpdate(BaseModel):
     retry2_minutes: Optional[int] = None
     retry3_minutes: Optional[int] = None
     max_retries:    Optional[int] = None
+
+
+# Campaign Reporter Config (Agent 8)
+class ReporterConfigUpdate(BaseModel):
+    email_admin: Optional[bool] = None
+    admin_email: Optional[str]  = None
