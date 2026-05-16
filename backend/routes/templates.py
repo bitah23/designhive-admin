@@ -1,6 +1,6 @@
 import json
 from fastapi import APIRouter, HTTPException, Depends
-from config import supabase
+from config import supabase, TABLE_EMAIL_LOGS
 from deps import get_current_admin
 from models import TemplateCreate, TemplateUpdate
 from services.email import get_default_template_html
@@ -37,7 +37,7 @@ def update_template(template_id: str, body: TemplateUpdate, admin=Depends(get_cu
 @router.delete("/{template_id}")
 def delete_template(template_id: str, admin=Depends(get_current_admin)):
     try:
-        supabase.table("email_logs").delete().eq("template_id", template_id).execute()
+        supabase.table(TABLE_EMAIL_LOGS).delete().eq("template_id", template_id).execute()
         supabase.table("email_templates").delete().eq("id", template_id).execute()
         return {"message": "Template deleted"}
     except Exception as e:
