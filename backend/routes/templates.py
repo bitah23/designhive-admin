@@ -36,8 +36,12 @@ def update_template(template_id: str, body: TemplateUpdate, admin=Depends(get_cu
 
 @router.delete("/{template_id}")
 def delete_template(template_id: str, admin=Depends(get_current_admin)):
-    supabase.table("email_templates").delete().eq("id", template_id).execute()
-    return {"message": "Template deleted"}
+    try:
+        supabase.table("email_logs").delete().eq("template_id", template_id).execute()
+        supabase.table("email_templates").delete().eq("id", template_id).execute()
+        return {"message": "Template deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete template: {str(e)}")
 
 
 @router.post("/{template_id}/approve")
