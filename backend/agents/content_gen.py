@@ -1,4 +1,3 @@
-import json
 import os
 
 from anthropic import Anthropic
@@ -24,10 +23,9 @@ Generate polished, on-brand marketing emails.
 
 Brand palette: accent/gold #ff9f1c · dark maroon #8b1a1a · body text #1c1c2e · muted #4a4a5a
 
-OUTPUT: Return ONLY a raw JSON object — no markdown, no code fences, no extra text.
-{"subject": "...", "body": "..."}
+Call the submit_email tool with your result.
 
-HTML rules for the body value:
+HTML rules for the body parameter:
 - INNER CONTENT ONLY — no DOCTYPE, no <html>, no <head>, no <body> tags whatsoever
 - Plain semantic HTML: <h1>, <h2>, <p>, <a>, <table>, <img>, <ul>, <li>, etc.
 - All CSS inline on each element — no <style> blocks
@@ -38,6 +36,25 @@ HTML rules for the body value:
 - Email-client safe: table-based layout for multi-column, no CSS grid or flexbox
 - Subject line: max 60 characters, compelling and specific
 - The content will be embedded inside a white-body email that already has a dark maroon branded header and grey footer"""
+
+_SUBMIT_TOOL = {
+    "name": "submit_email",
+    "description": "Submit the generated email subject line and HTML body content.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "subject": {
+                "type": "string",
+                "description": "Email subject line, max 60 characters.",
+            },
+            "body": {
+                "type": "string",
+                "description": "Inner HTML body content only — no DOCTYPE or html/head/body tags.",
+            },
+        },
+        "required": ["subject", "body"],
+    },
+}
 
 _TONE_MAP = {
     "friendly": "Warm, conversational, encouraging — feel like a message from a friend.",
@@ -104,21 +121,21 @@ def generate_email_content(
     client = _get_client()
     message = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=4096,
+        max_tokens=8192,
         system=_SYSTEM,
+        tools=[_SUBMIT_TOOL],
+        tool_choice={"type": "any"},
         messages=[{"role": "user", "content": user_prompt}],
     )
 
-    raw = message.content[0].text.strip()
+    tool_block = next(
+        (b for b in message.content if getattr(b, "type", None) == "tool_use"),
+        None,
+    )
+    if tool_block is None:
+        raise ValueError("Model did not call submit_email tool")
 
-    # Strip accidental markdown code fences
-    if raw.startswith("```"):
-        raw = raw.split("```", 2)[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.rsplit("```", 1)[0].strip()
-
-    result = json.loads(raw)
+    result = tool_block.input
 
     if not isinstance(result.get("subject"), str) or not isinstance(result.get("body"), str):
         raise ValueError("Unexpected response structure from content generation")
