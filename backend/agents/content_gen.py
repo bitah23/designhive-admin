@@ -4,6 +4,7 @@ import os
 from anthropic import Anthropic
 
 from config import MOCK_MODE
+from email_direct_template import build_direct_email_html
 
 _client = None
 
@@ -21,19 +22,22 @@ def _get_client() -> Anthropic:
 _SYSTEM = """You are an expert email copywriter for DesignHive AI — a premium design tools platform.
 Generate polished, on-brand marketing emails.
 
-Brand palette: background #07090f · card #131b2e · accent/gold #ff9f1c · body text #ffffff
+Brand palette: accent/gold #ff9f1c · dark maroon #8b1a1a · body text #1c1c2e · muted #4a4a5a
 
 OUTPUT: Return ONLY a raw JSON object — no markdown, no code fences, no extra text.
 {"subject": "...", "body": "..."}
 
 HTML rules for the body value:
-- Full document: DOCTYPE + <html> + <head> + <body>
-- All CSS inline on each element — no <style> blocks, no classes that reference an external sheet
+- INNER CONTENT ONLY — no DOCTYPE, no <html>, no <head>, no <body> tags whatsoever
+- Plain semantic HTML: <h1>, <h2>, <p>, <a>, <table>, <img>, <ul>, <li>, etc.
+- All CSS inline on each element — no <style> blocks
 - Personalisation placeholders: {{name}}  {{email}}  {{date}}
-- Dark background (#07090f outer, #131b2e card), amber CTAs (#ff9f1c text on black)
-- Max-width 600px container, margin:0 auto, centred
-- Email-client safe: table-based layout, no CSS grid or flexbox
-- Subject line: max 60 characters, compelling and specific"""
+- White background assumed — use dark text (#1c1c2e) for headings, muted (#4a4a5a) for body copy
+- CTA buttons: bulletproof table pattern — <table><tr><td style="background:#8b1a1a;border-radius:50px;padding:14px 40px;"><a href="URL" style="color:#ffffff;font-weight:700;text-decoration:none;">Label</a></td></tr></table>
+- Use real DesignHive URLs for CTAs: https://designhivestudio.ai (home), https://designhivestudio.ai/portfolio (work), https://designhivestudio.ai/contact (contact)
+- Email-client safe: table-based layout for multi-column, no CSS grid or flexbox
+- Subject line: max 60 characters, compelling and specific
+- The content will be embedded inside a white-body email that already has a dark maroon branded header and grey footer"""
 
 _TONE_MAP = {
     "friendly": "Warm, conversational, encouraging — feel like a message from a friend.",
@@ -41,54 +45,30 @@ _TONE_MAP = {
     "urgent": "Urgent and action-oriented — emphasise time-sensitivity and FOMO.",
 }
 
-_MOCK_BODY = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DesignHive — Mock Email</title>
-</head>
-<body style="margin:0;padding:0;background-color:#07090f;font-family:'DM Sans',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0"
-         style="background-color:#07090f;padding:40px 0;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" border="0"
-               style="max-width:600px;width:100%;">
-          <tr>
-            <td style="background:#131b2e;border-radius:16px;border:1px solid rgba(255,159,28,0.15);
-                        padding:48px 48px 40px;text-align:center;">
-              <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;
-                         color:#ff9f1c;font-family:monospace;">DesignHive AI</p>
-              <h1 style="margin:0 0 16px;font-size:40px;font-weight:700;color:#ffffff;line-height:1.1;">
-                Hello, <span style="color:#ff9f1c;">{{name}}</span>
-              </h1>
-              <p style="margin:0 0 32px;font-size:16px;color:rgba(255,255,255,0.6);line-height:1.7;">
-                This is a mock-mode preview. In production, Claude will generate a fully custom email
-                based on your brief, tone, and CTA preferences.
-              </p>
-              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 24px;">
-                <tr>
-                  <td style="background:#ff9f1c;border-radius:50px;padding:16px 48px;">
-                    <a href="#" style="color:#07090f;font-weight:700;font-size:15px;
-                                        text-decoration:none;letter-spacing:0.04em;">
-                      Get Started &rarr;
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.25);">
-                Sent to {{email}} &nbsp;&middot;&nbsp; {{date}}
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>"""
+_MOCK_BODY = """<h2 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#1c1c2e;
+              font-family:'DM Sans',Arial,sans-serif;line-height:1.2;">
+  Hello, <span style="color:#8b1a1a;">{{name}}</span>
+</h2>
+<p style="margin:0 0 24px;font-size:16px;line-height:1.75;color:#4a4a5a;
+           font-family:'DM Sans',Arial,sans-serif;">
+  This is a <strong>mock-mode preview</strong>. In production, Claude will generate a fully
+  custom email based on your brief, tone, and CTA preferences. Your personalised content
+  will appear here, styled consistently with the Design Hive brand.
+</p>
+<table border="0" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+  <tr>
+    <td style="background:#8b1a1a;border-radius:50px;padding:14px 40px;">
+      <a href="https://designhivestudio.ai"
+         style="color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;
+                font-family:'DM Sans',Arial,sans-serif;letter-spacing:0.04em;">
+        Visit Design Hive &rarr;
+      </a>
+    </td>
+  </tr>
+</table>
+<p style="margin:0;font-size:12px;color:#aaaaaa;font-family:'DM Sans',Arial,sans-serif;">
+  Sent to {{email}} &nbsp;&middot;&nbsp; {{date}}
+</p>"""
 
 
 def generate_email_content(
@@ -104,7 +84,7 @@ def generate_email_content(
     if MOCK_MODE:
         return {
             "subject": "[Mock] Re-engage with DesignHive — we miss you!",
-            "body": _MOCK_BODY,
+            "body": build_direct_email_html(_MOCK_BODY),
         }
 
     tone_desc = _TONE_MAP.get(tone, _TONE_MAP["friendly"])
@@ -143,7 +123,7 @@ def generate_email_content(
     if not isinstance(result.get("subject"), str) or not isinstance(result.get("body"), str):
         raise ValueError("Unexpected response structure from content generation")
 
-    if "<html" not in result["body"].lower():
-        raise ValueError("Generated body is not a valid HTML document")
+    if "<html" in result["body"].lower():
+        raise ValueError("Generated body must be inner content only, not a full HTML document")
 
-    return {"subject": result["subject"], "body": result["body"]}
+    return {"subject": result["subject"], "body": build_direct_email_html(result["body"])}
