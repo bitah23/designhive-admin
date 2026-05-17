@@ -646,39 +646,6 @@ async function testChat() {
   }
 }
 
-// ── Agent 10: Suggestions ─────────────────────────────────────────────────────
-
-async function loadSuggestions(forceRefresh) {
-  const btn = forceRefresh
-    ? document.querySelector('#agent-10 .btn-primary')
-    : document.querySelector('#agent-10 .btn-outline');
-  setLoading(btn, true);
-  showResult('suggestions-result', 'Analysing…');
-
-  try {
-    const url  = forceRefresh ? '/agents/suggestions?refresh=true' : '/agents/suggestions';
-    const data = await api.get(url);
-    const suggestions = data.suggestions || [];
-
-    if (!suggestions.length) {
-      showResult('suggestions-result', 'No suggestions generated (not enough data yet).');
-      return;
-    }
-
-    const lines = suggestions.map((s, i) =>
-      `[${s.type.toUpperCase()}] (${Math.round((s.confidence || 0) * 100)}% confidence)\n${s.message}` +
-      (s.suggested_action ? `\nAction: ${JSON.stringify(s.suggested_action)}` : '')
-    );
-
-    const prefix = data.cached ? `[CACHED — generated ${new Date(data.generated_at).toLocaleTimeString()}]\n\n` : '[FRESH]\n\n';
-    showResult('suggestions-result', prefix + lines.join('\n\n'));
-  } catch (err) {
-    showResult('suggestions-result', err?.response?.data?.detail || 'Failed.', true);
-  } finally {
-    setLoading(btn, false);
-  }
-}
-
 // ── Auto-load config panels on page open ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadWelcomeConfig();

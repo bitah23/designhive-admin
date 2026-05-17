@@ -24,7 +24,6 @@ from agents.reporter import (
     update_config as update_reporter_config,
 )
 from agents.chat import chat as agent_chat
-from agents.suggestions import get_suggestions
 from agents.scheduler import (
     create_scheduled_campaign,
     list_scheduled_campaigns,
@@ -159,21 +158,6 @@ async def chat(body: ChatRequest, admin=Depends(get_current_admin)):
     except Exception as e:
         _log.error("Chat route error: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Chat agent error: {str(e)}")
-
-
-# ---------------------------------------------------------------------------
-# Suggestion Agent (Agent 10)
-# ---------------------------------------------------------------------------
-
-@router.get("/suggestions")
-def suggestions(
-    refresh: bool = Query(default=False),
-    admin=Depends(get_current_admin),
-):
-    try:
-        return get_suggestions(force_refresh=refresh)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Suggestions agent error: {str(e)}")
 
 
 # ---------------------------------------------------------------------------

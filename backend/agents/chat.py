@@ -42,7 +42,7 @@ _SYSTEM_PROMPT = (
     "- Failure recovery agent: retries previously failed sends with exponential backoff.\n\n"
     "Behaviour rules:\n"
     "1. When the admin names a template (e.g. 'welcome email'), call list_templates first to resolve its ID.\n"
-    "2. After executing an action, reply with a concise, friendly summary including key numbers.\n"
+    "2. After executing an action, reply with a concise, friendly summary. For send_campaign_now, the tool returns immediately — emails are sent in the background. Tell the admin how many users were targeted and that results will appear in the Logs page shortly.\n"
     "3. If required info is missing (e.g. no send time given for scheduling), ask — don't guess.\n"
     "4. Never expose raw UUIDs in your reply unless specifically asked.\n"
     "4b. If a tool returns an 'error' field, always quote the exact error message in your reply — never give a generic 'something went wrong' response. The admin needs to know the specific failure reason.\n"
@@ -226,16 +226,33 @@ def _execute_tool(name: str, inputs: dict) -> str:
             if not tmpl_res.data:
                 return json.dumps({"error": f"Template {inputs['template_id']} not found"})
             template = tmpl_res.data[0]
-            results = _send_bulk(template, users)
-            from agents.reporter import generate_report
-            report = generate_report(template, results, total_targeted=len(users))
-            # Truncate failed_recipients so the tool result stays small enough
-            # for the model to process — full list is already in the email logs.
-            failed = report.get("failed_recipients", [])
-            report["failed_recipients"] = failed[:5]
-            if len(failed) > 5:
-                report["failed_recipients_note"] = f"{len(failed)} total failures — showing first 5 only"
-            return json.dumps(report)
+
+            # Fire the actual send in a daemon thread so the HTTP response is
+            # returned to the admin before nginx's proxy_read_timeout fires.
+            # Results are written to email_logs and visible in the Logs page.
+            import threading
+            def _bg_send(tmpl, usr_list):
+                try:
+                    from agents.reporter import generate_report
+                    results = _send_bulk(tmpl, usr_list)
+                    generate_report(tmpl, results, total_targeted=len(usr_list))
+                    logger.info("Background send complete: %d sent, %d failed",
+                                sum(1 for r in results if r.get("status") == "sent"),
+                                sum(1 for r in results if r.get("status") != "sent"))
+                except Exception as exc:
+                    logger.error("Background send error: %s", exc)
+
+            threading.Thread(target=_bg_send, args=(template, users), daemon=True).start()
+
+            return json.dumps({
+                "status": "sending",
+                "template": template.get("title"),
+                "total_users": len(users),
+                "note": (
+                    f"Campaign '{template.get('title')}' is now being sent to {len(users)} user(s) "
+                    "in the background. Results will appear in the Logs page shortly."
+                ),
+            })
 
         elif name == "schedule_campaign":
             job = _create_scheduled(

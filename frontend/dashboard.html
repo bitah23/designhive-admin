@@ -105,45 +105,6 @@
     }
     #dash-chat-send:disabled { opacity: .45; cursor: default; }
 
-    /* ── Suggestions list ───────────────────────────────────── */
-    #suggestions-section {
-      margin-bottom: 20px;
-    }
-    .sugg-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 9px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .sugg-row:last-child { border-bottom: none; }
-    .sugg-type {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--gold);
-      background: rgba(255,159,28,.1);
-      border: 1px solid rgba(255,159,28,.22);
-      padding: 2px 7px;
-      border-radius: 20px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .sugg-msg { color: var(--text-secondary); flex: 1; line-height: 1.5; }
-    .sugg-apply {
-      flex-shrink: 0;
-      font-size: 12px;
-      padding: 3px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: none;
-      color: var(--text-muted);
-      transition: border-color .15s, color .15s;
-    }
-    .sugg-apply:hover { border-color: var(--gold); color: var(--gold); }
   </style>
 </head>
 <body>
@@ -174,23 +135,7 @@
           </div>
         </div>
 
-        <!-- ── AI Suggestions ──────────────────────────────────── -->
-        <div id="suggestions-section" style="display:none">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:7px">
-              <i data-lucide="sparkles" style="width:13px;height:13px;color:var(--gold)"></i>
-              <span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">AI Insights</span>
-              <span id="suggestions-count" style="font-size:11px;color:var(--text-muted)"></span>
-            </div>
-            <button class="btn btn-ghost btn-sm" id="refresh-suggestions-btn" style="font-size:12px;padding:3px 10px">
-              <i data-lucide="refresh-cw" style="width:12px;height:12px"></i>
-              Refresh
-            </button>
-          </div>
-          <div id="suggestions-list"></div>
-        </div>
-
-        <!-- ── Draft notifications ─────────────────────────────── -->
+<!-- ── Draft notifications ─────────────────────────────── -->
         <div id="draft-notifications" style="display:none;margin-bottom:20px"></div>
 
         <!-- ── Stat cards ──────────────────────────────────────── -->

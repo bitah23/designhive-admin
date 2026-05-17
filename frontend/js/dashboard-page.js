@@ -2,9 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initDashChat();
   loadDashboard();
   loadDraftNotifications();
-  loadSuggestions();
-  document.getElementById('refresh-suggestions-btn')
-    ?.addEventListener('click', () => loadSuggestions(true));
 });
 
 /* ═══════════════════════════════════════════════════════════════
@@ -167,74 +164,6 @@ async function approveTemplate(templateId, btnEl) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   AI SUGGESTIONS  (compact list)
-   ═══════════════════════════════════════════════════════════════ */
-async function loadSuggestions(forceRefresh = false) {
-  const section   = document.getElementById('suggestions-section');
-  const list      = document.getElementById('suggestions-list');
-  const countEl   = document.getElementById('suggestions-count');
-  const refreshBtn = document.getElementById('refresh-suggestions-btn');
-  if (!section || !list) return;
-
-  if (forceRefresh && refreshBtn) {
-    refreshBtn.disabled = true;
-    refreshBtn.textContent = 'Loading…';
-  }
-
-  try {
-    const url  = forceRefresh ? '/agents/suggestions?refresh=true' : '/agents/suggestions';
-    const data = await api.get(url);
-    const suggestions = data.suggestions || [];
-
-    if (!suggestions.length) { section.style.display = 'none'; return; }
-
-    section.style.display = 'block';
-    if (countEl) countEl.textContent = data.cached ? '· cached' : '';
-
-    window._suggestions = suggestions;
-
-    list.innerHTML = suggestions.map((s, i) => {
-      const actionBtn = s.suggested_action
-        ? `<button class="sugg-apply" onclick="applySuggestion(${i})">Apply</button>`
-        : '';
-      return `
-        <div class="sugg-row">
-          <span class="sugg-type">${escapeHtml(s.type)}</span>
-          <span class="sugg-msg">${escapeHtml(s.message)}</span>
-          ${actionBtn}
-        </div>`;
-    }).join('');
-  } catch (err) {
-    console.warn('Suggestions failed:', err);
-  } finally {
-    if (refreshBtn) {
-      refreshBtn.disabled = false;
-      refreshBtn.innerHTML = '<i data-lucide="refresh-cw" style="width:12px;height:12px"></i> Refresh';
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-  }
-}
-
-async function applySuggestion(idx) {
-  const s = (window._suggestions || [])[idx];
-  if (!s?.suggested_action) return;
-  const action = s.suggested_action;
-
-  if (action.agent === 'reengagement') {
-    try { await api.post('/agents/reengagement/run', {}); Toast.success('Re-engagement agent triggered.'); }
-    catch (err) { Toast.error(err?.response?.data?.detail || 'Failed.'); }
-    return;
-  }
-  if (action.agent === 'failure_recovery') {
-    try { await api.post('/agents/failure-recovery/run', {}); Toast.success('Failure recovery triggered.'); }
-    catch (err) { Toast.error(err?.response?.data?.detail || 'Failed.'); }
-    return;
-  }
-  if (action.segment && action.template_id) {
-    window.location.href = `/campaign.html?template=${encodeURIComponent(action.template_id)}&segment=${encodeURIComponent(action.segment)}`;
-  }
-}
 
 /* ═══════════════════════════════════════════════════════════════
    RENDER HELPERS
