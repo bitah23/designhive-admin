@@ -15,7 +15,6 @@ def build_direct_email_html(body_content: str) -> str:
       .outer-td {{ padding: 24px 12px 32px !important; }}
       .header-td {{ padding: 28px 24px 24px !important; }}
       .header-td img {{ width: 160px !important; }}
-      .content-td {{ padding: 32px 24px !important; }}
       .footer-td {{ padding: 24px 20px !important; }}
     }}
   </style>
@@ -52,16 +51,8 @@ def build_direct_email_html(body_content: str) -> str:
 
           <!-- ── MESSAGE BODY ── -->
           <tr>
-            <td class="content-td" valign="top"
-                style="background:#ffffff;padding:48px 52px; border:1px solid #e0e0e0; border-top:0;">
-              <div style="font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
-                          font-size:16px;
-                          font-weight:400;
-                          line-height:1.85;
-                          color:#1c1c2e;
-                          letter-spacing:0.012em;">
-                {body_content}
-              </div>
+            <td class="content-td" valign="top" style="padding:0;">
+              {body_content}
             </td>
           </tr>
 
@@ -72,6 +63,52 @@ def build_direct_email_html(body_content: str) -> str:
                        border-top:1px solid #e0e0e0;
                        border-radius:0 0 16px 16px;
                        padding:28px 40px 26px;">
+
+              <!-- ── Social icons ── -->
+              <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto 20px;">
+                <tr>
+                  <td style="padding:0 6px;">
+                    <a href="https://www.instagram.com/designhiveai?igsh=MTRxbm82ZmR4d2tscg%3D%3D&utm_source=qr"
+                       target="_blank"
+                       style="display:inline-block;width:36px;height:36px;line-height:36px;
+                              border-radius:50%;background:#f4f4f4;border:1px solid #dcdcdc;
+                              text-align:center;text-decoration:none;
+                              font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:#8b1a1a;">
+                      IG
+                    </a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="https://www.facebook.com/share/1BBFb4PyGv/?mibextid=wwXIfr"
+                       target="_blank"
+                       style="display:inline-block;width:36px;height:36px;line-height:36px;
+                              border-radius:50%;background:#f4f4f4;border:1px solid #dcdcdc;
+                              text-align:center;text-decoration:none;
+                              font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:#8b1a1a;">
+                      f
+                    </a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="https://www.tiktok.com/@designhiveai?_r=1&amp;_t=ZS-96QLN5b0bdS"
+                       target="_blank"
+                       style="display:inline-block;width:36px;height:36px;line-height:36px;
+                              border-radius:50%;background:#f4f4f4;border:1px solid #dcdcdc;
+                              text-align:center;text-decoration:none;
+                              font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;color:#8b1a1a;">
+                      TK
+                    </a>
+                  </td>
+                  <td style="padding:0 6px;">
+                    <a href="https://www.reddit.com/u/designhive23/s/o7PoAOvEpT"
+                       target="_blank"
+                       style="display:inline-block;width:36px;height:36px;line-height:36px;
+                              border-radius:50%;background:#f4f4f4;border:1px solid #dcdcdc;
+                              text-align:center;text-decoration:none;
+                              font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#8b1a1a;">
+                      r/
+                    </a>
+                  </td>
+                </tr>
+              </table>
 
               <p style="font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
                         font-size:13px;

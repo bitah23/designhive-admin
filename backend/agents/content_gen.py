@@ -18,24 +18,150 @@ def _get_client() -> Anthropic:
     return _client
 
 
-_SYSTEM = """You are an expert email copywriter for DesignHive AI — a premium design tools platform.
-Generate polished, on-brand marketing emails.
+_SYSTEM = """You are the email design engine for Design Hive AI — a premium AI-powered creative and marketing platform.
+Every email you generate follows the exact brand system below. Call the submit_email tool with your result.
 
-Brand palette: accent/gold #ff9f1c · dark maroon #8b1a1a · body text #1c1c2e · muted #4a4a5a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AESTHETIC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Cinematic SaaS · dark mode · futuristic creative-tech · premium AI startup.
+Inspired by Linear, OpenAI, Framer, Midjourney, high-end creative dashboards.
+The email must feel like a luxury AI creative OS — never a generic newsletter.
 
-Call the submit_email tool with your result.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COLOR PALETTE  (use exclusively — no other colors)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Background:        #0B0B0F
+Secondary surface: #111827
+Accent red:        #991B1B
+Gold accent:       #F5B841
+Text primary:      #F9FAFB
+Text muted:        #9CA3AF
+Gold glass border: rgba(245,184,65,0.15)
+Red glow:          rgba(153,27,27,0.45)
+Gold glow:         rgba(245,184,65,0.2)
 
-HTML rules for the body parameter:
-- INNER CONTENT ONLY — no DOCTYPE, no <html>, no <head>, no <body> tags whatsoever
-- Plain semantic HTML: <h1>, <h2>, <p>, <a>, <table>, <img>, <ul>, <li>, etc.
-- All CSS inline on each element — no <style> blocks
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TYPOGRAPHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Headings:  font-family:'Space Grotesk','Inter',sans-serif; font-weight:700
+Body copy: font-family:'Inter','DM Sans',sans-serif; font-weight:400; font-size:15px; line-height:1.8
+No serif fonts. No corporate/Helvetica defaults.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BRAND LINKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Workspace / dashboard: https://admin.designhivestudio.ai/dashboard.html
+Website home:          https://designhivestudio.ai
+Portfolio:             https://designhivestudio.ai/portfolio
+Contact:               https://designhivestudio.ai/contact
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AVAILABLE IMAGES  (always include the most relevant one as a hero)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Welcome / onboarding:   https://admin.designhivestudio.ai/assets/images/email/welcome-hero.svg
+Feature spotlight:      https://admin.designhivestudio.ai/assets/images/email/feature-spotlight-hero.svg
+Getting started:        https://admin.designhivestudio.ai/assets/images/email/getting-started-hero.svg
+Help / support:         https://admin.designhivestudio.ai/assets/images/email/help-hero.svg
+
+Render image as:
+<img src="URL" alt="Design Hive AI" style="display:block;width:100%;max-width:520px;height:auto;margin:0 auto 40px;border-radius:12px;opacity:0.92;">
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CTA BUTTON  (always use this exact pattern)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+  <tr>
+    <td style="background:linear-gradient(135deg,#991B1B 0%,#b91c1c 100%);
+               border-radius:8px;padding:16px 48px;
+               box-shadow:0 0 32px rgba(153,27,27,0.45);">
+      <a href="LINK" style="color:#F9FAFB;font-family:'Inter',sans-serif;font-weight:700;
+                             font-size:15px;text-decoration:none;letter-spacing:0.05em;
+                             white-space:nowrap;">Button Label →</a>
+    </td>
+  </tr>
+</table>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GLASSMORPHISM CARD PATTERN  (use for feature / benefit cards)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Outer wrapper (3-col grid via nested tables with 8px gap):
+<td style="background:#111827;border:1px solid rgba(245,184,65,0.15);
+           border-radius:12px;padding:24px 20px;vertical-align:top;
+           box-shadow:0 0 24px rgba(245,184,65,0.06);">
+  <p style="font-size:22px;margin:0 0 12px;color:#F5B841;">ICON</p>
+  <p style="font-family:'Space Grotesk','Inter',sans-serif;font-weight:700;
+             font-size:14px;color:#F9FAFB;margin:0 0 8px;letter-spacing:0.02em;">TITLE</p>
+  <p style="font-family:'Inter',sans-serif;font-size:13px;color:#9CA3AF;
+             line-height:1.65;margin:0;">DESCRIPTION</p>
+</td>
+
+Icons: use Unicode — ⚡ ✦ ◈ ⬡ ◎ ⊹ ✧ ⟡ ❋ — styled color:#F5B841
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GLOWING DIVIDER  (use between sections)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(245,184,65,0.4),transparent);margin:40px 0;"></div>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REQUIRED LAYOUT STRUCTURE  (follow this order every time)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The body MUST open with a full-width dark container so the dark background fills the content area:
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:#0B0B0F;padding:48px 32px;">
+  <tr>
+    <td>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="max-width:520px;margin:0 auto;">
+        <tr><td>
+
+          [1] EYEBROW LINE
+              Small gold caps label above heading.
+              style: font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.25em;
+                     text-transform:uppercase;color:#F5B841;margin:0 0 16px;
+
+          [2] HERO IMAGE  (pick from AVAILABLE IMAGES above)
+
+          [3] HERO HEADING  — large, bold, soft white
+              H1: font-size:38px;font-weight:700;color:#F9FAFB;line-height:1.1;margin:0 0 16px;
+              Highlight one word with: style="color:#F5B841;"
+
+          [4] SUBHEADLINE  — muted, readable
+              font-size:16px;color:#9CA3AF;line-height:1.75;margin:0 0 32px;
+
+          [5] PERSONALISATION LINE
+              "Hello {{name}}," or woven naturally into the subheadline.
+
+          [6] PRIMARY CTA BUTTON  (use exact pattern above)
+
+          [7] GLOWING DIVIDER
+
+          [8] FEATURE / CONTENT SECTION
+              3 glassmorphism cards in a table row with 8px gap columns.
+              Each card: icon + title + description.
+
+          [9] GLOWING DIVIDER
+
+          [10] CLOSING PARAGRAPH + optional secondary CTA link
+               Warm sign-off, muted color, signed "— The Design Hive AI Team"
+
+        </td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HARD RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- DO NOT generate a header or footer — they are already built into the email shell
+- BODY ONLY — your output is injected between an existing branded maroon header and a grey footer that contain the logo, social links, contact info, and copyright
+- INNER CONTENT ONLY — absolutely no DOCTYPE, <html>, <head>, or <body> tags
+- All CSS inline — no <style> blocks, no classes referencing external sheets
 - Personalisation placeholders: {{name}}  {{email}}  {{date}}
-- White background assumed — use dark text (#1c1c2e) for headings, muted (#4a4a5a) for body copy
-- CTA buttons: bulletproof table pattern — <table><tr><td style="background:#8b1a1a;border-radius:50px;padding:14px 40px;"><a href="URL" style="color:#ffffff;font-weight:700;text-decoration:none;">Label</a></td></tr></table>
-- Use real DesignHive URLs for CTAs: https://designhivestudio.ai (home), https://designhivestudio.ai/portfolio (work), https://designhivestudio.ai/contact (contact)
-- Email-client safe: table-based layout for multi-column, no CSS grid or flexbox
-- Subject line: max 60 characters, compelling and specific
-- The content will be embedded inside a white-body email that already has a dark maroon branded header and grey footer"""
+- Table-based layout — no CSS grid, no flexbox
+- Subject line: max 60 characters, compelling and specific"""
 
 _SUBMIT_TOOL = {
     "name": "submit_email",
@@ -62,30 +188,50 @@ _TONE_MAP = {
     "urgent": "Urgent and action-oriented — emphasise time-sensitivity and FOMO.",
 }
 
-_MOCK_BODY = """<h2 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#1c1c2e;
-              font-family:'DM Sans',Arial,sans-serif;line-height:1.2;">
-  Hello, <span style="color:#8b1a1a;">{{name}}</span>
-</h2>
-<p style="margin:0 0 24px;font-size:16px;line-height:1.75;color:#4a4a5a;
-           font-family:'DM Sans',Arial,sans-serif;">
-  This is a <strong>mock-mode preview</strong>. In production, Claude will generate a fully
-  custom email based on your brief, tone, and CTA preferences. Your personalised content
-  will appear here, styled consistently with the Design Hive brand.
-</p>
-<table border="0" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+_MOCK_BODY = """<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:#0B0B0F;padding:48px 32px;">
   <tr>
-    <td style="background:#8b1a1a;border-radius:50px;padding:14px 40px;">
-      <a href="https://designhivestudio.ai"
-         style="color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;
-                font-family:'DM Sans',Arial,sans-serif;letter-spacing:0.04em;">
-        Visit Design Hive &rarr;
-      </a>
+    <td>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="max-width:520px;margin:0 auto;">
+        <tr>
+          <td>
+            <p style="font-family:'Inter',sans-serif;font-size:11px;letter-spacing:0.25em;
+                      text-transform:uppercase;color:#F5B841;margin:0 0 20px;">
+              ✦ &nbsp; Design Hive AI &nbsp; ✦
+            </p>
+            <h1 style="font-family:'Space Grotesk','Inter',sans-serif;font-weight:700;
+                        font-size:38px;color:#F9FAFB;line-height:1.1;margin:0 0 16px;">
+              Hello, <span style="color:#F5B841;">{{name}}.</span>
+            </h1>
+            <p style="font-family:'Inter',sans-serif;font-size:15px;color:#9CA3AF;
+                      line-height:1.8;margin:0 0 32px;">
+              This is a <strong style="color:#F9FAFB;">mock-mode preview</strong>. In production,
+              the AI generates a fully custom dark-mode email following the exact Design Hive AI
+              brand system — cinematic, futuristic, premium.
+            </p>
+            <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto 40px;">
+              <tr>
+                <td style="background:linear-gradient(135deg,#991B1B 0%,#b91c1c 100%);
+                           border-radius:8px;padding:16px 48px;
+                           box-shadow:0 0 32px rgba(153,27,27,0.45);">
+                  <a href="https://admin.designhivestudio.ai/dashboard.html"
+                     style="color:#F9FAFB;font-family:'Inter',sans-serif;font-weight:700;
+                            font-size:15px;text-decoration:none;letter-spacing:0.05em;
+                            white-space:nowrap;">Launch Your Workspace &rarr;</a>
+                </td>
+              </tr>
+            </table>
+            <p style="font-family:'Inter',sans-serif;font-size:12px;color:#4B5563;
+                      margin:0;text-align:center;">
+              {{email}} &nbsp;&middot;&nbsp; {{date}}
+            </p>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
-</table>
-<p style="margin:0;font-size:12px;color:#aaaaaa;font-family:'DM Sans',Arial,sans-serif;">
-  Sent to {{email}} &nbsp;&middot;&nbsp; {{date}}
-</p>"""
+</table>"""
 
 
 def generate_email_content(
