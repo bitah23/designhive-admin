@@ -32,6 +32,10 @@ window.closeAiPanel = closeAiPanel;
 window.generateWithAI = generateWithAI;
 window.toggleAiCtaInput = toggleAiCtaInput;
 window.approveTemplate = approveTemplate;
+window.uploadEmailImage = uploadEmailImage;
+window.showAddCtaLink = showAddCtaLink;
+window.hideAddCtaLink = hideAddCtaLink;
+window.saveNewCtaLink = saveNewCtaLink;
 
 /* ── Event listeners ─────────────────────────────────────────────── */
 document.getElementById('new-template-btn').addEventListener('click', () => openTemplateModal(null));
@@ -613,9 +617,12 @@ function insertVariable(variable) {
 /* ═══════════════════════════════════════════════════════════════════
    AI CONTENT GENERATION
    ═══════════════════════════════════════════════════════════════════ */
-function toggleAiPanel() {
+async function toggleAiPanel() {
   const panel = document.getElementById('ai-gen-panel');
   const isVisible = panel.style.display !== 'none';
+  if (!isVisible) {
+    await Promise.all([loadEmailImages(), loadCtaLinks()]);
+  }
   panel.style.display = isVisible ? 'none' : 'block';
   redrawIcons();
 }
@@ -643,6 +650,8 @@ async function generateWithAI() {
       tone: document.getElementById('ai-tone').value,
       include_cta: document.getElementById('ai-include-cta').checked,
       cta_text: document.getElementById('ai-cta-text').value.trim() || 'Learn More',
+      image_url: document.getElementById('ai-image-select').value || null,
+      cta_url: document.getElementById('ai-cta-link-select').value || null,
     });
 
     // Pre-fill subject
@@ -666,6 +675,80 @@ async function generateWithAI() {
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="sparkles" style="width:13px;height:13px"></i> Generate';
     redrawIcons();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ASSET MANAGEMENT  (images + CTA links)
+   ═══════════════════════════════════════════════════════════════════ */
+async function loadEmailImages() {
+  try {
+    const images = await api.get('/assets/images');
+    const select = document.getElementById('ai-image-select');
+    select.innerHTML =
+      '<option value="">Auto-select</option>' +
+      images.map(img =>
+        `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
+      ).join('');
+  } catch (_) { /* silently ignore */ }
+}
+
+async function loadCtaLinks() {
+  try {
+    const links = await api.get('/assets/cta-links');
+    const select = document.getElementById('ai-cta-link-select');
+    select.innerHTML =
+      '<option value="">Use default</option>' +
+      links.map(link =>
+        `<option value="${escapeAttr(link.url)}">${escapeHtml(link.label)}</option>`
+      ).join('');
+  } catch (_) { /* silently ignore */ }
+}
+
+async function uploadEmailImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const label = input.closest('label');
+  if (label) label.style.opacity = '0.5';
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await axios.post('/api/assets/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    await loadEmailImages();
+    document.getElementById('ai-image-select').value = resp.data.url;
+    Toast.success(`"${resp.data.name}" uploaded.`);
+  } catch (e) {
+    Toast.error(e.response?.data?.detail || 'Image upload failed.');
+  } finally {
+    if (label) label.style.opacity = '1';
+    input.value = '';
+  }
+}
+
+function showAddCtaLink() {
+  document.getElementById('add-cta-link-form').style.display = '';
+}
+
+function hideAddCtaLink() {
+  document.getElementById('add-cta-link-form').style.display = 'none';
+  document.getElementById('new-cta-label').value = '';
+  document.getElementById('new-cta-url').value = '';
+}
+
+async function saveNewCtaLink() {
+  const label = document.getElementById('new-cta-label').value.trim();
+  const url   = document.getElementById('new-cta-url').value.trim();
+  if (!label || !url) { Toast.error('Both a label and a URL are required.'); return; }
+  try {
+    await api.post('/assets/cta-links', { label, url });
+    await loadCtaLinks();
+    document.getElementById('ai-cta-link-select').value = url;
+    hideAddCtaLink();
+    Toast.success('CTA link saved.');
+  } catch (e) {
+    Toast.error(e.response?.data?.detail || 'Failed to save link.');
   }
 }
 

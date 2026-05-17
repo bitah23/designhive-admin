@@ -53,7 +53,7 @@ async function sendChatMessage() {
   const thinking = appendChatMsg('Thinking…', 'thinking');
 
   try {
-    const data = await api.post('/agents/chat', { message: text });
+    const data = await api.post('/agents/chat', { message: text }, { timeout: 300000 });
     thinking.parentElement.remove();
     appendChatMsg(data.reply || 'Done.', 'ai');
     // If a draft was saved, refresh notifications
@@ -62,7 +62,13 @@ async function sendChatMessage() {
     }
   } catch (err) {
     thinking.parentElement.remove();
-    appendChatMsg(err?.response?.data?.detail || 'Something went wrong. Try again.', 'ai');
+    console.error('Chat agent error:', err?.response?.status, err?.response?.data, err?.message, err);
+    const detail = err?.response?.data?.detail
+      || (err?.response?.data ? JSON.stringify(err.response.data) : null)
+      || (err?.code === 'ECONNABORTED' ? 'Request timed out — the operation is taking too long.' : null)
+      || err?.message
+      || 'Something went wrong. Try again.';
+    appendChatMsg(detail, 'ai');
   } finally {
     sendBtn.disabled = false;
     input.focus();

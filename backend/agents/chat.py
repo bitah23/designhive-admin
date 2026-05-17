@@ -28,7 +28,7 @@ def _get_client() -> Anthropic:
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY is not configured")
-        _client = Anthropic(api_key=api_key)
+        _client = Anthropic(api_key=api_key, timeout=120.0)
     return _client
 
 _SYSTEM_PROMPT = (
@@ -45,7 +45,11 @@ _SYSTEM_PROMPT = (
     "2. After executing an action, reply with a concise, friendly summary including key numbers.\n"
     "3. If required info is missing (e.g. no send time given for scheduling), ask — don't guess.\n"
     "4. Never expose raw UUIDs in your reply unless specifically asked.\n"
-    "5. When generating NEW email content, always call generate_content then save_template — never call send_campaign_now with freshly generated content. The admin must review and approve from the dashboard first; approval triggers the send automatically.\n"
+    "4b. If a tool returns an 'error' field, always quote the exact error message in your reply — never give a generic 'something went wrong' response. The admin needs to know the specific failure reason.\n"
+    "5. When generating NEW email content:\n"
+    "   a. Always call generate_content then save_template first (to create a record).\n"
+    "   b. If the admin explicitly asks to send immediately — phrases like 'send now', 'no scheduling', 'send immediately', 'create and send' — call send_campaign_now right after save_template using the template id returned by save_template. Do not wait for dashboard approval in this case.\n"
+    "   c. If the admin does NOT say to send immediately, stop after save_template and tell them the draft is ready for review on the dashboard.\n"
     "6. When the admin approves a template (message contains 'approved template' and a template id), call send_campaign_now using that exact template id and the specified segment.\n\n"
     f"Today's date (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
 )
@@ -225,6 +229,12 @@ def _execute_tool(name: str, inputs: dict) -> str:
             results = _send_bulk(template, users)
             from agents.reporter import generate_report
             report = generate_report(template, results, total_targeted=len(users))
+            # Truncate failed_recipients so the tool result stays small enough
+            # for the model to process — full list is already in the email logs.
+            failed = report.get("failed_recipients", [])
+            report["failed_recipients"] = failed[:5]
+            if len(failed) > 5:
+                report["failed_recipients_note"] = f"{len(failed)} total failures — showing first 5 only"
             return json.dumps(report)
 
         elif name == "schedule_campaign":
@@ -300,8 +310,10 @@ def _execute_tool(name: str, inputs: dict) -> str:
             return json.dumps({"error": f"Unknown tool: {name}"})
 
     except Exception as exc:
-        logger.error(f"Chat tool '{name}' error: {exc}")
-        return json.dumps({"error": str(exc)})
+        import traceback
+        detail = traceback.format_exc()
+        logger.error("Chat tool '%s' error: %s\n%s", name, exc, detail)
+        return json.dumps({"error": str(exc), "detail": detail.splitlines()[-3:]})
 
 
 def chat(message: str) -> dict:
@@ -318,7 +330,7 @@ def chat(message: str) -> dict:
     for round_num in range(10):  # safety cap on tool-call rounds
         response = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=2048,
+            max_tokens=4096,
             system=_SYSTEM_PROMPT,
             tools=_TOOLS,
             messages=messages,

@@ -10,6 +10,8 @@ load_dotenv(Path(__file__).with_name(".env"), override=True)
 APP_ENV = os.getenv("APP_ENV", "development")
 MOCK_MODE = os.getenv("MOCK_MODE", "false").lower() == "true"
 
+ADMIN_BASE_URL = os.getenv("ADMIN_BASE_URL", "https://admin.designhivestudio.ai")
+
 # Swappable table names — override in .env to point at test tables
 TABLE_PROFILES   = os.getenv("TABLE_PROFILES",   "profiles")
 TABLE_EMAIL_LOGS = os.getenv("TABLE_EMAIL_LOGS",  "email_logs")

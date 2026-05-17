@@ -55,6 +55,14 @@ class ContentGenRequest(BaseModel):
     tone: str = "friendly"          # friendly | professional | urgent
     include_cta: bool = True
     cta_text: Optional[str] = "Learn More"
+    image_url: Optional[str] = None  # absolute URL of hero image to use
+    cta_url: Optional[str] = None    # absolute URL for the CTA button
+
+
+# Assets — CTA Links
+class CtaLinkCreate(BaseModel):
+    label: str
+    url: str
 
 
 # Drip Sequences

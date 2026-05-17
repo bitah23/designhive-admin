@@ -153,12 +153,35 @@ The body MUST open with a full-width dark container so the dark background fills
 </table>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MOBILE RESPONSIVENESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Every template body MUST be fully mobile responsive. Place a single <style> block at the very
+top of your output (before any table) containing media queries only. Example structure:
+
+<style>
+  @media only screen and (max-width:600px) {
+    .dh-outer   { padding: 28px 16px !important; }
+    .dh-inner   { max-width: 100% !important; width: 100% !important; }
+    .dh-hero-h  { font-size: 26px !important; line-height: 1.2 !important; }
+    .dh-card    { display: block !important; width: 100% !important; padding: 20px 16px !important; }
+    .dh-card-gap{ display: none !important; }
+    .dh-img     { width: 100% !important; border-radius: 8px !important; }
+    .dh-cta-td  { padding: 14px 28px !important; }
+    .dh-cta-a   { font-size: 14px !important; }
+  }
+</style>
+
+Apply the matching class attribute to every element the media query targets (e.g. class="dh-card").
+All other CSS must remain inline. Use percentage widths (100%, max-width:520px) on containers
+so they reflow naturally. Feature card columns must stack vertically on mobile using dh-card rules.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 HARD RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - DO NOT generate a header or footer — they are already built into the email shell
 - BODY ONLY — your output is injected between an existing branded maroon header and a grey footer that contain the logo, social links, contact info, and copyright
 - INNER CONTENT ONLY — absolutely no DOCTYPE, <html>, <head>, or <body> tags
-- All CSS inline — no <style> blocks, no classes referencing external sheets
+- One <style> block allowed at the very top for media queries only — all other CSS must be inline
 - Personalisation placeholders: {{name}}  {{email}}  {{date}}
 - Table-based layout — no CSS grid, no flexbox
 - Subject line: max 60 characters, compelling and specific"""
@@ -239,6 +262,8 @@ def generate_email_content(
     tone: str = "friendly",
     include_cta: bool = True,
     cta_text: str = "Learn More",
+    image_url: str | None = None,
+    cta_url: str | None = None,
 ) -> dict:
     """
     Returns {"subject": "...", "body": "<html>...</html>"}.
@@ -256,11 +281,23 @@ def generate_email_content(
         if include_cta
         else "Do not include a CTA button."
     )
+    image_instruction = (
+        f'Hero image: use this EXACT URL in the <img> src — do not modify it: "{image_url}"'
+        if image_url
+        else "Hero image: choose the most relevant image from AVAILABLE IMAGES in your brand system."
+    )
+    cta_url_instruction = (
+        f'CTA button URL: use this EXACT href — do not modify it: "{cta_url}"'
+        if cta_url
+        else "CTA button URL: use the default workspace URL from your brand system."
+    )
 
     user_prompt = (
         f"Brief: {brief}\n"
         f"Tone: {tone_desc}\n"
-        f"{cta_instruction}\n\n"
+        f"{cta_instruction}\n"
+        f"{image_instruction}\n"
+        f"{cta_url_instruction}\n\n"
         "Generate the email now."
     )
 

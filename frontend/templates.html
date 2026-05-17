@@ -79,6 +79,55 @@
                        placeholder="e.g. Get Started" value="Get Started">
               </div>
             </div>
+
+            <!-- Image & CTA Link selectors -->
+            <div class="grid grid-2" style="gap:12px;margin-bottom:12px">
+              <div>
+                <label class="form-label">Hero Image</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <select id="ai-image-select" class="form-control" style="flex:1;min-width:0">
+                    <option value="">Auto-select</option>
+                  </select>
+                  <label class="btn btn-outline btn-sm" title="Upload new image"
+                         style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
+                    <i data-lucide="upload" style="width:12px;height:12px"></i>
+                    <input type="file" id="ai-image-upload" accept="image/*,.svg"
+                           style="display:none" onchange="uploadEmailImage(this)">
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label class="form-label">CTA Link</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <select id="ai-cta-link-select" class="form-control" style="flex:1;min-width:0">
+                    <option value="">Use default</option>
+                  </select>
+                  <button type="button" class="btn btn-outline btn-sm" title="Add new link"
+                          onclick="showAddCtaLink()" style="flex-shrink:0">
+                    <i data-lucide="plus" style="width:12px;height:12px"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inline add-CTA-link form -->
+            <div id="add-cta-link-form" style="display:none;margin-bottom:12px;
+                 padding:12px 14px;border-radius:8px;
+                 background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08)">
+              <div class="grid grid-2" style="gap:8px;margin-bottom:8px">
+                <input type="text" id="new-cta-label" class="form-control"
+                       placeholder="Label (e.g. Dashboard)">
+                <input type="text" id="new-cta-url" class="form-control"
+                       placeholder="https://…">
+              </div>
+              <div style="display:flex;gap:6px;justify-content:flex-end">
+                <button type="button" class="btn btn-outline btn-sm"
+                        onclick="hideAddCtaLink()">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm"
+                        onclick="saveNewCtaLink()">Save Link</button>
+              </div>
+            </div>
+
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
               <input type="checkbox" id="ai-include-cta" checked
                      onchange="toggleAiCtaInput(this.checked)">

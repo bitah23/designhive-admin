@@ -81,6 +81,8 @@ def generate_content(body: ContentGenRequest, admin=Depends(get_current_admin)):
             tone=body.tone,
             include_cta=body.include_cta,
             cta_text=body.cta_text or "Learn More",
+            image_url=body.image_url or None,
+            cta_url=body.cta_url or None,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -146,10 +148,16 @@ def update_reporter_config_route(body: ReporterConfigUpdate, admin=Depends(get_c
 # ---------------------------------------------------------------------------
 
 @router.post("/chat")
-def chat(body: ChatRequest, admin=Depends(get_current_admin)):
+async def chat(body: ChatRequest, admin=Depends(get_current_admin)):
+    import asyncio
+    import logging
+    import traceback
+    _log = logging.getLogger("routes")
     try:
-        return agent_chat(body.message)
+        result = await asyncio.to_thread(agent_chat, body.message)
+        return result
     except Exception as e:
+        _log.error("Chat route error: %s\n%s", e, traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Chat agent error: {str(e)}")
 
 
