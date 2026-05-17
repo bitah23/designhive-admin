@@ -47,9 +47,10 @@ _SYSTEM_PROMPT = (
     "4. Never expose raw UUIDs in your reply unless specifically asked.\n"
     "4b. If a tool returns an 'error' field, always quote the exact error message in your reply — never give a generic 'something went wrong' response. The admin needs to know the specific failure reason.\n"
     "5. When generating NEW email content:\n"
-    "   a. Always call generate_content then save_template first (to create a record).\n"
+    "   a. Always call generate_content then save_template first (to create a record). generate_content produces text only — the design is fixed.\n"
     "   b. If the admin explicitly asks to send immediately — phrases like 'send now', 'no scheduling', 'send immediately', 'create and send' — call send_campaign_now right after save_template using the template id returned by save_template. Do not wait for dashboard approval in this case.\n"
     "   c. If the admin does NOT say to send immediately, stop after save_template and tell them the draft is ready for review on the dashboard.\n"
+    "   d. If the admin mentions a hero image URL or CTA link, pass them as image_url / cta_url to generate_content.\n"
     "6. When the admin approves a template (message contains 'approved template' and a template id), call send_campaign_now using that exact template id and the specified segment.\n\n"
     f"Today's date (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
 )
@@ -116,7 +117,7 @@ _TOOLS = [
     },
     {
         "name": "generate_content",
-        "description": "Generate an email subject and HTML body using AI from a brief description. The admin can then save it as a new template.",
+        "description": "Generate email text content (heading, body paragraphs) from a brief. The design is fixed — AI writes only the words. The admin can then save it as a new template.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -126,7 +127,9 @@ _TOOLS = [
                     "enum": ["friendly", "professional", "urgent"],
                 },
                 "include_cta": {"type": "boolean"},
-                "cta_text": {"type": "string"},
+                "cta_text": {"type": "string", "description": "CTA button label, e.g. 'Get Started'"},
+                "cta_url": {"type": "string", "description": "URL for the CTA button. Defaults to the workspace if omitted."},
+                "image_url": {"type": "string", "description": "Optional URL of a hero image to show at the top of the email."},
             },
             "required": ["brief"],
         },
@@ -269,6 +272,8 @@ def _execute_tool(name: str, inputs: dict) -> str:
                 tone=inputs.get("tone", "friendly"),
                 include_cta=inputs.get("include_cta", True),
                 cta_text=inputs.get("cta_text", "Learn More"),
+                image_url=inputs.get("image_url"),
+                cta_url=inputs.get("cta_url"),
             )
             return json.dumps(result)
 
