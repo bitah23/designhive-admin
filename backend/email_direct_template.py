@@ -6,9 +6,7 @@ _OUTER_STYLE = """<style type="text/css">
     img {{ border: 0; outline: none; text-decoration: none; }}
     @media only screen and (max-width: 620px) {{
       .outer-td  {{ padding: 24px 12px 32px !important; }}
-      .header-td {{ padding: 28px 24px 24px !important; }}
-      .header-td img {{ width: 160px !important; }}
-      .footer-td {{ padding: 24px 20px !important; }}
+.footer-td {{ padding: 24px 20px !important; }}
       .dh-pad    {{ padding-left: 20px !important; padding-right: 20px !important; }}
       .dh-heading {{ font-size: 22px !important; line-height: 1.25 !important; }}
       .dh-subheading {{ font-size: 15px !important; }}
@@ -37,17 +35,14 @@ def build_direct_email_html(body_content: str) -> str:
 
         <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-          <!-- HEADER: deep maroon gradient with logo -->
+          <!-- HEADER: template header image -->
           <tr>
-            <td class="header-td" align="center" valign="middle"
-                style="background:linear-gradient(150deg,#6e1212 0%,#9a1e1e 50%,#6e1212 100%);
-                       border-radius:16px 16px 0 0;
-                       padding:42px 40px 38px;">
+            <td style="padding:0;line-height:0;font-size:0;border-radius:16px 16px 0 0;overflow:hidden;">
               <a href="https://designhivestudio.ai" target="_blank"
                  style="text-decoration:none;border:0;display:block;">
-                <img src="https://admin.designhivestudio.ai/assets/brand/header_logo_v4.png"
-                     width="200" height="auto" alt="Design Hive"
-                     style="display:block;margin:0 auto;width:200px;max-width:100%;height:auto;border:0;">
+                <img src="https://admin.designhivestudio.ai/assets/brand/template_header.jpeg"
+                     width="600" alt="Design Hive"
+                     style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:16px 16px 0 0;">
               </a>
             </td>
           </tr>
