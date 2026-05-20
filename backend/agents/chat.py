@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from datetime import datetime, timedelta, timezone
 
 from anthropic import Anthropic
@@ -195,6 +196,52 @@ _TOOLS = [
 ]
 
 
+def _summarize_result(tool: str, parsed) -> str:
+    """Return a short human-readable summary of a successful tool result."""
+    if not isinstance(parsed, dict):
+        items = len(parsed) if isinstance(parsed, list) else 0
+        return f"{items} item(s) returned"
+    if tool == "list_templates":
+        count = len(parsed) if isinstance(parsed, list) else 0
+        return f"{count} template(s) found"
+    if tool == "segment_users":
+        return f"{parsed.get('count', 0)} user(s) matched"
+    if tool == "send_campaign_now":
+        tmpl = parsed.get("template", "unknown template")
+        total = parsed.get("total_users", 0)
+        return f"Sending '{tmpl}' to {total} user(s)"
+    if tool == "schedule_campaign":
+        send_at = parsed.get("send_at", "")
+        return f"Scheduled for {send_at}"
+    if tool == "generate_content":
+        subj = parsed.get("subject", "")
+        short = subj[:60] + ("…" if len(subj) > 60 else "")
+        return f"Subject: \"{short}\""
+    if tool == "run_reengagement":
+        targeted = parsed.get("targeted", parsed.get("enrolled", parsed.get("sent", "?")))
+        return f"{targeted} user(s) targeted"
+    if tool == "run_failure_recovery":
+        retried = parsed.get("retried", 0)
+        recovered = parsed.get("recovered", 0)
+        return f"{retried} retried, {recovered} recovered"
+    if tool == "get_email_stats":
+        counts = parsed.get("counts", {})
+        sent = counts.get("sent", 0)
+        failed = counts.get("failed", 0)
+        return f"{sent} sent · {failed} failed (last {parsed.get('since_days', 30)}d)"
+    if tool == "list_scheduled_campaigns":
+        count = len(parsed) if isinstance(parsed, list) else parsed.get("count", "?")
+        return f"{count} scheduled campaign(s)"
+    if tool == "get_campaign_report":
+        count = len(parsed) if isinstance(parsed, list) else parsed.get("count", "?")
+        return f"{count} campaign report(s)"
+    if tool == "save_template":
+        return f"Draft saved: \"{parsed.get('title', '')}\""
+    # generic fallback
+    first_val = next(iter(parsed.values()), "") if parsed else ""
+    return str(first_val)[:120]
+
+
 def _execute_tool(name: str, inputs: dict) -> str:
     try:
         if name == "list_templates":
@@ -345,6 +392,7 @@ def chat(message: str) -> dict:
     """
     messages = [{"role": "user", "content": message}]
     action_taken = None
+    logs: list[dict] = []
 
     client = _get_client()
     logger.info("Chat request: %.120s", message)
@@ -367,29 +415,52 @@ def chat(message: str) -> dict:
                 "Done.",
             )
             logger.info("Chat completed after %d round(s)", round_num + 1)
-            return {"reply": reply, "action_taken": action_taken}
+            return {"reply": reply, "action_taken": action_taken, "logs": logs}
 
         if response.stop_reason == "tool_use":
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
                     logger.info("Tool call: %s  input=%s", block.name, json.dumps(block.input)[:200])
+                    t0 = time.monotonic()
                     result_str = _execute_tool(block.name, block.input)
+                    duration_ms = int((time.monotonic() - t0) * 1000)
                     logger.info("Tool result: %s  output=%s", block.name, result_str[:300])
+
+                    try:
+                        parsed = json.loads(result_str)
+                    except Exception:
+                        parsed = result_str
+
+                    has_error = isinstance(parsed, dict) and "error" in parsed
+                    log_entry = {
+                        "step":           len(logs) + 1,
+                        "tool":           block.name,
+                        "input":          block.input,
+                        "status":         "error" if has_error else "ok",
+                        "result_summary": parsed.get("error") if has_error
+                                          else _summarize_result(block.name, parsed),
+                        "result_detail":  parsed,
+                        "duration_ms":    duration_ms,
+                        "ts":             datetime.now(timezone.utc).isoformat(),
+                    }
+                    logs.append(log_entry)
+                    logger.info(
+                        "Log [step %d] %s → %s (%dms)",
+                        log_entry["step"], block.name,
+                        log_entry["status"], duration_ms,
+                    )
+
                     if action_taken is None:
-                        try:
-                            parsed = json.loads(result_str)
-                        except Exception:
-                            parsed = result_str
                         action_taken = {
-                            "tool": block.name,
-                            "input": block.input,
+                            "tool":   block.name,
+                            "input":  block.input,
                             "result": parsed,
                         }
                     tool_results.append({
-                        "type": "tool_result",
+                        "type":        "tool_result",
                         "tool_use_id": block.id,
-                        "content": result_str,
+                        "content":     result_str,
                     })
             messages.append({"role": "user", "content": tool_results})
             continue
@@ -403,4 +474,4 @@ def chat(message: str) -> dict:
         round_num + 1,
         getattr(response, "stop_reason", "unknown"),
     )
-    return {"reply": "I was unable to complete the request.", "action_taken": action_taken}
+    return {"reply": "I was unable to complete the request.", "action_taken": action_taken, "logs": logs}

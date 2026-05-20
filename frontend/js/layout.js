@@ -267,6 +267,76 @@ function initChat() {
       justify-content:center;flex-shrink:0;
     }
     #chat-send-btn:disabled { opacity:0.5;cursor:default; }
+
+    /* ── Agent trace logs ─────────────────────────────────── */
+    .chat-trace {
+      align-self:flex-start;width:88%;font-size:12px;
+    }
+    .chat-trace-toggle {
+      display:flex;align-items:center;gap:6px;
+      background:none;border:1px solid var(--border);border-radius:8px;
+      color:var(--text-muted);padding:5px 10px;cursor:pointer;
+      font-size:11px;width:100%;text-align:left;
+    }
+    .chat-trace-toggle:hover { border-color:var(--gold);color:var(--text-primary); }
+    .chat-trace-toggle .trace-chevron {
+      margin-left:auto;transition:transform 0.2s;
+    }
+    .chat-trace.open .trace-chevron { transform:rotate(180deg); }
+    .chat-trace-body {
+      display:none;margin-top:4px;border:1px solid var(--border);
+      border-radius:8px;overflow:hidden;
+    }
+    .chat-trace.open .chat-trace-body { display:block; }
+    .trace-step {
+      border-bottom:1px solid var(--border);
+    }
+    .trace-step:last-child { border-bottom:none; }
+    .trace-step-header {
+      display:flex;align-items:center;gap:8px;
+      padding:7px 10px;cursor:pointer;
+      background:var(--bg-card-alt);
+    }
+    .trace-step-header:hover { background:var(--bg-input); }
+    .trace-step-num {
+      font-size:10px;font-weight:700;color:var(--text-muted);
+      min-width:16px;text-align:center;
+    }
+    .trace-status-dot {
+      width:7px;height:7px;border-radius:50%;flex-shrink:0;
+    }
+    .trace-status-dot.ok  { background:#22c55e; }
+    .trace-status-dot.error { background:#ef4444; }
+    .trace-tool-name {
+      font-weight:600;color:var(--text-primary);flex:1;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .trace-summary {
+      color:var(--text-muted);font-size:11px;
+      flex:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .trace-duration {
+      font-size:10px;color:var(--text-muted);
+      background:var(--bg-input);border-radius:4px;
+      padding:1px 5px;flex-shrink:0;
+    }
+    .trace-duration.slow { color:#f59e0b; }
+    .trace-detail {
+      display:none;padding:8px 10px;
+      background:var(--bg-card);border-top:1px solid var(--border);
+    }
+    .trace-step.detail-open .trace-detail { display:block; }
+    .trace-detail-section { margin-bottom:6px; }
+    .trace-detail-label {
+      font-size:10px;font-weight:700;color:var(--text-muted);
+      text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;
+    }
+    .trace-detail-code {
+      font-family:monospace;font-size:11px;color:var(--text-secondary);
+      background:var(--bg-input);border-radius:5px;padding:6px 8px;
+      white-space:pre-wrap;word-break:break-word;max-height:140px;overflow-y:auto;
+    }
+    .trace-detail-code.error-text { color:#f87171; }
   `;
   document.head.appendChild(style);
 
@@ -302,6 +372,20 @@ function initChat() {
 
   sendBtn?.addEventListener('click', sendMessage);
 
+  const TOOL_LABELS = {
+    list_templates:          'List Templates',
+    segment_users:           'Segment Users',
+    send_campaign_now:       'Send Campaign',
+    schedule_campaign:       'Schedule Campaign',
+    generate_content:        'Generate Content',
+    run_reengagement:        'Re-engagement Agent',
+    run_failure_recovery:    'Failure Recovery Agent',
+    get_email_stats:         'Email Stats',
+    list_scheduled_campaigns:'List Scheduled Campaigns',
+    get_campaign_report:     'Campaign Report',
+    save_template:           'Save Template',
+  };
+
   function appendMsg(text, role) {
     const div = document.createElement('div');
     div.className = `chat-msg chat-msg--${role}`;
@@ -309,6 +393,98 @@ function initChat() {
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
     return div;
+  }
+
+  function appendLogs(logs) {
+    if (!logs || !logs.length) return;
+
+    const hasError = logs.some(l => l.status === 'error');
+    const totalMs  = logs.reduce((s, l) => s + (l.duration_ms || 0), 0);
+    const stepWord = logs.length === 1 ? 'step' : 'steps';
+    const errLabel = hasError ? ' · ⚠ error' : '';
+    const timeLabel = totalMs >= 1000
+      ? `${(totalMs / 1000).toFixed(1)}s`
+      : `${totalMs}ms`;
+
+    const trace = document.createElement('div');
+    trace.className = 'chat-trace';
+
+    // Toggle button
+    const toggle = document.createElement('button');
+    toggle.className = 'chat-trace-toggle';
+    toggle.innerHTML = `
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Agent trace · ${logs.length} ${stepWord} · ${timeLabel}${errLabel}</span>
+      <svg class="trace-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    `;
+    toggle.addEventListener('click', () => trace.classList.toggle('open'));
+
+    // Steps body
+    const body = document.createElement('div');
+    body.className = 'chat-trace-body';
+
+    logs.forEach(log => {
+      const isError = log.status === 'error';
+      const durationMs = log.duration_ms || 0;
+      const isSlow = durationMs > 3000;
+      const label = TOOL_LABELS[log.tool] || log.tool;
+
+      // Input: filter out empty objects
+      const inputStr = log.input && Object.keys(log.input).length
+        ? JSON.stringify(log.input, null, 2)
+        : '(no input)';
+
+      // Result detail: show full result_detail if available, else summary
+      let resultStr;
+      if (isError) {
+        resultStr = log.result_summary || 'Unknown error';
+      } else {
+        resultStr = log.result_detail
+          ? JSON.stringify(log.result_detail, null, 2)
+          : (log.result_summary || '—');
+      }
+
+      const step = document.createElement('div');
+      step.className = 'trace-step';
+      step.innerHTML = `
+        <div class="trace-step-header">
+          <span class="trace-step-num">${log.step}</span>
+          <span class="trace-status-dot ${isError ? 'error' : 'ok'}"></span>
+          <span class="trace-tool-name">${label}</span>
+          <span class="trace-summary">${log.result_summary || ''}</span>
+          <span class="trace-duration ${isSlow ? 'slow' : ''}">${durationMs >= 1000 ? (durationMs/1000).toFixed(1)+'s' : durationMs+'ms'}</span>
+        </div>
+        <div class="trace-detail">
+          <div class="trace-detail-section">
+            <div class="trace-detail-label">Input</div>
+            <div class="trace-detail-code">${escHtml(inputStr)}</div>
+          </div>
+          <div class="trace-detail-section">
+            <div class="trace-detail-label">${isError ? 'Error' : 'Result'}</div>
+            <div class="trace-detail-code ${isError ? 'error-text' : ''}">${escHtml(resultStr)}</div>
+          </div>
+        </div>
+      `;
+
+      step.querySelector('.trace-step-header').addEventListener('click', () => {
+        step.classList.toggle('detail-open');
+      });
+
+      body.appendChild(step);
+    });
+
+    trace.appendChild(toggle);
+    trace.appendChild(body);
+    messages.appendChild(trace);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   async function sendMessage() {
@@ -326,6 +502,7 @@ function initChat() {
       const data = await api.post('/agents/chat', { message: text });
       thinking.remove();
       appendMsg(data.reply || 'Done.', 'ai');
+      if (data.logs && data.logs.length) appendLogs(data.logs);
     } catch (err) {
       thinking.remove();
       const detail = err?.response?.data?.detail || 'Something went wrong. Please try again.';
