@@ -1,7 +1,6 @@
 import os
-import shutil
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from config import supabase, ADMIN_BASE_URL
 from deps import get_current_admin
@@ -33,22 +32,24 @@ def list_images(admin=Depends(get_current_admin)):
 
 @router.post("/images")
 async def upload_image(request: Request, admin=Depends(get_current_admin)):
-    form = await request.form(max_part_size=_MAX_UPLOAD_BYTES)
-    file: UploadFile = form.get("file")
-    if not file or not getattr(file, "filename", None):
-        raise HTTPException(status_code=400, detail="No file provided.")
-    ext = os.path.splitext(file.filename)[1].lower()
+    filename = request.headers.get("x-filename", "").strip()
+    if not filename:
+        raise HTTPException(status_code=400, detail="X-Filename header is required.")
+    ext = os.path.splitext(filename)[1].lower()
     if ext not in _ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
             detail=f"File type not allowed. Accepted: {', '.join(_ALLOWED_EXTENSIONS)}",
         )
-    dest = os.path.join(_EMAIL_IMAGES_DIR, file.filename)
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="Empty file.")
+    dest = os.path.join(_EMAIL_IMAGES_DIR, filename)
     with open(dest, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+        f.write(body)
     return {
-        "name": file.filename,
-        "url": f"{ADMIN_BASE_URL}/assets/images/email/{file.filename}",
+        "name": filename,
+        "url": f"{ADMIN_BASE_URL}/assets/images/email/{filename}",
     }
 
 

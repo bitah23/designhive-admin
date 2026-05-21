@@ -755,14 +755,10 @@ async function uploadEmailImage(input) {
   const label = input.closest('label');
   if (label) label.style.opacity = '0.5';
   try {
-    const formData = new FormData();
-    formData.append('file', file);
     const token = localStorage.getItem('adminToken');
-    const res = await fetch('/api/assets/images', {
-      method: 'POST',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      body: formData,
-    });
+    const headers = { 'X-Filename': file.name, 'Content-Type': file.type || 'application/octet-stream' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch('/api/assets/images', { method: 'POST', headers, body: file });
     const text = await res.text();
     let data;
     try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
@@ -913,14 +909,10 @@ async function uploadEditImage(input) {
   const label = input.closest('label');
   if (label) label.style.opacity = '0.5';
   try {
-    const formData = new FormData();
-    formData.append('file', file);
     const token = localStorage.getItem('adminToken');
-    const res = await fetch('/api/assets/images', {
-      method: 'POST',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      body: formData,
-    });
+    const headers = { 'X-Filename': file.name, 'Content-Type': file.type || 'application/octet-stream' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch('/api/assets/images', { method: 'POST', headers, body: file });
     const text = await res.text();
     let data;
     try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
