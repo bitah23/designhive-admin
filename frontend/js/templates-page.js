@@ -10,6 +10,7 @@ let quill;
 let templates = [];
 let editingId = null;
 let htmlMode = false;
+let visualPreview = false;
 let defaultTemplateBody = '';
 let defaultTemplateBodyPromise = null;
 
@@ -178,6 +179,11 @@ async function openTemplateModal(id) {
   document.getElementById('t-subject').value = t?.subject || '';
 
   htmlMode = useHtmlMode;
+  visualPreview = false;
+  document.getElementById('quill-editor').style.display = '';
+  const prevFrame = document.getElementById('visual-preview-frame');
+  prevFrame.style.display = 'none';
+  prevFrame.srcdoc = '';
   htmlEditor.style.display = useHtmlMode ? '' : 'none';
   quillWrap.style.display = useHtmlMode ? 'none' : '';
   toggleModeBtn.innerHTML = useHtmlMode
@@ -214,14 +220,33 @@ function closeTemplateModal() {
 function toggleEditorMode() {
   htmlMode = !htmlMode;
   if (htmlMode) {
-    htmlEditor.value = quill.root.innerHTML;
+    if (!visualPreview) {
+      htmlEditor.value = quill.root.innerHTML;
+    }
+    visualPreview = false;
+    const frame = document.getElementById('visual-preview-frame');
+    frame.style.display = 'none';
+    frame.srcdoc = '';
+    document.getElementById('quill-editor').style.display = '';
     quillWrap.style.display = 'none';
     htmlEditor.style.display = '';
     toggleModeBtn.innerHTML = '<i data-lucide="eye" style="width:12px;height:12px"></i> Visual Mode';
   } else {
-    quill.clipboard.dangerouslyPasteHTML(htmlEditor.value);
+    const val = htmlEditor.value;
     htmlEditor.style.display = 'none';
     quillWrap.style.display = '';
+    if (looksLikeFullEmailDocument(val)) {
+      visualPreview = true;
+      document.getElementById('quill-editor').style.display = 'none';
+      const frame = document.getElementById('visual-preview-frame');
+      frame.srcdoc = val;
+      frame.style.display = '';
+    } else {
+      visualPreview = false;
+      document.getElementById('quill-editor').style.display = '';
+      document.getElementById('visual-preview-frame').style.display = 'none';
+      quill.clipboard.dangerouslyPasteHTML(val);
+    }
     toggleModeBtn.innerHTML = '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
   }
   redrawIcons();
@@ -230,7 +255,7 @@ function toggleEditorMode() {
 /* ── Save ─────────────────────────────────────────────────────────── */
 async function saveTemplate(event) {
   event.preventDefault();
-  let body = htmlMode ? htmlEditor.value : quill.root.innerHTML;
+  let body = (htmlMode || visualPreview) ? htmlEditor.value : quill.root.innerHTML;
   body = applyEditMediaToBody(body);
   const payload = {
     title: document.getElementById('t-title').value.trim(),
@@ -677,6 +702,7 @@ async function generateWithAI() {
     // Switch to HTML mode and load the generated body
     if (!htmlMode) {
       htmlMode = true;
+      visualPreview = false;
       quillWrap.style.display = 'none';
       htmlEditor.style.display = '';
       toggleModeBtn.innerHTML = '<i data-lucide="eye" style="width:12px;height:12px"></i> Visual Mode';
