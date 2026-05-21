@@ -159,19 +159,39 @@
             </div>
           </div>
 
-          <!-- Image & CTA editing (always visible) -->
-          <div style="margin-bottom:16px;padding:14px 16px;background:rgba(255,255,255,0.02);
+          <div>
+            <div class="flex-between mb-2">
+              <label class="form-label" style="margin:0">Body</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="toggle-mode-btn">
+                <i data-lucide="code" style="width:12px;height:12px"></i>
+                HTML Mode
+              </button>
+            </div>
+            <div id="quill-wrap">
+              <div id="quill-editor"></div>
+            </div>
+            <textarea id="html-editor" class="form-control" style="display:none;min-height:240px;font-family:Consolas, monospace"></textarea>
+            <div class="variable-hints">
+              <span class="text-muted" style="font-size:12px">Insert variables:</span>
+              <button type="button" class="variable-chip" data-variable="{{name}}">{{name}}</button>
+              <button type="button" class="variable-chip" data-variable="{{email}}">{{email}}</button>
+              <button type="button" class="variable-chip" data-variable="{{date}}">{{date}}</button>
+            </div>
+          </div>
+
+          <!-- Image & CTA editing -->
+          <div style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,0.02);
                border:1px solid rgba(255,255,255,0.08);border-radius:12px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
               <i data-lucide="image" style="width:14px;height:14px;color:var(--gold-strong)"></i>
-              <span style="font-weight:600;font-size:13px;color:var(--text-primary)">Image &amp; CTA</span>
+              <span id="media-section-title" style="font-weight:600;font-size:13px;color:var(--text-primary)">Image &amp; CTA</span>
             </div>
             <div class="grid grid-2" style="gap:12px;margin-bottom:10px">
               <div>
                 <label class="form-label">Hero Image</label>
                 <div style="display:flex;gap:6px;align-items:center">
                   <select id="edit-image-select" class="form-control" style="flex:1;min-width:0">
-                    <option value="">— keep current —</option>
+                    <option value="">— select image —</option>
                   </select>
                   <label class="btn btn-outline btn-sm" title="Upload new image"
                          style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
@@ -191,7 +211,7 @@
               <label class="form-label">CTA Link</label>
               <div style="display:flex;gap:6px;align-items:center">
                 <select id="edit-cta-link-select" class="form-control" style="flex:1;min-width:0">
-                  <option value="">— keep current —</option>
+                  <option value="">— select link —</option>
                 </select>
                 <button type="button" class="btn btn-outline btn-sm" title="Add new link"
                         onclick="showAddEditCtaLink()" style="flex-shrink:0">
@@ -213,26 +233,6 @@
                           onclick="saveNewEditCtaLink()">Save Link</button>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div>
-            <div class="flex-between mb-2">
-              <label class="form-label" for="html-editor" style="margin:0">Body</label>
-              <button type="button" class="btn btn-secondary btn-sm" id="toggle-mode-btn">
-                <i data-lucide="code" style="width:12px;height:12px"></i>
-                HTML Mode
-              </button>
-            </div>
-            <div id="quill-wrap">
-              <div id="quill-editor"></div>
-            </div>
-            <textarea id="html-editor" class="form-control" style="display:none;min-height:240px;font-family:Consolas, monospace"></textarea>
-            <div class="variable-hints">
-              <span class="text-muted" style="font-size:12px">Insert variables:</span>
-              <button type="button" class="variable-chip" data-variable="{{name}}">{{name}}</button>
-              <button type="button" class="variable-chip" data-variable="{{email}}">{{email}}</button>
-              <button type="button" class="variable-chip" data-variable="{{date}}">{{date}}</button>
             </div>
           </div>
         </div>

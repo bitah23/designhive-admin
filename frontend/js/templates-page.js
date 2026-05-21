@@ -192,9 +192,12 @@ async function openTemplateModal(id) {
   htmlEditor.value = body;
 
   // Reset edit media fields, then load options and prefill from existing body
+  const isEdit = !!id;
+  const mediaPlaceholder = isEdit ? '— keep current —' : '— select —';
   document.getElementById('edit-cta-text').value = '';
-  document.getElementById('edit-image-select').innerHTML = '<option value="">— keep current —</option>';
-  document.getElementById('edit-cta-link-select').innerHTML = '<option value="">— keep current —</option>';
+  document.getElementById('edit-image-select').innerHTML = `<option value="">${mediaPlaceholder}</option>`;
+  document.getElementById('edit-cta-link-select').innerHTML = `<option value="">${mediaPlaceholder}</option>`;
+  document.getElementById('media-section-title').textContent = isEdit ? 'Update Image & CTA' : 'Image & CTA';
   hideAddEditCtaLink();
   await Promise.all([loadEditImages(), loadEditCtaLinks()]);
   prefillEditMedia(body);
@@ -773,8 +776,9 @@ async function loadEditImages() {
   try {
     const images = await api.get('/assets/images');
     const select = document.getElementById('edit-image-select');
+    const placeholder = editingId ? '— keep current —' : '— select image —';
     select.innerHTML =
-      '<option value="">— keep current —</option>' +
+      `<option value="">${placeholder}</option>` +
       images.map(img =>
         `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
       ).join('');
@@ -785,8 +789,9 @@ async function loadEditCtaLinks() {
   try {
     const links = await api.get('/assets/cta-links');
     const select = document.getElementById('edit-cta-link-select');
+    const placeholder = editingId ? '— keep current —' : '— select link —';
     select.innerHTML =
-      '<option value="">— keep current —</option>' +
+      `<option value="">${placeholder}</option>` +
       links.map(link =>
         `<option value="${escapeAttr(link.url)}">${escapeHtml(link.label)}</option>`
       ).join('');
