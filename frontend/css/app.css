@@ -1138,6 +1138,8 @@ tbody tr.is-selected td {
 
 .ql-container.ql-snow {
   min-height: 240px !important;
+  max-height: 480px !important;
+  overflow-y: auto !important;
   background: #ffffff;
   border-radius: 0 0 12px 12px !important;
 }

@@ -36,6 +36,10 @@ window.uploadEmailImage = uploadEmailImage;
 window.showAddCtaLink = showAddCtaLink;
 window.hideAddCtaLink = hideAddCtaLink;
 window.saveNewCtaLink = saveNewCtaLink;
+window.uploadEditImage = uploadEditImage;
+window.showAddEditCtaLink = showAddEditCtaLink;
+window.hideAddEditCtaLink = hideAddEditCtaLink;
+window.saveNewEditCtaLink = saveNewEditCtaLink;
 
 /* ── Event listeners ─────────────────────────────────────────────── */
 document.getElementById('new-template-btn').addEventListener('click', () => openTemplateModal(null));
@@ -187,6 +191,14 @@ async function openTemplateModal(id) {
   }
   htmlEditor.value = body;
 
+  // Reset edit media fields, then load options and prefill from existing body
+  document.getElementById('edit-cta-text').value = '';
+  document.getElementById('edit-image-select').innerHTML = '<option value="">— keep current —</option>';
+  document.getElementById('edit-cta-link-select').innerHTML = '<option value="">— keep current —</option>';
+  hideAddEditCtaLink();
+  await Promise.all([loadEditImages(), loadEditCtaLinks()]);
+  prefillEditMedia(body);
+
   templateModal.classList.remove('hidden');
   redrawIcons();
 }
@@ -215,10 +227,12 @@ function toggleEditorMode() {
 /* ── Save ─────────────────────────────────────────────────────────── */
 async function saveTemplate(event) {
   event.preventDefault();
+  let body = htmlMode ? htmlEditor.value : quill.root.innerHTML;
+  body = applyEditMediaToBody(body);
   const payload = {
     title: document.getElementById('t-title').value.trim(),
     subject: document.getElementById('t-subject').value.trim(),
-    body: htmlMode ? htmlEditor.value : quill.root.innerHTML
+    body
   };
 
   saveTemplateBtn.disabled = true;
@@ -746,6 +760,146 @@ async function saveNewCtaLink() {
     await loadCtaLinks();
     document.getElementById('ai-cta-link-select').value = url;
     hideAddCtaLink();
+    Toast.success('CTA link saved.');
+  } catch (e) {
+    Toast.error(e.response?.data?.detail || 'Failed to save link.');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   EDIT-MODAL IMAGE & CTA
+   ═══════════════════════════════════════════════════════════════════ */
+async function loadEditImages() {
+  try {
+    const images = await api.get('/assets/images');
+    const select = document.getElementById('edit-image-select');
+    select.innerHTML =
+      '<option value="">— keep current —</option>' +
+      images.map(img =>
+        `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
+      ).join('');
+  } catch (_) {}
+}
+
+async function loadEditCtaLinks() {
+  try {
+    const links = await api.get('/assets/cta-links');
+    const select = document.getElementById('edit-cta-link-select');
+    select.innerHTML =
+      '<option value="">— keep current —</option>' +
+      links.map(link =>
+        `<option value="${escapeAttr(link.url)}">${escapeHtml(link.label)}</option>`
+      ).join('');
+  } catch (_) {}
+}
+
+function prefillEditMedia(body) {
+  if (!body) return;
+
+  // Detect hero image from the email image library
+  const imgMatch = body.match(/<img\b[^>]*\bsrc="([^"]*\/assets\/images\/email\/[^"]*)"[^>]*>/i);
+  if (imgMatch) {
+    const select = document.getElementById('edit-image-select');
+    const opt = Array.from(select.options).find(o => o.value === imgMatch[1]);
+    if (opt) select.value = imgMatch[1];
+  }
+
+  // Detect CTA button text and link
+  const ctaMatch = body.match(/<a\b([^>]*\bclass="[^"]*\bcta-button\b[^"]*"[^>]*)>([\s\S]*?)<\/a>/i);
+  if (ctaMatch) {
+    const innerText = ctaMatch[2]
+      .replace(/<[^>]*>/g, '')
+      .replace(/&rarr;/g, '→').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
+      .trim();
+    if (innerText) document.getElementById('edit-cta-text').value = innerText;
+
+    const hrefMatch = ctaMatch[1].match(/\bhref="([^"]*)"/i);
+    if (hrefMatch) {
+      const select = document.getElementById('edit-cta-link-select');
+      const opt = Array.from(select.options).find(o => o.value === hrefMatch[1]);
+      if (opt) select.value = hrefMatch[1];
+    }
+  }
+}
+
+function applyEditMediaToBody(body) {
+  const imageUrl = document.getElementById('edit-image-select').value;
+  const ctaText  = document.getElementById('edit-cta-text').value.trim();
+  const ctaLink  = document.getElementById('edit-cta-link-select').value;
+
+  if (imageUrl) {
+    let replaced = false;
+    body = body.replace(/<img\b([^>]*)>/gi, (match, attrs) => {
+      if (replaced) return match;
+      if (/\bsrc="[^"]*\/assets\/images\/email\/[^"]*"/i.test(attrs)) {
+        replaced = true;
+        return match.replace(/(\bsrc=")[^"]*(")/i, `$1${imageUrl}$2`);
+      }
+      return match;
+    });
+  }
+
+  if (ctaLink || ctaText) {
+    body = body.replace(
+      /(<a\b([^>]*\bclass="[^"]*\bcta-button\b[^"]*"[^>]*)>)([\s\S]*?)(<\/a>)/gi,
+      (match, openTag, attrs, content, closeTag) => {
+        let tag = openTag;
+        if (ctaLink) {
+          if (/\bhref="/i.test(tag)) {
+            tag = tag.replace(/(\bhref=")[^"]*(")/i, `$1${ctaLink}$2`);
+          } else {
+            tag = tag.replace(/^(<a\b)/, `$1 href="${ctaLink}"`);
+          }
+        }
+        return `${tag}${ctaText || content}${closeTag}`;
+      }
+    );
+  }
+
+  return body;
+}
+
+async function uploadEditImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const label = input.closest('label');
+  if (label) label.style.opacity = '0.5';
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await axios.post('/api/assets/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    await Promise.all([loadEditImages(), loadEmailImages()]);
+    document.getElementById('edit-image-select').value = resp.data.url;
+    Toast.success(`"${resp.data.name}" uploaded.`);
+  } catch (e) {
+    Toast.error(e.response?.data?.detail || 'Image upload failed.');
+  } finally {
+    if (label) label.style.opacity = '1';
+    input.value = '';
+  }
+}
+
+function showAddEditCtaLink() {
+  document.getElementById('add-edit-cta-link-form').style.display = '';
+}
+
+function hideAddEditCtaLink() {
+  document.getElementById('add-edit-cta-link-form').style.display = 'none';
+  document.getElementById('new-edit-cta-label').value = '';
+  document.getElementById('new-edit-cta-url').value = '';
+}
+
+async function saveNewEditCtaLink() {
+  const label = document.getElementById('new-edit-cta-label').value.trim();
+  const url   = document.getElementById('new-edit-cta-url').value.trim();
+  if (!label || !url) { Toast.error('Both a label and a URL are required.'); return; }
+  try {
+    await api.post('/assets/cta-links', { label, url });
+    await Promise.all([loadEditCtaLinks(), loadCtaLinks()]);
+    document.getElementById('edit-cta-link-select').value = url;
+    hideAddEditCtaLink();
     Toast.success('CTA link saved.');
   } catch (e) {
     Toast.error(e.response?.data?.detail || 'Failed to save link.');

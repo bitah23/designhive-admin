@@ -91,7 +91,8 @@
                   <label class="btn btn-outline btn-sm" title="Upload new image"
                          style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
                     <i data-lucide="upload" style="width:12px;height:12px"></i>
-                    <input type="file" id="ai-image-upload" accept="image/*,.svg"
+                    <input type="file" id="ai-image-upload"
+                           accept=".svg,.png,.jpg,.jpeg,.gif,.webp"
                            style="display:none" onchange="uploadEmailImage(this)">
                   </label>
                 </div>
@@ -157,6 +158,64 @@
               <input type="text" id="t-subject" class="form-control" required>
             </div>
           </div>
+
+          <!-- Image & CTA editing (always visible) -->
+          <div style="margin-bottom:16px;padding:14px 16px;background:rgba(255,255,255,0.02);
+               border:1px solid rgba(255,255,255,0.08);border-radius:12px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <i data-lucide="image" style="width:14px;height:14px;color:var(--gold-strong)"></i>
+              <span style="font-weight:600;font-size:13px;color:var(--text-primary)">Image &amp; CTA</span>
+            </div>
+            <div class="grid grid-2" style="gap:12px;margin-bottom:10px">
+              <div>
+                <label class="form-label">Hero Image</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <select id="edit-image-select" class="form-control" style="flex:1;min-width:0">
+                    <option value="">— keep current —</option>
+                  </select>
+                  <label class="btn btn-outline btn-sm" title="Upload new image"
+                         style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
+                    <i data-lucide="upload" style="width:12px;height:12px"></i>
+                    <input type="file" id="edit-image-upload"
+                           accept=".svg,.png,.jpg,.jpeg,.gif,.webp"
+                           style="display:none" onchange="uploadEditImage(this)">
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label class="form-label">CTA Button Text</label>
+                <input type="text" id="edit-cta-text" class="form-control" placeholder="e.g. Get Started">
+              </div>
+            </div>
+            <div>
+              <label class="form-label">CTA Link</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <select id="edit-cta-link-select" class="form-control" style="flex:1;min-width:0">
+                  <option value="">— keep current —</option>
+                </select>
+                <button type="button" class="btn btn-outline btn-sm" title="Add new link"
+                        onclick="showAddEditCtaLink()" style="flex-shrink:0">
+                  <i data-lucide="plus" style="width:12px;height:12px"></i>
+                </button>
+              </div>
+              <div id="add-edit-cta-link-form" style="display:none;margin-top:10px;padding:12px 14px;
+                   border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08)">
+                <div class="grid grid-2" style="gap:8px;margin-bottom:8px">
+                  <input type="text" id="new-edit-cta-label" class="form-control"
+                         placeholder="Label (e.g. Dashboard)">
+                  <input type="text" id="new-edit-cta-url" class="form-control"
+                         placeholder="https://…">
+                </div>
+                <div style="display:flex;gap:6px;justify-content:flex-end">
+                  <button type="button" class="btn btn-outline btn-sm"
+                          onclick="hideAddEditCtaLink()">Cancel</button>
+                  <button type="button" class="btn btn-primary btn-sm"
+                          onclick="saveNewEditCtaLink()">Save Link</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div>
             <div class="flex-between mb-2">
               <label class="form-label" for="html-editor" style="margin:0">Body</label>
