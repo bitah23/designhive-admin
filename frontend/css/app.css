@@ -735,6 +735,8 @@ tbody tr.is-selected td {
 .modal-body {
   padding: 22px;
   overflow-y: auto;
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .empty-state {
