@@ -728,7 +728,7 @@ async function uploadEmailImage(input) {
     const formData = new FormData();
     formData.append('file', file);
     const resp = await axios.post('/api/assets/images', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     });
     await loadEmailImages();
     document.getElementById('ai-image-select').value = resp.data.url;
@@ -837,6 +837,14 @@ function applyEditMediaToBody(body) {
       }
       return match;
     });
+    if (!replaced) {
+      const imgHtml = `<img src="${imageUrl}" style="display:block;max-width:100%;height:auto;margin:0 auto;" alt="">`;
+      if (looksLikeFullEmailDocument(body)) {
+        body = body.replace(/(<body\b[^>]*>)/i, `$1\n${imgHtml}\n`);
+      } else {
+        body = imgHtml + '\n' + (body || '');
+      }
+    }
   }
 
   if (ctaLink || ctaText) {
@@ -868,7 +876,7 @@ async function uploadEditImage(input) {
     const formData = new FormData();
     formData.append('file', file);
     const resp = await axios.post('/api/assets/images', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     });
     await Promise.all([loadEditImages(), loadEmailImages()]);
     document.getElementById('edit-image-select').value = resp.data.url;
