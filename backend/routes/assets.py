@@ -44,6 +44,8 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
     body = await request.body()
     if not body:
         raise HTTPException(status_code=400, detail="Empty file.")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds the {_MAX_UPLOAD_BYTES // (1024*1024)} MB limit.")
     dest = os.path.join(_EMAIL_IMAGES_DIR, filename)
     with open(dest, "wb") as f:
         f.write(body)
