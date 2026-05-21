@@ -831,12 +831,16 @@ async function loadEditCtaLinks() {
 function prefillEditMedia(body) {
   if (!body) return;
 
-  // Detect hero image from the email image library
-  const imgMatch = body.match(/<img\b[^>]*\bsrc="([^"]*\/assets\/images\/email\/[^"]*)"[^>]*>/i);
-  if (imgMatch) {
-    const select = document.getElementById('edit-image-select');
-    const opt = Array.from(select.options).find(o => o.value === imgMatch[1]);
-    if (opt) select.value = imgMatch[1];
+  // Detect hero image — match any src that exists in the loaded image library
+  const allImgTags = body.match(/<img\b[^>]*\bsrc="([^"]+)"[^>]*>/gi) || [];
+  const imageSelect = document.getElementById('edit-image-select');
+  const knownUrls = new Set(Array.from(imageSelect.options).map(o => o.value).filter(Boolean));
+  for (const tag of allImgTags) {
+    const srcMatch = tag.match(/\bsrc="([^"]+)"/i);
+    if (srcMatch && knownUrls.has(srcMatch[1])) {
+      imageSelect.value = srcMatch[1];
+      break;
+    }
   }
 
   // Detect CTA button text and link
@@ -866,7 +870,7 @@ function applyEditMediaToBody(body) {
     let replaced = false;
     body = body.replace(/<img\b([^>]*)>/gi, (match, attrs) => {
       if (replaced) return match;
-      if (/\bsrc="[^"]*\/assets\/images\/email\/[^"]*"/i.test(attrs)) {
+      if (/\bsrc="[^"]*(?:\/assets\/images\/email\/|\/storage\/v1\/object\/public\/template-images\/)[^"]*"/i.test(attrs)) {
         replaced = true;
         return match.replace(/(\bsrc=")[^"]*(")/i, `$1${imageUrl}$2`);
       }

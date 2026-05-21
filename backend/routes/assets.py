@@ -1,33 +1,25 @@
 import os
+import mimetypes
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from config import supabase, ADMIN_BASE_URL
+from config import supabase
 from deps import get_current_admin
 from models import CtaLinkCreate
 
 _MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+_BUCKET = "template-images"
+_ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
 
 router = APIRouter()
-
-_EMAIL_IMAGES_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "assets", "images", "email")
-)
-_ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
 
 
 # ── Images ────────────────────────────────────────────────────────────────────
 
 @router.get("/images")
 def list_images(admin=Depends(get_current_admin)):
-    images = []
-    for fname in sorted(os.listdir(_EMAIL_IMAGES_DIR)):
-        if os.path.splitext(fname)[1].lower() in _ALLOWED_EXTENSIONS:
-            images.append({
-                "name": fname,
-                "url": f"{ADMIN_BASE_URL}/assets/images/email/{fname}",
-            })
-    return images
+    result = supabase.table("template_images").select("name,url").order("created_at").execute()
+    return result.data
 
 
 @router.post("/images")
@@ -46,13 +38,27 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
         raise HTTPException(status_code=400, detail="Empty file.")
     if len(body) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail=f"File exceeds the {_MAX_UPLOAD_BYTES // (1024*1024)} MB limit.")
-    dest = os.path.join(_EMAIL_IMAGES_DIR, filename)
-    with open(dest, "wb") as f:
-        f.write(body)
-    return {
-        "name": filename,
-        "url": f"{ADMIN_BASE_URL}/assets/images/email/{filename}",
-    }
+
+    content_type = request.headers.get("content-type", "") or mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+    try:
+        supabase.storage.from_(_BUCKET).upload(
+            path=filename,
+            file=body,
+            file_options={"content-type": content_type, "upsert": "true"},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Storage upload failed: {e}")
+
+    public_url = supabase.storage.from_(_BUCKET).get_public_url(filename)
+
+    result = supabase.table("template_images").upsert(
+        {"name": filename, "url": public_url},
+        on_conflict="name",
+    ).execute()
+
+    row = result.data[0] if result.data else {"name": filename, "url": public_url}
+    return {"name": row["name"], "url": row["url"]}
 
 
 # ── CTA Links ─────────────────────────────────────────────────────────────────
