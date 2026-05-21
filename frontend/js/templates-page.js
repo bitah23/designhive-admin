@@ -756,7 +756,7 @@ async function uploadEmailImage(input) {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const resp = await axios.post('/api/assets/images', formData, {
+    const resp = await axios.post('/assets/images', formData, {
       headers: { 'Content-Type': undefined },
     });
     await loadEmailImages();
@@ -906,7 +906,7 @@ async function uploadEditImage(input) {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const resp = await axios.post('/api/assets/images', formData, {
+    const resp = await axios.post('/assets/images', formData, {
       headers: { 'Content-Type': undefined },
     });
     await Promise.all([loadEditImages(), loadEmailImages()]);
