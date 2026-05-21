@@ -751,6 +751,7 @@ async function loadCtaLinks() {
 async function uploadEmailImage(input) {
   const file = input.files[0];
   if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { Toast.error('Image must be under 10 MB.'); input.value = ''; return; }
   const label = input.closest('label');
   if (label) label.style.opacity = '0.5';
   try {
@@ -908,6 +909,7 @@ function applyEditMediaToBody(body) {
 async function uploadEditImage(input) {
   const file = input.files[0];
   if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { Toast.error('Image must be under 10 MB.'); input.value = ''; return; }
   const label = input.closest('label');
   if (label) label.style.opacity = '0.5';
   try {

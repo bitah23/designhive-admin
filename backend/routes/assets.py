@@ -1,11 +1,13 @@
 import os
 import shutil
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 
 from config import supabase, ADMIN_BASE_URL
 from deps import get_current_admin
 from models import CtaLinkCreate
+
+_MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter()
 
@@ -30,7 +32,11 @@ def list_images(admin=Depends(get_current_admin)):
 
 
 @router.post("/images")
-async def upload_image(file: UploadFile = File(...), admin=Depends(get_current_admin)):
+async def upload_image(request: Request, admin=Depends(get_current_admin)):
+    form = await request.form(max_part_size=_MAX_UPLOAD_BYTES)
+    file: UploadFile = form.get("file")
+    if not file or not getattr(file, "filename", None):
+        raise HTTPException(status_code=400, detail="No file provided.")
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in _ALLOWED_EXTENSIONS:
         raise HTTPException(
