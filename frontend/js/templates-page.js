@@ -756,14 +756,19 @@ async function uploadEmailImage(input) {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const resp = await axios.post('/assets/images', formData, {
-      headers: { 'Content-Type': undefined },
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/assets/images', {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData,
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Image upload failed.');
     await loadEmailImages();
-    document.getElementById('ai-image-select').value = resp.data.url;
-    Toast.success(`"${resp.data.name}" uploaded.`);
+    document.getElementById('ai-image-select').value = data.url;
+    Toast.success(`"${data.name}" uploaded.`);
   } catch (e) {
-    Toast.error(e.response?.data?.detail || 'Image upload failed.');
+    Toast.error(e.message || 'Image upload failed.');
   } finally {
     if (label) label.style.opacity = '1';
     input.value = '';
@@ -906,14 +911,19 @@ async function uploadEditImage(input) {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const resp = await axios.post('/assets/images', formData, {
-      headers: { 'Content-Type': undefined },
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch('/api/assets/images', {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData,
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Image upload failed.');
     await Promise.all([loadEditImages(), loadEmailImages()]);
-    document.getElementById('edit-image-select').value = resp.data.url;
-    Toast.success(`"${resp.data.name}" uploaded.`);
+    document.getElementById('edit-image-select').value = data.url;
+    Toast.success(`"${data.name}" uploaded.`);
   } catch (e) {
-    Toast.error(e.response?.data?.detail || 'Image upload failed.');
+    Toast.error(e.message || 'Image upload failed.');
   } finally {
     if (label) label.style.opacity = '1';
     input.value = '';
