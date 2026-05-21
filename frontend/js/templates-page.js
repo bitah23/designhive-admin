@@ -380,12 +380,12 @@ function buildPreviewEmail(template) {
     if (/\s+style\s*=\s*["'][^"']*["']/i.test(cleaned)) {
       cleaned = cleaned.replace(
         /\s+style\s*=\s*(["'])(.*?)\1/i,
-        (_styleMatch, quote, styleValue) => ` style=${quote}${styleValue};max-width:100%;height:auto;${quote}`
+        (_styleMatch, quote, styleValue) => ` style=${quote}${styleValue};width:100%;height:auto;${quote}`
       );
       return `<img${cleaned} alt="Design Hive visual">`;
     }
 
-    return `<img${cleaned} style="display:block;max-width:100%;height:auto;margin:0 auto;" alt="Design Hive visual">`;
+    return `<img${cleaned} style="display:block;width:100%;height:auto;" alt="Design Hive visual">`;
   });
 
   return body;
@@ -762,8 +762,10 @@ async function uploadEmailImage(input) {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       body: formData,
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Image upload failed.');
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
+    if (!res.ok) throw new Error(data.detail || `Upload failed (${res.status})`);
     await loadEmailImages();
     document.getElementById('ai-image-select').value = data.url;
     Toast.success(`"${data.name}" uploaded.`);
@@ -917,8 +919,10 @@ async function uploadEditImage(input) {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       body: formData,
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Image upload failed.');
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
+    if (!res.ok) throw new Error(data.detail || `Upload failed (${res.status})`);
     await Promise.all([loadEditImages(), loadEmailImages()]);
     document.getElementById('edit-image-select').value = data.url;
     Toast.success(`"${data.name}" uploaded.`);

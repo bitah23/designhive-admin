@@ -60,7 +60,7 @@ def _sanitize_body_html(body: str) -> str:
         if re.search(r"\s+style\s*=\s*['\"][^'\"]*['\"]", cleaned, flags=re.IGNORECASE):
             cleaned = re.sub(
                 r"\s+style\s*=\s*(['\"])(.*?)\1",
-                lambda m: f' style={m.group(1)}{m.group(2)};max-width:100%;height:auto;{m.group(1)}',
+                lambda m: f' style={m.group(1)}{m.group(2)};width:100%;height:auto;{m.group(1)}',
                 cleaned,
                 flags=re.IGNORECASE,
             )
@@ -68,7 +68,7 @@ def _sanitize_body_html(body: str) -> str:
 
         return (
             f'<img{cleaned} '
-            'style="display:block;max-width:100%;height:auto;margin:0 auto;" alt="Design Hive visual">'
+            'style="display:block;width:100%;height:auto;" alt="Design Hive visual">'
         )
 
     html = re.sub(r"<img(\s[^>]*)?>", repl, body or "", flags=re.IGNORECASE)

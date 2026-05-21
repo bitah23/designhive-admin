@@ -168,8 +168,7 @@ def build_text_email_html(
             <td style="padding:0;line-height:0;font-size:0;">
               <img class="dh-hero-img" src="{hero_image_url}" alt="Design Hive"
                    width="600"
-                   style="display:block;width:100%;max-width:600px;height:220px;
-                          object-fit:cover;border:0;">
+                   style="display:block;width:100%;max-width:600px;height:auto;border:0;">
             </td>
           </tr>"""
     else:
