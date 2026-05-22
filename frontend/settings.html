@@ -37,7 +37,7 @@
           <div style="padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px">
             <div class="label-upper mb-3">Add New Admin</div>
             <form id="add-admin-form"
-              style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+              style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;align-items:end">
               <div>
                 <label class="form-label" for="new-name">Name</label>
                 <input type="text" id="new-name" class="form-control" placeholder="Full name">
@@ -101,7 +101,7 @@
 
           <!-- Sent state -->
           <form id="pw-step-form" style="display:none" onsubmit="confirmReset(event)">
-            <div style="display:grid;grid-template-columns:220px 1fr 1fr;gap:14px;align-items:end">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;align-items:end">
               <div>
                 <label class="form-label" for="otp-input">Verification Code</label>
                 <input type="text" id="otp-input" class="form-control" placeholder="6-digit code" maxlength="6" required
