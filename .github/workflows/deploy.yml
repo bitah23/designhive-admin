@@ -62,8 +62,8 @@ jobs:
             GMAIL_CLIENT_ID=${GMAIL_CLIENT_ID}
             GMAIL_CLIENT_SECRET=${GMAIL_CLIENT_SECRET}
             ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-            TABLE_PROFILES=test_profiles
-            TABLE_EMAIL_LOGS=test_email_logs
+            TABLE_PROFILES=profiles
+            TABLE_EMAIL_LOGS=email_logs
             EOF
             chmod 600 /root/app.env
 
