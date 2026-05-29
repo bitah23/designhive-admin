@@ -2,6 +2,8 @@
 
 This file tracks every agent planned or built for the DesignHive Admin platform. Each agent is a discrete, automated capability that runs on the backend without manual intervention from an admin.
 
+
+
 **Stack context:** FastAPI · Supabase (PostgreSQL) · Gmail API · Claude API (Anthropic)  
 **Agent home:** `backend/agents/` (one file per agent)
 
