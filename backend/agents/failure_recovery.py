@@ -115,6 +115,8 @@ def _retry(row: dict, max_retries: int, backoff: list):
 
     try:
         # Fetch template
+        if not row.get("template_id"):
+            raise ValueError("no template_id on log")
         tmpl_res = (
             supabase.table("email_templates")
             .select("*")
@@ -122,7 +124,7 @@ def _retry(row: dict, max_retries: int, backoff: list):
             .execute()
         )
         if not tmpl_res.data:
-            raise ValueError(f"Template {row['template_id']} not found")
+            raise ValueError("template not found")
         template = tmpl_res.data[0]
 
         # Fetch user by email
@@ -133,7 +135,7 @@ def _retry(row: dict, max_retries: int, backoff: list):
             .execute()
         )
         if not user_res.data:
-            raise ValueError(f"User {row['user_email']} not found in profiles")
+            raise ValueError("user not found in profiles")
         user = user_res.data[0]
 
         result = _send_one(template, user)
@@ -158,8 +160,8 @@ def _retry(row: dict, max_retries: int, backoff: list):
 
 
 def _mark_failed(log_id: str, retry_count: int, now_iso: str, error: str, max_retries: int):
-    new_count = retry_count + 1
-    new_status = "permanently_failed" if new_count >= max_retries else "failed"
+    new_count = min(retry_count + 1, max_retries)
+    new_status = "failed"  # permanently_failed not in DB constraint; retry_count >= max_retries stops further polling
     supabase.table(TABLE_EMAIL_LOGS).update({
         "status": new_status,
         "retry_count": new_count,

@@ -14,6 +14,10 @@ _scheduler = BackgroundScheduler(daemon=True)
 _PROCESSING_SENTINEL = "9999-01-01T00:00:00+00:00"
 
 
+class _PermanentStepError(Exception):
+    """Raised when a drip step cannot ever succeed (deleted template/sequence/user)."""
+
+
 # ---------------------------------------------------------------------------
 # Lifecycle
 # ---------------------------------------------------------------------------
@@ -88,7 +92,7 @@ def _execute_step(enrollment: dict):
             .execute()
         )
         if not seq_res.data:
-            raise ValueError(f"Sequence {enrollment['sequence_id']} not found")
+            raise _PermanentStepError("sequence not found")
         sequence = seq_res.data[0]
 
         steps = sequence.get("steps") or []
@@ -108,7 +112,7 @@ def _execute_step(enrollment: dict):
             .execute()
         )
         if not tmpl_res.data:
-            raise ValueError(f"Template {step['template_id']} not found")
+            raise _PermanentStepError("template not found")
         template = tmpl_res.data[0]
 
         # Fetch user
@@ -119,7 +123,7 @@ def _execute_step(enrollment: dict):
             .execute()
         )
         if not user_res.data:
-            raise ValueError(f"User {enrollment['user_id']} not found")
+            raise _PermanentStepError("user not found")
         user = user_res.data[0]
 
         _send_one(template, user)
@@ -144,6 +148,11 @@ def _execute_step(enrollment: dict):
                 f"next step in {delay_days}d"
             )
 
+    except _PermanentStepError as exc:
+        logger.error(f"Drip enrollment {enrollment_id} permanent error, cancelling: {exc}")
+        supabase.table("drip_enrollments").update({
+            "status": "cancelled",
+        }).eq("id", enrollment_id).execute()
     except Exception as exc:
         logger.error(f"Drip enrollment {enrollment_id} step error: {exc}")
         # Restore next_send_at so the step retries on the next poll cycle
