@@ -51,7 +51,7 @@ _SYSTEM_PROMPT = (
     "   a. Always call generate_content then save_template first (to create a record). generate_content produces text only — the design is fixed.\n"
     "   b. If the admin explicitly asks to send immediately — phrases like 'send now', 'no scheduling', 'send immediately', 'create and send' — call send_campaign_now right after save_template using the template id returned by save_template. Do not wait for dashboard approval in this case.\n"
     "   c. If the admin does NOT say to send immediately, stop after save_template and tell them the draft is ready for review on the dashboard.\n"
-    "   d. If the admin mentions a hero image URL or CTA link, pass them as image_url / cta_url to generate_content.\n"
+    "   d. If the admin mentions a hero image/video URL or CTA link, pass them as image_url / video_url / cta_url to generate_content.\n"
     "6. When the admin approves a template (message contains 'approved template' and a template id), call send_campaign_now using that exact template id and the specified segment.\n\n"
     f"Today's date (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
 )
@@ -131,6 +131,7 @@ _TOOLS = [
                 "cta_text": {"type": "string", "description": "CTA button label, e.g. 'Get Started'"},
                 "cta_url": {"type": "string", "description": "URL for the CTA button. Defaults to the workspace if omitted."},
                 "image_url": {"type": "string", "description": "Optional URL of a hero image to show at the top of the email."},
+                "video_url": {"type": "string", "description": "Optional URL of a hero video to show at the top of the email (takes priority over image_url if both are given)."},
             },
             "required": ["brief"],
         },
@@ -320,6 +321,7 @@ def _execute_tool(name: str, inputs: dict) -> str:
                 include_cta=inputs.get("include_cta", True),
                 cta_text=inputs.get("cta_text", "Learn More"),
                 image_url=inputs.get("image_url"),
+                video_url=inputs.get("video_url"),
                 cta_url=inputs.get("cta_url"),
             )
             return json.dumps(result)

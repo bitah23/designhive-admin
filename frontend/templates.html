@@ -111,6 +111,23 @@
               </div>
             </div>
 
+            <!-- Hero Video selector -->
+            <div style="margin-bottom:12px">
+              <label class="form-label">Hero Video <span class="text-muted" style="font-weight:400">(optional — overrides Hero Image if set)</span></label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <select id="ai-video-select" class="form-control" style="flex:1;min-width:0">
+                  <option value="">None</option>
+                </select>
+                <label class="btn btn-outline btn-sm" title="Upload new video"
+                       style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
+                  <i data-lucide="upload" style="width:12px;height:12px"></i>
+                  <input type="file" id="ai-video-upload"
+                         accept=".mp4,.webm,.mov,.m4v"
+                         style="display:none" onchange="uploadEmailVideo(this)">
+                </label>
+              </div>
+            </div>
+
             <!-- Inline add-CTA-link form -->
             <div id="add-cta-link-form" style="display:none;margin-bottom:12px;
                  padding:12px 14px;border-radius:8px;
@@ -208,6 +225,21 @@
               <div>
                 <label class="form-label">CTA Button Text</label>
                 <input type="text" id="edit-cta-text" class="form-control" placeholder="e.g. Get Started">
+              </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <label class="form-label">Hero Video <span class="text-muted" style="font-weight:400">(optional — overrides Hero Image if set)</span></label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <select id="edit-video-select" class="form-control" style="flex:1;min-width:0">
+                  <option value="">— select video —</option>
+                </select>
+                <label class="btn btn-outline btn-sm" title="Upload new video"
+                       style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
+                  <i data-lucide="upload" style="width:12px;height:12px"></i>
+                  <input type="file" id="edit-video-upload"
+                         accept=".mp4,.webm,.mov,.m4v"
+                         style="display:none" onchange="uploadEditVideo(this)">
+                </label>
               </div>
             </div>
             <div>

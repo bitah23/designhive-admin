@@ -56,6 +56,7 @@ class ContentGenRequest(BaseModel):
     include_cta: bool = True
     cta_text: Optional[str] = "Learn More"
     image_url: Optional[str] = None  # absolute URL of hero image to use
+    video_url: Optional[str] = None  # absolute URL of hero video to use
     cta_url: Optional[str] = None    # absolute URL for the CTA button
 
 

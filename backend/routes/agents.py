@@ -81,6 +81,7 @@ def generate_content(body: ContentGenRequest, admin=Depends(get_current_admin)):
             include_cta=body.include_cta,
             cta_text=body.cta_text or "Learn More",
             image_url=body.image_url or None,
+            video_url=body.video_url or None,
             cta_url=body.cta_url or None,
         )
     except ValueError as e:

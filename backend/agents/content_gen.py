@@ -77,6 +77,7 @@ def generate_email_content(
     include_cta: bool = True,
     cta_text: str = "Learn More",
     image_url: str | None = None,
+    video_url: str | None = None,
     cta_url: str | None = None,
 ) -> dict:
     """
@@ -95,6 +96,7 @@ def generate_email_content(
                 ],
                 sign_off="— The Design Hive Team",
                 hero_image_url=image_url,
+                hero_video_url=video_url,
                 cta_url=cta_url,
                 cta_text=cta_text if include_cta else None,
             ),
@@ -146,6 +148,7 @@ def generate_email_content(
         paragraphs=result["paragraphs"],
         sign_off=result.get("sign_off", "— The Design Hive Team"),
         hero_image_url=image_url,
+        hero_video_url=video_url,
         cta_url=cta_url,
         cta_text=cta_text if include_cta else None,
     )

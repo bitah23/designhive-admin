@@ -34,10 +34,12 @@ window.generateWithAI = generateWithAI;
 window.toggleAiCtaInput = toggleAiCtaInput;
 window.approveTemplate = approveTemplate;
 window.uploadEmailImage = uploadEmailImage;
+window.uploadEmailVideo = uploadEmailVideo;
 window.showAddCtaLink = showAddCtaLink;
 window.hideAddCtaLink = hideAddCtaLink;
 window.saveNewCtaLink = saveNewCtaLink;
 window.uploadEditImage = uploadEditImage;
+window.uploadEditVideo = uploadEditVideo;
 window.showAddEditCtaLink = showAddEditCtaLink;
 window.hideAddEditCtaLink = hideAddEditCtaLink;
 window.saveNewEditCtaLink = saveNewEditCtaLink;
@@ -202,10 +204,11 @@ async function openTemplateModal(id) {
   const mediaPlaceholder = isEdit ? '— keep current —' : '— select —';
   document.getElementById('edit-cta-text').value = '';
   document.getElementById('edit-image-select').innerHTML = `<option value="">${mediaPlaceholder}</option>`;
+  document.getElementById('edit-video-select').innerHTML = `<option value="">${mediaPlaceholder}</option>`;
   document.getElementById('edit-cta-link-select').innerHTML = `<option value="">${mediaPlaceholder}</option>`;
   document.getElementById('media-section-title').textContent = isEdit ? 'Update Image & CTA' : 'Image & CTA';
   hideAddEditCtaLink();
-  await Promise.all([loadEditImages(), loadEditCtaLinks()]);
+  await Promise.all([loadEditImages(), loadEditVideos(), loadEditCtaLinks()]);
   prefillEditMedia(body);
 
   templateModal.classList.remove('hidden');
@@ -386,6 +389,25 @@ function buildPreviewEmail(template) {
     }
 
     return `<img${cleaned} style="display:block;width:100%;height:auto;" alt="Design Hive visual">`;
+  });
+
+  /* ── 3. Sanitise any <video> tags in the stored body ──────────
+     Same treatment as images: strip explicit width/height, force
+     responsive sizing so an oversized video can't break layout. */
+  body = body.replace(/<video(\s[^>]*)?>/gi, (_match, attrs) => {
+    let cleaned = (attrs || '')
+      .replace(/\s+width\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/\s+height\s*=\s*["'][^"']*["']/gi, '');
+
+    if (/\s+style\s*=\s*["'][^"']*["']/i.test(cleaned)) {
+      cleaned = cleaned.replace(
+        /\s+style\s*=\s*(["'])(.*?)\1/i,
+        (_styleMatch, quote, styleValue) => ` style=${quote}${styleValue};width:100%;height:auto;${quote}`
+      );
+      return `<video${cleaned}>`;
+    }
+
+    return `<video${cleaned} style="display:block;width:100%;height:auto;">`;
   });
 
   return body;
@@ -663,7 +685,7 @@ async function toggleAiPanel() {
   const panel = document.getElementById('ai-gen-panel');
   const isVisible = panel.style.display !== 'none';
   if (!isVisible) {
-    await Promise.all([loadEmailImages(), loadCtaLinks()]);
+    await Promise.all([loadEmailImages(), loadEmailVideos(), loadCtaLinks()]);
   }
   panel.style.display = isVisible ? 'none' : 'block';
   redrawIcons();
@@ -693,6 +715,7 @@ async function generateWithAI() {
       include_cta: document.getElementById('ai-include-cta').checked,
       cta_text: document.getElementById('ai-cta-text').value.trim() || 'Learn More',
       image_url: document.getElementById('ai-image-select').value || null,
+      video_url: document.getElementById('ai-video-select').value || null,
       cta_url: document.getElementById('ai-cta-link-select').value || null,
     });
 
@@ -722,18 +745,43 @@ async function generateWithAI() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   ASSET MANAGEMENT  (images + CTA links)
+   ASSET MANAGEMENT  (images + videos + CTA links)
    ═══════════════════════════════════════════════════════════════════ */
-async function loadEmailImages() {
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.m4v'];
+
+function isVideoAsset(nameOrUrl) {
+  const value = String(nameOrUrl || '').toLowerCase().split('?')[0];
+  return VIDEO_EXTENSIONS.some(ext => value.endsWith(ext));
+}
+
+async function loadEmailAssets() {
   try {
-    const images = await api.get('/assets/images');
-    const select = document.getElementById('ai-image-select');
-    select.innerHTML =
-      '<option value="">Auto-select</option>' +
-      images.map(img =>
-        `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
-      ).join('');
-  } catch (_) { /* silently ignore */ }
+    return await api.get('/assets/images');
+  } catch (_) {
+    return [];
+  }
+}
+
+async function loadEmailImages() {
+  const assets = await loadEmailAssets();
+  const images = assets.filter(a => !isVideoAsset(a.name || a.url));
+  const select = document.getElementById('ai-image-select');
+  select.innerHTML =
+    '<option value="">Auto-select</option>' +
+    images.map(img =>
+      `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
+    ).join('');
+}
+
+async function loadEmailVideos() {
+  const assets = await loadEmailAssets();
+  const videos = assets.filter(a => isVideoAsset(a.name || a.url));
+  const select = document.getElementById('ai-video-select');
+  select.innerHTML =
+    '<option value="">None</option>' +
+    videos.map(vid =>
+      `<option value="${escapeAttr(vid.url)}">${escapeHtml(vid.name)}</option>`
+    ).join('');
 }
 
 async function loadCtaLinks() {
@@ -748,26 +796,48 @@ async function loadCtaLinks() {
   } catch (_) { /* silently ignore */ }
 }
 
+async function uploadAssetFile(file) {
+  const token = localStorage.getItem('adminToken');
+  const headers = { 'X-Filename': file.name, 'Content-Type': file.type || 'application/octet-stream' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch('/api/assets/images', { method: 'POST', headers, body: file });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
+  if (!res.ok) throw new Error(data.detail || `Upload failed (${res.status})`);
+  return data;
+}
+
 async function uploadEmailImage(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { Toast.error('Image must be under 10 MB.'); input.value = ''; return; }
   const label = input.closest('label');
   if (label) label.style.opacity = '0.5';
   try {
-    const token = localStorage.getItem('adminToken');
-    const headers = { 'X-Filename': file.name, 'Content-Type': file.type || 'application/octet-stream' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch('/api/assets/images', { method: 'POST', headers, body: file });
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
-    if (!res.ok) throw new Error(data.detail || `Upload failed (${res.status})`);
+    const data = await uploadAssetFile(file);
     await loadEmailImages();
     document.getElementById('ai-image-select').value = data.url;
     Toast.success(`"${data.name}" uploaded.`);
   } catch (e) {
     Toast.error(e.message || 'Image upload failed.');
+  } finally {
+    if (label) label.style.opacity = '1';
+    input.value = '';
+  }
+}
+
+async function uploadEmailVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const label = input.closest('label');
+  if (label) label.style.opacity = '0.5';
+  try {
+    const data = await uploadAssetFile(file);
+    await loadEmailVideos();
+    document.getElementById('ai-video-select').value = data.url;
+    Toast.success(`"${data.name}" uploaded.`);
+  } catch (e) {
+    Toast.error(e.message || 'Video upload failed.');
   } finally {
     if (label) label.style.opacity = '1';
     input.value = '';
@@ -803,16 +873,27 @@ async function saveNewCtaLink() {
    EDIT-MODAL IMAGE & CTA
    ═══════════════════════════════════════════════════════════════════ */
 async function loadEditImages() {
-  try {
-    const images = await api.get('/assets/images');
-    const select = document.getElementById('edit-image-select');
-    const placeholder = editingId ? '— keep current —' : '— select image —';
-    select.innerHTML =
-      `<option value="">${placeholder}</option>` +
-      images.map(img =>
-        `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
-      ).join('');
-  } catch (_) {}
+  const assets = await loadEmailAssets();
+  const images = assets.filter(a => !isVideoAsset(a.name || a.url));
+  const select = document.getElementById('edit-image-select');
+  const placeholder = editingId ? '— keep current —' : '— select image —';
+  select.innerHTML =
+    `<option value="">${placeholder}</option>` +
+    images.map(img =>
+      `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
+    ).join('');
+}
+
+async function loadEditVideos() {
+  const assets = await loadEmailAssets();
+  const videos = assets.filter(a => isVideoAsset(a.name || a.url));
+  const select = document.getElementById('edit-video-select');
+  const placeholder = editingId ? '— keep current —' : '— select video —';
+  select.innerHTML =
+    `<option value="">${placeholder}</option>` +
+    videos.map(vid =>
+      `<option value="${escapeAttr(vid.url)}">${escapeHtml(vid.name)}</option>`
+    ).join('');
 }
 
 async function loadEditCtaLinks() {
@@ -843,6 +924,18 @@ function prefillEditMedia(body) {
     }
   }
 
+  // Detect hero video — match any src that exists in the loaded video library
+  const allVideoTags = body.match(/<video\b[^>]*\bsrc="([^"]+)"[^>]*>/gi) || [];
+  const videoSelect = document.getElementById('edit-video-select');
+  const knownVideoUrls = new Set(Array.from(videoSelect.options).map(o => o.value).filter(Boolean));
+  for (const tag of allVideoTags) {
+    const srcMatch = tag.match(/\bsrc="([^"]+)"/i);
+    if (srcMatch && knownVideoUrls.has(srcMatch[1])) {
+      videoSelect.value = srcMatch[1];
+      break;
+    }
+  }
+
   // Detect CTA button text and link
   const ctaMatch = body.match(/<a\b([^>]*\bclass="[^"]*\bcta-button\b[^"]*"[^>]*)>([\s\S]*?)<\/a>/i);
   if (ctaMatch) {
@@ -863,6 +956,7 @@ function prefillEditMedia(body) {
 
 function applyEditMediaToBody(body) {
   const imageUrl = document.getElementById('edit-image-select').value;
+  const videoUrl = document.getElementById('edit-video-select').value;
   const ctaText  = document.getElementById('edit-cta-text').value.trim();
   const ctaLink  = document.getElementById('edit-cta-link-select').value;
 
@@ -882,6 +976,26 @@ function applyEditMediaToBody(body) {
         body = body.replace(/(<body\b[^>]*>)/i, `$1\n${imgHtml}\n`);
       } else {
         body = imgHtml + '\n' + (body || '');
+      }
+    }
+  }
+
+  if (videoUrl) {
+    let replaced = false;
+    body = body.replace(/<video\b([^>]*)>[\s\S]*?<\/video>/gi, (match, attrs) => {
+      if (replaced) return match;
+      if (/\bsrc="[^"]*(?:\/assets\/images\/email\/|\/storage\/v1\/object\/public\/template-images\/)[^"]*"/i.test(attrs)) {
+        replaced = true;
+        return match.replace(/(\bsrc=")[^"]*(")/i, `$1${videoUrl}$2`);
+      }
+      return match;
+    });
+    if (!replaced) {
+      const videoHtml = `<video src="${videoUrl}" controls playsinline style="display:block;max-width:100%;height:auto;margin:0 auto;"></video>`;
+      if (looksLikeFullEmailDocument(body)) {
+        body = body.replace(/(<body\b[^>]*>)/i, `$1\n${videoHtml}\n`);
+      } else {
+        body = videoHtml + '\n' + (body || '');
       }
     }
   }
@@ -909,23 +1023,33 @@ function applyEditMediaToBody(body) {
 async function uploadEditImage(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { Toast.error('Image must be under 10 MB.'); input.value = ''; return; }
   const label = input.closest('label');
   if (label) label.style.opacity = '0.5';
   try {
-    const token = localStorage.getItem('adminToken');
-    const headers = { 'X-Filename': file.name, 'Content-Type': file.type || 'application/octet-stream' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch('/api/assets/images', { method: 'POST', headers, body: file });
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
-    if (!res.ok) throw new Error(data.detail || `Upload failed (${res.status})`);
+    const data = await uploadAssetFile(file);
     await Promise.all([loadEditImages(), loadEmailImages()]);
     document.getElementById('edit-image-select').value = data.url;
     Toast.success(`"${data.name}" uploaded.`);
   } catch (e) {
     Toast.error(e.message || 'Image upload failed.');
+  } finally {
+    if (label) label.style.opacity = '1';
+    input.value = '';
+  }
+}
+
+async function uploadEditVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const label = input.closest('label');
+  if (label) label.style.opacity = '0.5';
+  try {
+    const data = await uploadAssetFile(file);
+    await Promise.all([loadEditVideos(), loadEmailVideos()]);
+    document.getElementById('edit-video-select').value = data.url;
+    Toast.success(`"${data.name}" uploaded.`);
+  } catch (e) {
+    Toast.error(e.message || 'Video upload failed.');
   } finally {
     if (label) label.style.opacity = '1';
     input.value = '';

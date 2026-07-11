@@ -156,13 +156,23 @@ def build_text_email_html(
     paragraphs: list,
     sign_off: str = "— The Design Hive Team",
     hero_image_url: str | None = None,
+    hero_video_url: str | None = None,
     cta_url: str | None = None,
     cta_text: str | None = None,
 ) -> str:
     """Build a complete email from structured text content in a fixed, mobile-safe template."""
 
-    # Hero image block
-    if hero_image_url:
+    # Hero video block (takes priority over the hero image when both are set)
+    if hero_video_url:
+        hero_section = f"""
+          <tr>
+            <td style="padding:0;line-height:0;font-size:0;">
+              <video class="dh-hero-img" src="{hero_video_url}" width="600" controls playsinline
+                     style="display:block;width:100%;max-width:600px;height:auto;border:0;">
+              </video>
+            </td>
+          </tr>"""
+    elif hero_image_url:
         hero_section = f"""
           <tr>
             <td style="padding:0;line-height:0;font-size:0;">

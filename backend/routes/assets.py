@@ -7,14 +7,15 @@ from config import supabase
 from deps import get_current_admin
 from models import CtaLinkCreate
 
-_MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 _BUCKET = "template-images"
-_ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
+_ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
+_ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".m4v"}
+_ALLOWED_EXTENSIONS = _ALLOWED_IMAGE_EXTENSIONS | _ALLOWED_VIDEO_EXTENSIONS
 
 router = APIRouter()
 
 
-# ── Images ────────────────────────────────────────────────────────────────────
+# ── Images & Videos ─────────────────────────────────────────────────────────
 
 @router.get("/images")
 def list_images(admin=Depends(get_current_admin)):
@@ -31,13 +32,11 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
     if ext not in _ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"File type not allowed. Accepted: {', '.join(_ALLOWED_EXTENSIONS)}",
+            detail=f"File type not allowed. Accepted: {', '.join(sorted(_ALLOWED_EXTENSIONS))}",
         )
     body = await request.body()
     if not body:
         raise HTTPException(status_code=400, detail="Empty file.")
-    if len(body) > _MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail=f"File exceeds the {_MAX_UPLOAD_BYTES // (1024*1024)} MB limit.")
 
     content_type = request.headers.get("content-type", "") or mimetypes.guess_type(filename)[0] or "application/octet-stream"
 
