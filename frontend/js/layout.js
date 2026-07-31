@@ -104,15 +104,15 @@ function renderSidebar(path) {
   const admin = getCurrentAdmin();
   const name = adminDisplayName(admin);
 
+  // The brand block owns the full sidebar width — the collapse control lives in
+  // the topbar so nothing competes with the lockup for horizontal space.
   sidebar.innerHTML = `
     <div class="sidebar-logo">
       <a href="/dashboard.html" class="sidebar-logo-link" aria-label="DesignHive Admin — dashboard">
-        <img src="/assets/brand/logo-mark.png" alt="Design Hive">
+        <img class="brand-lockup" src="/assets/brand/logo-lockup.png" alt="Design Hive">
+        <img class="brand-glyph" src="/assets/brand/logo-glyph.png" alt="Design Hive">
+        <span class="brand-caption">Admin Console</span>
       </a>
-      <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse"
-              aria-label="Collapse sidebar" title="Toggle sidebar">
-        <i data-lucide="menu" style="width:16px;height:16px"></i>
-      </button>
     </div>
 
     <nav class="sidebar-nav" aria-label="Primary">
@@ -143,6 +143,10 @@ function renderTopbar(meta) {
     <div class="topbar-left">
       <button class="mobile-menu-btn" id="mobile-toggle" aria-label="Open navigation" aria-expanded="false">
         <i data-lucide="menu" style="width:20px;height:20px"></i>
+      </button>
+      <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse"
+              aria-label="Toggle sidebar" title="Toggle sidebar">
+        <i data-lucide="panel-left" style="width:17px;height:17px"></i>
       </button>
       <div class="page-title-group">
         <h1 class="page-title">${meta.title}</h1>

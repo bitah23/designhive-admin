@@ -75,7 +75,38 @@ def health():
     return {"status": "ok"}
 
 
+class RevalidatingStaticFiles(StaticFiles):
+    """
+    Static files that a browser always revalidates before reusing.
+
+    `StaticFiles` sends `last-modified` and `etag` but no `Cache-Control`. With
+    no explicit directive a browser falls back to *heuristic* freshness —
+    roughly 10% of the file's age — and serves the cached copy without asking.
+    On a long-lived deployment that means a released CSS or JS change can go
+    unseen for days, producing the worst kind of bug: new HTML running against
+    old scripts and styles.
+
+    The app has no build step and therefore no content-hashed filenames, so the
+    fix is to make the browser check. `no-cache` still allows the cached copy to
+    be reused — it just requires an `ETag` revalidation first, which answers 304
+    with no body when nothing changed.
+
+    Images keep a real max-age: they are large, they change rarely, and a new
+    version ships under a new filename.
+    """
+
+    ALWAYS_REVALIDATE = (".html", ".css", ".js", ".json", ".map")
+
+    def file_response(self, full_path, stat_result, scope, status_code=200):
+        response = super().file_response(full_path, stat_result, scope, status_code)
+        if str(full_path).lower().endswith(self.ALWAYS_REVALIDATE):
+            response.headers["Cache-Control"] = "no-cache"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
+
+
 # Serve frontend static files — must be last
 _frontend = os.path.join(os.path.dirname(__file__), "..", "frontend")
 if os.path.isdir(_frontend):
-    app.mount("/", StaticFiles(directory=_frontend, html=True), name="static")
+    app.mount("/", RevalidatingStaticFiles(directory=_frontend, html=True), name="static")

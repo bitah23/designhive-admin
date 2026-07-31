@@ -520,3 +520,28 @@ the UI surfaces so the admin knows what was sent.
 
 `Pillow` and `pillow-heif` back this; both ship as manylinux wheels, so the slim
 image needs no extra system packages.
+
+
+---
+
+## Static file caching
+
+`main.py` mounts the frontend through `RevalidatingStaticFiles` rather than
+plain `StaticFiles`.
+
+Plain `StaticFiles` sends `last-modified` and `etag` but **no `Cache-Control`**.
+With no explicit directive a browser applies *heuristic* freshness — roughly 10%
+of the file's age — and reuses its cached copy without asking. On a long-lived
+deployment that means a released CSS or JS change can go unseen for days, and
+the failure mode is nasty: new HTML running against old scripts and styles.
+
+The app has no build step and so no content-hashed filenames, so the fix is to
+make the browser check:
+
+- `.html`, `.css`, `.js`, `.json`, `.map` → `Cache-Control: no-cache`. The
+  cached copy is still reused; it just needs an ETag revalidation first, which
+  answers `304` with no body when nothing changed.
+- Everything else (images) → `public, max-age=86400`. They are larger, change
+  rarely, and a new version ships under a new filename.
+
+If a deploy ever appears not to have taken effect, check this first.

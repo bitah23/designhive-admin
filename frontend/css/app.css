@@ -36,9 +36,9 @@
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.32);
   --logo-shadow: 0 12px 28px rgba(239, 201, 76, 0.18);
 
-  --sidebar-width: 248px;
+  --sidebar-width: 264px;
   --sidebar-width-collapsed: 76px;
-  --topbar-height: 68px;
+  --topbar-height: 88px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -147,49 +147,79 @@ img {
   transition: width 200ms var(--ease);
 }
 
+/* ---------------------------------------------------------------------------
+   Brand block
+
+   Uses the gold lockup (logo-lockup.png, ≈3.8:1) rather than the maroon one.
+   The maroon wordmark sat at very low contrast on the black sidebar, and gold
+   is the app's accent colour, so the brand and the UI agree.
+
+   The collapse control lives in the topbar rather than here, letting the mark
+   use the sidebar's full inner width instead of sharing the row with a button.
+   --------------------------------------------------------------------------- */
+
 .sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: var(--topbar-height);
   flex-shrink: 0;
-  padding: 0 12px 0 16px;
+  /* Matched to the topbar so the sidebar and header rules read as one line. */
+  height: var(--topbar-height);
+  padding: 0 20px;
   border-bottom: 1px solid var(--border);
 }
 
 .sidebar-logo-link {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
   min-width: 0;
-  flex: 1;
 }
 
-/* logo-mark.png is the brand lockup with its transparent padding trimmed
-   (≈8.4:1), so width drives the size here. */
-.sidebar-logo-link img {
+.brand-lockup {
   width: 100%;
-  max-width: 168px;
+  max-width: 190px;
   height: auto;
   object-fit: contain;
 }
 
+/* The square glyph stands in for the lockup on the collapsed rail. */
+.brand-glyph {
+  display: none;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.brand-caption {
+  padding-left: 2px;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .sidebar-collapse-btn {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--bg-soft);
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
 
 .sidebar-collapse-btn:hover {
   background: var(--bg-hover);
+  border-color: var(--border-strong);
   color: var(--text-primary);
 }
 
@@ -325,8 +355,18 @@ img {
   .sidebar-collapsed .nav-link-label,
   .sidebar-collapsed .nav-group-label,
   .sidebar-collapsed .sidebar-user-copy,
-  .sidebar-collapsed .sidebar-logo-link {
+  .sidebar-collapsed .brand-lockup,
+  .sidebar-collapsed .brand-caption {
     display: none;
+  }
+
+  /* The rail keeps the brand present as its square glyph. */
+  .sidebar-collapsed .brand-glyph {
+    display: block;
+  }
+
+  .sidebar-collapsed .sidebar-logo-link {
+    align-items: center;
   }
 
   .sidebar-collapsed .sidebar-logo,
@@ -1576,9 +1616,13 @@ tbody tr.is-selected td {
     transform: translateX(0);
   }
 
-  /* Collapsing is a desktop affordance; there is nothing to toggle here. */
+  /* Collapsing is a desktop affordance; the drawer has the hamburger instead. */
   .sidebar-collapse-btn {
     display: none;
+  }
+
+  .sidebar-logo {
+    padding: 18px 20px 16px;
   }
 
   .sidebar-overlay {

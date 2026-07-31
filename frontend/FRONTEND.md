@@ -41,9 +41,24 @@ frontend/
 │   └── <page>-page.js    # one script per page
 │
 └── assets/
-    ├── brand/            # logo-mark.png (sidebar/login), favicon.png
+    ├── brand/            # logo-lockup.png, logo-glyph.png, favicon.png
     └── images/email/     # hero art referenced by email templates
 ```
+
+### Brand assets
+
+| File | Where it is used | Notes |
+|---|---|---|
+| `logo-lockup.png` | Sidebar header, login card | Gold lockup, ≈3.8:1, cropped from `header_logo_v4.png` |
+| `logo-glyph.png` | Collapsed sidebar rail | Square hexagon mark |
+| `favicon.png` | Browser tab | Square, from the maroon mark |
+| `logo.png`, `header_logo_v4.png` | originals — do not delete | `header_logo_v4.png` is referenced by email templates |
+
+The **gold** lockup is used rather than the maroon one because the sidebar is
+true black: the maroon wordmark sat at very low contrast there, and gold is
+already the app's accent. The lockup is wide, so its rendered size is driven by
+available width — which is why the sidebar collapse control lives in the topbar
+and not in the brand row.
 
 ### Why no framework
 
