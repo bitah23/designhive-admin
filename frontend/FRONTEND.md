@@ -163,6 +163,58 @@ await api.post('/agents/chat', { message });
 
 ---
 
+## Template hero media
+
+The generated email marks its hero element with `class="dh-hero-img"` — see
+`build_text_email_html()` in `backend/email_direct_template.py`. **That marker is
+the contract.** `templates-page.js` uses it to read the current hero and to
+replace it, which is what keeps an edit off the branded header image, the four
+social icons, and the footer.
+
+Consequences worth knowing before changing either side:
+
+- An image hero and a video hero are mutually exclusive, matching the
+  generator. Setting one removes the other, row and all.
+- When a template has no hero yet, a new one is inserted as a `<tr>` at the top
+  of the white content table (`<td class="content-td"><table …>`), not appended
+  after `<body>`. Loose media there renders above the branded header and
+  outside the layout table.
+- If a hero points at a URL that is not in the asset library, the picker gains
+  a one-off "(in use)" option so it shows the real state rather than reading as
+  "no image set".
+- `__remove__` (`REMOVE_MEDIA`) is the picker value that clears a hero. An empty
+  value means "keep whatever the template already has".
+
+If you change the marker class in the backend template, update the `HERO_*`
+regexes in `templates-page.js` in the same commit.
+
+---
+
+## Asset uploads
+
+`POST /api/assets/images` takes the raw file as the request body with the name
+in an `X-Filename` header. It handles video as well as images — the extension
+decides which limit applies.
+
+- Limits live on the backend (`routes/assets.py`) and are served by
+  `GET /api/assets/limits`. The frontend fetches them at boot, validates
+  `file.size` before spending an upload, and renders them into every
+  `[data-upload-hint]` element. The values in `uploadLimits` are only a fallback
+  for when that request fails.
+- Current ceilings: **10 MB** for images, **50 MB** for video. Change them in
+  `routes/assets.py`; the UI follows automatically.
+- Content type is derived from the extension server-side, never trusted from the
+  client, so an upload cannot be stored as `text/html` and served as a page from
+  the public bucket URL.
+- Filenames are sanitised, and an upload never overwrites an existing asset —
+  a colliding name becomes `name-2.ext`. Replacing in place used to silently
+  change every template already pointing at that name.
+- Supabase enforces its own per-bucket ceiling, which can be lower than ours. If
+  storage rejects a file that passed our check, the route returns a 413 saying
+  so rather than a raw driver error.
+
+---
+
 ## `js/utils.js` — shared helpers
 
 `escapeHtml`, `formatDate`, `formatDateTime`, `errorMessage`, `debounce`.

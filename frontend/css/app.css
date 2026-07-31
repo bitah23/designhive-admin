@@ -2057,3 +2057,11 @@ tbody tr.is-selected td {
     scroll-behavior: auto !important;
   }
 }
+
+/* Upload size/format hint under each asset picker in the template editor. */
+.upload-hint {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
