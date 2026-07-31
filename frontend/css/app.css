@@ -1150,6 +1150,20 @@ tbody tr.is-selected td {
   gap: 10px;
 }
 
+/* Icon chip in a modal header. These used to borrow `.sidebar-logo-mark` plus
+   a pile of inline styles; that class went away with the brand rework, leaving
+   the icons uncentred. */
+.modal-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--gold-dim);
+}
+
 .modal-header .title {
   color: var(--text-primary);
   font-size: 1rem;
@@ -1332,18 +1346,7 @@ tbody tr.is-selected td {
   filter: drop-shadow(0 12px 30px rgba(239, 201, 76, 0.12));
 }
 
-.brand-title {
-  color: var(--text-primary);
-  font-size: 1.7rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
 
-.brand-subtitle {
-  margin-top: 8px;
-  color: var(--text-muted);
-  font-size: 0.86rem;
-}
 
 .dashboard-stat-card {
   padding: 24px;
