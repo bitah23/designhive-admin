@@ -41,9 +41,24 @@ frontend/
 │   └── <page>-page.js    # one script per page
 │
 └── assets/
-    ├── brand/            # logo-mark.png (sidebar/login), favicon.png
+    ├── brand/            # logo-lockup.png, logo-glyph.png, favicon.png
     └── images/email/     # hero art referenced by email templates
 ```
+
+### Brand assets
+
+| File | Where it is used | Notes |
+|---|---|---|
+| `logo-lockup.png` | Sidebar header, login card | Gold lockup, ≈3.8:1, cropped from `header_logo_v4.png` |
+| `logo-glyph.png` | Collapsed sidebar rail | Square hexagon mark |
+| `favicon.png` | Browser tab | Square, from the maroon mark |
+| `logo.png`, `header_logo_v4.png` | originals — do not delete | `header_logo_v4.png` is referenced by email templates |
+
+The **gold** lockup is used rather than the maroon one because the sidebar is
+true black: the maroon wordmark sat at very low contrast there, and gold is
+already the app's accent. The lockup is wide, so its rendered size is driven by
+available width — which is why the sidebar collapse control lives in the topbar
+and not in the brand row.
 
 ### Why no framework
 
@@ -121,6 +136,30 @@ keeps the navy palette, the signed-in app is black. Nothing else redefines them.
 - **The collapsed sidebar rail is inside `@media (min-width: 768px)`.** Below
   that the sidebar is an off-canvas drawer that always shows full labels.
 
+### Mobile
+
+The breakpoint is 767px. Beyond stacking the grids, four things matter:
+
+- **`min-width: 0` on grid and flex children.** Both default to `min-width:auto`
+  and refuse to shrink below their content's intrinsic width. That is what
+  pushed the campaign page's layout viewport out to 545px on a 375px screen —
+  wide content widened the page instead of scrolling inside its container.
+- **Data tables become cards.** A five-column table is unreadable on a phone and
+  scrolling it sideways is worse. `.table-stack` hides the header row and turns
+  each `<td>` into a labelled line, reading its label from `data-label`. **When
+  adding a table, set both `class="table-stack"` and `data-label` on each
+  cell** — a cell with no label renders full-width, which is right for a
+  checkbox or an action button.
+- **Touch sizing lives under `@media (pointer: coarse)`, not a width query**, so
+  a touchscreen laptop gets 44px targets and a narrow desktop window keeps its
+  compact controls. That block also sets form fields to 16px, because iOS zooms
+  the page when a focused field's text is smaller.
+- **`dvh` alongside `vh`.** `100vh` on mobile excludes the browser chrome, so
+  full-height elements overflow the visible area.
+
+Safe-area insets (`env(safe-area-inset-*)`) pad the topbar, page content, and
+sidebar footer so nothing sits under a notch or the home indicator.
+
 ### Page-specific styles
 
 Live at the bottom of `app.css` under a heading, not in an inline `<style>` in
@@ -160,6 +199,78 @@ bearer token; a response interceptor clears the token and redirects to login on
 const templates = await api.get('/templates');
 await api.post('/agents/chat', { message });
 ```
+
+---
+
+## Template hero media
+
+The generated email marks its hero element with `class="dh-hero-img"` — see
+`build_text_email_html()` in `backend/email_direct_template.py`. **That marker is
+the contract.** `templates-page.js` uses it to read the current hero and to
+replace it, which is what keeps an edit off the branded header image, the four
+social icons, and the footer.
+
+Consequences worth knowing before changing either side:
+
+- An image hero and a video hero are mutually exclusive, matching the
+  generator. Setting one removes the other, row and all.
+- When a template has no hero yet, a new one is inserted as a `<tr>` at the top
+  of the white content table (`<td class="content-td"><table …>`), not appended
+  after `<body>`. Loose media there renders above the branded header and
+  outside the layout table.
+- If a hero points at a URL that is not in the asset library, the picker gains
+  a one-off "(in use)" option so it shows the real state rather than reading as
+  "no image set".
+- **The hero is sized to the artwork.** `setHeroMedia()` measures the image and
+  writes `width`/`max-width` of `min(naturalWidth, 600)`, centring anything
+  narrower than the column. A 320px badge stays 320px instead of being stretched
+  to 600px and going soft. That measurement is why `setHeroMedia()` and
+  `applyEditMediaToBody()` are async — await them.
+- `__remove__` (`REMOVE_MEDIA`) is the picker value that clears a hero. An empty
+  value means "keep whatever the template already has".
+
+If you change the marker class in the backend template, update the `HERO_*`
+regexes in `templates-page.js` in the same commit.
+
+---
+
+## Asset uploads
+
+`POST /api/assets/images` takes the raw file as the request body with the name
+in an `X-Filename` header. It handles video as well as images — the extension
+decides which limit applies.
+
+- Limits live on the backend (`routes/assets.py`) and are served by
+  `GET /api/assets/limits`. The frontend fetches them at boot, validates
+  `file.size` before spending an upload, and renders them into every
+  `[data-upload-hint]` element. The values in `uploadLimits` are only a fallback
+  for when that request fails.
+- Current ceilings: **10 MB** for images, **50 MB** for video. Change them in
+  `routes/assets.py`; the UI follows automatically.
+- **Accepted inputs:** JPEG, PNG, GIF, WebP, AVIF, BMP, TIFF, and HEIC/HEIF.
+  The backend decodes each one and re-encodes it to JPEG, PNG, or GIF — the
+  three formats every mail client renders — so the admin never has to convert
+  anything by hand. `services/images.py` owns that; see BACKEND.md.
+- **SVG is the one rejection.** Gmail, Outlook, and Apple Mail all refuse to
+  render it, so an SVG hero arrives as a broken image. The error says to export
+  PNG or JPEG. The bundled hero art under `assets/images/email/` keeps its
+  `.svg` for the admin UI and ships a matching `.png` for mail.
+- Uploads wider than 1200px are scaled down automatically, so a 4000px phone
+  photo does not ship as a multi-megabyte hero. The response carries a `note`
+  describing any conversion or resize, which the UI reports in the success toast.
+- After a successful upload the backend fetches the public URL once, anonymously.
+  If storage answers 401/403/404 — the usual sign of a private bucket — the
+  response carries a `warning` and the UI shows it as an error, because that file
+  would be a broken image in every inbox.
+- Content type is derived from the extension server-side, never trusted from the
+  client, so an upload cannot be stored as `text/html` and served as a page from
+  the public bucket URL.
+- Filenames are sanitised, and an upload never overwrites an existing asset —
+  a colliding name becomes `name-2.ext`. Replacing in place used to silently
+  change every template already pointing at that name.
+- Supabase enforces its own per-bucket ceiling, which can be lower than ours. If
+  storage rejects a file that passed our check, the route returns a 413 saying
+  so rather than a raw driver error.
 
 ---
 

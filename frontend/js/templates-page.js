@@ -59,7 +59,7 @@ document.querySelectorAll('.variable-chip').forEach(btn => {
 /* ── Boot ─────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
   initQuill();
-  await Promise.all([ensureDefaultTemplateBody(), loadTemplates()]);
+  await Promise.all([ensureDefaultTemplateBody(), loadTemplates(), loadUploadLimits()]);
   redrawIcons();
 
   // The command palette links here with ?new=1 to open the editor directly.
@@ -205,14 +205,15 @@ async function openTemplateModal(id) {
   editingId = id;
   const t = id ? templates.find(item => item.id === id) : null;
   const body = t?.body || '';
-  const useHtmlMode = looksLikeFullEmailDocument(body);
+  // A full email document always opens in HTML mode, and so does everything
+  // else when the visual editor failed to load.
+  const useHtmlMode = looksLikeFullEmailDocument(body) || !quillAvailable;
 
   document.getElementById('modal-template-title').textContent = t ? 'Edit Template' : 'New Template';
   document.getElementById('t-title').value = t?.title || '';
   document.getElementById('t-subject').value = t?.subject || '';
 
-  htmlMode = useHtmlMode || !quillAvailable;
-  useHtmlMode = htmlMode;
+  htmlMode = useHtmlMode;
   visualPreview = false;
   document.getElementById('quill-editor').style.display = '';
   const prevFrame = document.getElementById('visual-preview-frame');
@@ -295,7 +296,7 @@ function toggleEditorMode() {
 async function saveTemplate(event) {
   event.preventDefault();
   let body = (htmlMode || visualPreview || !quillAvailable) ? htmlEditor.value : quill.root.innerHTML;
-  body = applyEditMediaToBody(body);
+  body = await applyEditMediaToBody(body);
   const payload = {
     title: document.getElementById('t-title').value.trim(),
     subject: document.getElementById('t-subject').value.trim(),
@@ -832,11 +833,77 @@ async function loadCtaLinks() {
   } catch (_) { /* silently ignore */ }
 }
 
+/* ── Uploads ──────────────────────────────────────────────────────── */
+
+// Mirrors the backend defaults so validation still works if /limits fails.
+let uploadLimits = {
+  image: { max_bytes: 10 * 1024 * 1024, max_label: '10.0 MB', extensions: ['.avif', '.bmp', '.gif', '.heic', '.heif', '.jfif', '.jpeg', '.jpg', '.png', '.tif', '.tiff', '.webp'] },
+  video: { max_bytes: 50 * 1024 * 1024, max_label: '50.0 MB', extensions: ['.m4v', '.mov', '.mp4', '.webm'] },
+};
+
+async function loadUploadLimits() {
+  try {
+    uploadLimits = await api.get('/assets/limits');
+  } catch (_) {
+    // Keep the defaults above; the backend enforces the real limit regardless.
+  }
+  renderUploadHints();
+}
+
+/** Show the limit next to each upload control so it is known before picking a file. */
+function renderUploadHints() {
+  document.querySelectorAll('[data-upload-hint]').forEach(node => {
+    const kind = node.getAttribute('data-upload-hint');
+    const limit = uploadLimits[kind];
+    if (!limit) return;
+    const formats = limit.extensions.map(e => e.replace('.', '')).join(', ');
+    const resize = limit.auto_resize_width
+      ? ` · resized to ${limit.auto_resize_width}px and converted for email automatically`
+      : '';
+    node.textContent = `${formats} · max ${limit.max_label}${resize}`;
+  });
+}
+
+function formatBytes(bytes) {
+  const mb = bytes / (1024 * 1024);
+  return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(bytes / 1024, 0.1).toFixed(1)} KB`;
+}
+
+/**
+ * Reject a file the server would reject anyway, before spending the upload.
+ *
+ * Returns an error string, or null when the file is acceptable.
+ */
+function validateUpload(file, kind) {
+  const limit = uploadLimits[kind];
+  if (!limit) return null;
+
+  const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+  if (!limit.extensions.includes(ext)) {
+    const hint = ext === '.svg'
+      ? 'SVG cannot be used in email — export it as PNG or JPEG first.'
+      : `Accepted: ${limit.extensions.join(', ')}.`;
+    return `"${file.name}" is not a supported ${kind} type. ${hint}`;
+  }
+  if (file.size > limit.max_bytes) {
+    return `"${file.name}" is ${formatBytes(file.size)} — over the ${limit.max_label} ${kind} limit. `
+         + 'Compress or resize it and try again.';
+  }
+  if (file.size === 0) {
+    return `"${file.name}" is empty.`;
+  }
+  return null;
+}
+
 async function uploadAssetFile(file) {
   const token = localStorage.getItem('adminToken');
   const headers = { 'X-Filename': file.name, 'Content-Type': file.type || 'application/octet-stream' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch('/api/assets/images', { method: 'POST', headers, body: file });
+  // Uses API_BASE like every other call rather than a hardcoded "/api". That
+  // matters when the frontend is served from somewhere other than the backend
+  // (see vercel.json): setting window.ENV_API_URL sends large uploads straight
+  // to the backend instead of through a proxy with its own body-size limit.
+  const res = await fetch(`${API_BASE}/assets/images`, { method: 'POST', headers, body: file });
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }
@@ -844,36 +911,45 @@ async function uploadAssetFile(file) {
   return data;
 }
 
-async function uploadEmailImage(input) {
+/**
+ * Shared upload flow for all four upload buttons.
+ *
+ * `kind` picks the limit to validate against; `after` refreshes the relevant
+ * pickers and returns the `<select>` that should land on the new asset.
+ */
+async function handleAssetUpload(input, kind, after) {
   const file = input.files[0];
   if (!file) return;
-  const label = input.closest('label');
-  if (label) label.style.opacity = '0.5';
-  try {
-    const data = await uploadAssetFile(file);
-    await loadEmailImages();
-    document.getElementById('ai-image-select').value = data.url;
-    Toast.success(`"${data.name}" uploaded.`);
-  } catch (e) {
-    Toast.error(e.message || 'Image upload failed.');
-  } finally {
-    if (label) label.style.opacity = '1';
-    input.value = '';
-  }
-}
 
-async function uploadEmailVideo(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const problem = validateUpload(file, kind);
+  if (problem) {
+    Toast.error(problem);
+    input.value = '';
+    return;
+  }
+
   const label = input.closest('label');
   if (label) label.style.opacity = '0.5';
   try {
     const data = await uploadAssetFile(file);
-    await loadEmailVideos();
-    document.getElementById('ai-video-select').value = data.url;
-    Toast.success(`"${data.name}" uploaded.`);
+    const select = await after(data);
+    if (select) select.value = data.url;
+
+    if (data.warning) {
+      // The file stored fine but will not load in an inbox — say so now rather
+      // than letting a campaign go out with a broken image.
+      Toast.error(`"${file.name}": ${data.warning}`);
+      return;
+    }
+
+    // Say what happened to the file: it may have been converted to an
+    // email-safe format, scaled down, or renamed to avoid a collision.
+    const details = [];
+    if (data.note) details.push(data.note);
+    if (data.name !== file.name) details.push(`saved as "${data.name}"`);
+    Toast.success(`"${file.name}" uploaded${details.length ? ' — ' + details.join(', ') : ''}.`);
   } catch (e) {
-    Toast.error(e.message || 'Video upload failed.');
+    Toast.error(e.message || `${kind === 'video' ? 'Video' : 'Image'} upload failed.`);
   } finally {
     if (label) label.style.opacity = '1';
     input.value = '';
@@ -905,6 +981,35 @@ async function saveNewCtaLink() {
   }
 }
 
+/* The four upload buttons differ only in which pickers they refresh. */
+async function uploadEmailImage(input) {
+  await handleAssetUpload(input, 'image', async () => {
+    await loadEmailImages();
+    return document.getElementById('ai-image-select');
+  });
+}
+
+async function uploadEmailVideo(input) {
+  await handleAssetUpload(input, 'video', async () => {
+    await loadEmailVideos();
+    return document.getElementById('ai-video-select');
+  });
+}
+
+async function uploadEditImage(input) {
+  await handleAssetUpload(input, 'image', async () => {
+    await Promise.all([loadEditImages(), loadEmailImages()]);
+    return document.getElementById('edit-image-select');
+  });
+}
+
+async function uploadEditVideo(input) {
+  await handleAssetUpload(input, 'video', async () => {
+    await Promise.all([loadEditVideos(), loadEmailVideos()]);
+    return document.getElementById('edit-video-select');
+  });
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    EDIT-MODAL IMAGE & CTA
    ═══════════════════════════════════════════════════════════════════ */
@@ -915,6 +1020,7 @@ async function loadEditImages() {
   const placeholder = editingId ? '— keep current —' : '— select image —';
   select.innerHTML =
     `<option value="">${placeholder}</option>` +
+    (editingId ? `<option value="${REMOVE_MEDIA}">— remove image —</option>` : '') +
     images.map(img =>
       `<option value="${escapeHtml(img.url)}">${escapeHtml(img.name)}</option>`
     ).join('');
@@ -927,6 +1033,7 @@ async function loadEditVideos() {
   const placeholder = editingId ? '— keep current —' : '— select video —';
   select.innerHTML =
     `<option value="">${placeholder}</option>` +
+    (editingId ? `<option value="${REMOVE_MEDIA}">— remove video —</option>` : '') +
     videos.map(vid =>
       `<option value="${escapeHtml(vid.url)}">${escapeHtml(vid.name)}</option>`
     ).join('');
@@ -945,31 +1052,112 @@ async function loadEditCtaLinks() {
   } catch (_) {}
 }
 
+/* ── Hero media ───────────────────────────────────────────────────────
+   The generated email marks its hero with class="dh-hero-img" (see
+   backend/email_direct_template.py). That marker is the anchor for both
+   reading the current hero and replacing it, so edits land on the hero and
+   never on the branded header image, the social icons, or the footer.
+   ─────────────────────────────────────────────────────────────────────── */
+
+// Sentinel value for the "remove" option in the edit pickers. An empty value
+// means "keep whatever the template already has", so clearing needs its own.
+const REMOVE_MEDIA = '__remove__';
+
+const HERO_IMG_RE = /<img\b[^>]*\bclass="[^"]*\bdh-hero-img\b[^"]*"[^>]*>/i;
+const HERO_VIDEO_RE = /<video\b[^>]*\bclass="[^"]*\bdh-hero-img\b[^"]*"[^>]*>[\s\S]*?<\/video>/i;
+
+// The <tr> wrapping a hero element, so a swap replaces the whole row.
+const HERO_IMG_ROW_RE =
+  /<tr>\s*<td\b[^>]*>\s*<img\b[^>]*\bclass="[^"]*\bdh-hero-img\b[^"]*"[^>]*>\s*<\/td>\s*<\/tr>/i;
+const HERO_VIDEO_ROW_RE =
+  /<tr>\s*<td\b[^>]*>\s*<video\b[^>]*\bclass="[^"]*\bdh-hero-img\b[^"]*"[^>]*>[\s\S]*?<\/video>\s*<\/td>\s*<\/tr>/i;
+
+// Opening of the white content table the hero row belongs to.
+const CONTENT_TABLE_OPEN_RE =
+  /(<td\b[^>]*\bclass="content-td"[^>]*>\s*<table\b[^>]*>)/i;
+
+/** Hero row markup matching what the backend generates, so edits stay consistent. */
+// The email content column is 600px. Artwork narrower than that is centred at
+// its own size rather than stretched, which is what made small logos and badges
+// look soft and over-scaled in the inbox.
+const EMAIL_COLUMN_WIDTH = 600;
+
+/**
+ * Measure an image so the hero can be sized to fit rather than always stretched.
+ *
+ * Resolves to the natural width, or the full column width if the image cannot be
+ * measured — an unreachable asset must not block saving a template.
+ */
+function measureImageWidth(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const done = width => resolve(Math.max(1, Math.min(width || EMAIL_COLUMN_WIDTH, EMAIL_COLUMN_WIDTH)));
+    const timer = setTimeout(() => done(EMAIL_COLUMN_WIDTH), 4000);
+    img.onload = () => { clearTimeout(timer); done(img.naturalWidth); };
+    img.onerror = () => { clearTimeout(timer); done(EMAIL_COLUMN_WIDTH); };
+    img.src = url;
+  });
+}
+
+function heroRowHtml(url, isVideo, width = EMAIL_COLUMN_WIDTH) {
+  const w = Math.round(width);
+  // `width` attribute for Outlook, max-width for everyone else, and margin auto
+  // so anything narrower than the column stays centred.
+  const style = `display:block;width:100%;max-width:${w}px;height:auto;border:0;margin:0 auto;`;
+  const media = isVideo
+    ? `<video class="dh-hero-img" src="${url}" width="${w}" controls playsinline\n` +
+      `                     style="${style}">\n` +
+      `              </video>`
+    : `<img class="dh-hero-img" src="${url}" alt="Design Hive"\n` +
+      `                   width="${w}"\n` +
+      `                   style="${style}">`;
+
+  return `
+          <tr>
+            <td align="center" style="padding:0;line-height:0;font-size:0;">
+              ${media}
+            </td>
+          </tr>`;
+}
+
+/** Read the current hero's src out of a body, or null. */
+function currentHeroSrc(body, isVideo) {
+  const tag = (body || '').match(isVideo ? HERO_VIDEO_RE : HERO_IMG_RE);
+  if (!tag) return null;
+  const src = tag[0].match(/\bsrc="([^"]*)"/i);
+  return src ? src[1] : null;
+}
+
 function prefillEditMedia(body) {
   if (!body) return;
 
-  // Detect hero image — match any src that exists in the loaded image library
-  const allImgTags = body.match(/<img\b[^>]*\bsrc="([^"]+)"[^>]*>/gi) || [];
+  // Read the hero straight off its marker. Falling back to "first <img> whose
+  // src is in the library" used to mis-detect the header image as the hero.
   const imageSelect = document.getElementById('edit-image-select');
-  const knownUrls = new Set(Array.from(imageSelect.options).map(o => o.value).filter(Boolean));
-  for (const tag of allImgTags) {
-    const srcMatch = tag.match(/\bsrc="([^"]+)"/i);
-    if (srcMatch && knownUrls.has(srcMatch[1])) {
-      imageSelect.value = srcMatch[1];
-      break;
+  const videoSelect = document.getElementById('edit-video-select');
+
+  const heroImage = currentHeroSrc(body, false);
+  if (heroImage) {
+    if (!Array.from(imageSelect.options).some(o => o.value === heroImage)) {
+      // The hero points somewhere outside the asset library — show it anyway so
+      // the picker reflects reality instead of reading as "no image set".
+      imageSelect.insertAdjacentHTML(
+        'beforeend',
+        `<option value="${escapeHtml(heroImage)}">${escapeHtml(heroImage.split('/').pop())} (in use)</option>`
+      );
     }
+    imageSelect.value = heroImage;
   }
 
-  // Detect hero video — match any src that exists in the loaded video library
-  const allVideoTags = body.match(/<video\b[^>]*\bsrc="([^"]+)"[^>]*>/gi) || [];
-  const videoSelect = document.getElementById('edit-video-select');
-  const knownVideoUrls = new Set(Array.from(videoSelect.options).map(o => o.value).filter(Boolean));
-  for (const tag of allVideoTags) {
-    const srcMatch = tag.match(/\bsrc="([^"]+)"/i);
-    if (srcMatch && knownVideoUrls.has(srcMatch[1])) {
-      videoSelect.value = srcMatch[1];
-      break;
+  const heroVideo = currentHeroSrc(body, true);
+  if (heroVideo) {
+    if (!Array.from(videoSelect.options).some(o => o.value === heroVideo)) {
+      videoSelect.insertAdjacentHTML(
+        'beforeend',
+        `<option value="${escapeHtml(heroVideo)}">${escapeHtml(heroVideo.split('/').pop())} (in use)</option>`
+      );
     }
+    videoSelect.value = heroVideo;
   }
 
   // Detect CTA button text and link
@@ -990,51 +1178,92 @@ function prefillEditMedia(body) {
   }
 }
 
-function applyEditMediaToBody(body) {
+/**
+ * Put `url` in the body as the hero, whatever state the body is currently in.
+ *
+ * Image and video heroes are mutually exclusive — the generator renders one or
+ * the other — so setting one removes the other.
+ */
+async function setHeroMedia(body, url, isVideo) {
+  body = body || '';
+  // Video dimensions are not known until it downloads, so video keeps the full
+  // column; images are measured and sized to fit.
+  const width = isVideo ? EMAIL_COLUMN_WIDTH : await measureImageWidth(url);
+  const row = heroRowHtml(url, isVideo, width);
+
+  // 1. A hero of the same kind already exists: swap its src and resize it to the
+  //    new artwork, so replacing a 600px hero with a 320px badge does not leave
+  //    the old stretched width behind.
+  const sameKind = isVideo ? HERO_VIDEO_RE : HERO_IMG_RE;
+  if (sameKind.test(body)) {
+    return body.replace(sameKind, tag => tag
+      .replace(/(\bsrc=")[^"]*(")/i, `$1${url}$2`)
+      .replace(/(\bwidth=")[^"]*(")/i, `$1${Math.round(width)}$2`)
+      .replace(/max-width:\s*\d+px/i, `max-width:${Math.round(width)}px`));
+  }
+
+  // 2. A hero of the other kind exists: replace that whole row.
+  const otherRow = isVideo ? HERO_IMG_ROW_RE : HERO_VIDEO_ROW_RE;
+  if (otherRow.test(body)) {
+    return body.replace(otherRow, row.trim());
+  }
+
+  // 3. The other kind exists but not inside a recognisable row — drop the bare
+  //    element and fall through to inserting a proper row.
+  const otherKind = isVideo ? HERO_IMG_RE : HERO_VIDEO_RE;
+  if (otherKind.test(body)) {
+    body = body.replace(otherKind, '');
+  }
+
+  // 4. No hero yet. Insert one at the top of the white content table.
+  //    Previously this dropped a bare <img> immediately after <body>, which put
+  //    it outside the layout table and above the branded header.
+  if (CONTENT_TABLE_OPEN_RE.test(body)) {
+    return body.replace(CONTENT_TABLE_OPEN_RE, `$1${row}`);
+  }
+
+  // 5. A full document with no recognisable content table — wrap the media in a
+  //    centred table so it still renders correctly in an email client.
+  const w = Math.round(width);
+  const inline = `display:block;width:100%;max-width:${w}px;height:auto;border:0;margin:0 auto;`;
+  const standalone =
+    `<table width="100%" border="0" cellpadding="0" cellspacing="0">` +
+    `<tr><td align="center" style="padding:0;line-height:0;font-size:0;">` +
+    (isVideo
+      ? `<video class="dh-hero-img" src="${url}" width="${w}" controls playsinline style="${inline}"></video>`
+      : `<img class="dh-hero-img" src="${url}" alt="Design Hive" width="${w}" style="${inline}">`) +
+    `</td></tr></table>`;
+
+  if (looksLikeFullEmailDocument(body)) {
+    return body.replace(/(<body\b[^>]*>)/i, `$1\n${standalone}\n`);
+  }
+  return `${standalone}\n${body}`;
+}
+
+/** Remove the hero of the given kind, including its layout row. */
+function clearHeroMedia(body, isVideo) {
+  const rowRe = isVideo ? HERO_VIDEO_ROW_RE : HERO_IMG_ROW_RE;
+  if (rowRe.test(body)) return body.replace(rowRe, '');
+  return body.replace(isVideo ? HERO_VIDEO_RE : HERO_IMG_RE, '');
+}
+
+async function applyEditMediaToBody(body) {
   const imageUrl = document.getElementById('edit-image-select').value;
   const videoUrl = document.getElementById('edit-video-select').value;
   const ctaText  = document.getElementById('edit-cta-text').value.trim();
   const ctaLink  = document.getElementById('edit-cta-link-select').value;
 
-  if (imageUrl) {
-    let replaced = false;
-    body = body.replace(/<img\b([^>]*)>/gi, (match, attrs) => {
-      if (replaced) return match;
-      if (/\bsrc="[^"]*(?:\/assets\/images\/email\/|\/storage\/v1\/object\/public\/template-images\/)[^"]*"/i.test(attrs)) {
-        replaced = true;
-        return match.replace(/(\bsrc=")[^"]*(")/i, `$1${imageUrl}$2`);
-      }
-      return match;
-    });
-    if (!replaced) {
-      const imgHtml = `<img src="${imageUrl}" style="display:block;max-width:100%;height:auto;margin:0 auto;" alt="">`;
-      if (looksLikeFullEmailDocument(body)) {
-        body = body.replace(/(<body\b[^>]*>)/i, `$1\n${imgHtml}\n`);
-      } else {
-        body = imgHtml + '\n' + (body || '');
-      }
-    }
-  }
+  const removeImage = imageUrl === REMOVE_MEDIA;
+  const removeVideo = videoUrl === REMOVE_MEDIA;
 
-  if (videoUrl) {
-    let replaced = false;
-    body = body.replace(/<video\b([^>]*)>[\s\S]*?<\/video>/gi, (match, attrs) => {
-      if (replaced) return match;
-      if (/\bsrc="[^"]*(?:\/assets\/images\/email\/|\/storage\/v1\/object\/public\/template-images\/)[^"]*"/i.test(attrs)) {
-        replaced = true;
-        return match.replace(/(\bsrc=")[^"]*(")/i, `$1${videoUrl}$2`);
-      }
-      return match;
-    });
-    if (!replaced) {
-      const videoHtml = `<video src="${videoUrl}" controls playsinline style="display:block;max-width:100%;height:auto;margin:0 auto;"></video>`;
-      if (looksLikeFullEmailDocument(body)) {
-        body = body.replace(/(<body\b[^>]*>)/i, `$1\n${videoHtml}\n`);
-      } else {
-        body = videoHtml + '\n' + (body || '');
-      }
-    }
+  // Video wins when both are set, matching build_text_email_html().
+  if (videoUrl && !removeVideo) {
+    body = await setHeroMedia(body, videoUrl, true);
+  } else if (imageUrl && !removeImage) {
+    body = await setHeroMedia(body, imageUrl, false);
   }
+  if (removeVideo) body = clearHeroMedia(body, true);
+  if (removeImage) body = clearHeroMedia(body, false);
 
   if (ctaLink || ctaText) {
     body = body.replace(
@@ -1054,42 +1283,6 @@ function applyEditMediaToBody(body) {
   }
 
   return body;
-}
-
-async function uploadEditImage(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const label = input.closest('label');
-  if (label) label.style.opacity = '0.5';
-  try {
-    const data = await uploadAssetFile(file);
-    await Promise.all([loadEditImages(), loadEmailImages()]);
-    document.getElementById('edit-image-select').value = data.url;
-    Toast.success(`"${data.name}" uploaded.`);
-  } catch (e) {
-    Toast.error(e.message || 'Image upload failed.');
-  } finally {
-    if (label) label.style.opacity = '1';
-    input.value = '';
-  }
-}
-
-async function uploadEditVideo(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const label = input.closest('label');
-  if (label) label.style.opacity = '0.5';
-  try {
-    const data = await uploadAssetFile(file);
-    await Promise.all([loadEditVideos(), loadEmailVideos()]);
-    document.getElementById('edit-video-select').value = data.url;
-    Toast.success(`"${data.name}" uploaded.`);
-  } catch (e) {
-    Toast.error(e.message || 'Video upload failed.');
-  } finally {
-    if (label) label.style.opacity = '1';
-    input.value = '';
-  }
 }
 
 function showAddEditCtaLink() {

@@ -36,9 +36,9 @@
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.32);
   --logo-shadow: 0 12px 28px rgba(239, 201, 76, 0.18);
 
-  --sidebar-width: 248px;
+  --sidebar-width: 264px;
   --sidebar-width-collapsed: 76px;
-  --topbar-height: 68px;
+  --topbar-height: 88px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -58,6 +58,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(circle at top left, rgba(239, 201, 76, 0.09), transparent 22%),
     radial-gradient(circle at bottom right, rgba(169, 35, 69, 0.16), transparent 28%),
@@ -116,6 +117,7 @@ img {
 .app-shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-base);
   /* Signed-in surface theme — true black instead of the login navy. */
   --bg-base: #000000;
@@ -143,53 +145,84 @@ img {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   z-index: 2;
   transition: width 200ms var(--ease);
 }
 
+/* ---------------------------------------------------------------------------
+   Brand block
+
+   Uses the gold lockup (logo-lockup.png, ≈3.8:1) rather than the maroon one.
+   The maroon wordmark sat at very low contrast on the black sidebar, and gold
+   is the app's accent colour, so the brand and the UI agree.
+
+   The collapse control lives in the topbar rather than here, letting the mark
+   use the sidebar's full inner width instead of sharing the row with a button.
+   --------------------------------------------------------------------------- */
+
 .sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: var(--topbar-height);
   flex-shrink: 0;
-  padding: 0 12px 0 16px;
+  /* Matched to the topbar so the sidebar and header rules read as one line. */
+  height: var(--topbar-height);
+  padding: 0 20px;
   border-bottom: 1px solid var(--border);
 }
 
 .sidebar-logo-link {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
   min-width: 0;
-  flex: 1;
 }
 
-/* logo-mark.png is the brand lockup with its transparent padding trimmed
-   (≈8.4:1), so width drives the size here. */
-.sidebar-logo-link img {
+.brand-lockup {
   width: 100%;
-  max-width: 168px;
+  max-width: 190px;
   height: auto;
   object-fit: contain;
 }
 
+/* The square glyph stands in for the lockup on the collapsed rail. */
+.brand-glyph {
+  display: none;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.brand-caption {
+  padding-left: 2px;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .sidebar-collapse-btn {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--bg-soft);
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
 
 .sidebar-collapse-btn:hover {
   background: var(--bg-hover);
+  border-color: var(--border-strong);
   color: var(--text-primary);
 }
 
@@ -325,8 +358,18 @@ img {
   .sidebar-collapsed .nav-link-label,
   .sidebar-collapsed .nav-group-label,
   .sidebar-collapsed .sidebar-user-copy,
-  .sidebar-collapsed .sidebar-logo-link {
+  .sidebar-collapsed .brand-lockup,
+  .sidebar-collapsed .brand-caption {
     display: none;
+  }
+
+  /* The rail keeps the brand present as its square glyph. */
+  .sidebar-collapsed .brand-glyph {
+    display: block;
+  }
+
+  .sidebar-collapsed .sidebar-logo-link {
+    align-items: center;
   }
 
   .sidebar-collapsed .sidebar-logo,
@@ -383,7 +426,8 @@ img {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 24px;
+  /* env() keeps the right-hand controls clear of a notch in landscape. */
+  padding: 0 max(24px, env(safe-area-inset-right)) 0 24px;
   background: var(--bg-shell);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -736,6 +780,18 @@ kbd {
   gap: 20px;
 }
 
+/* Grid and flex items default to min-width:auto, so they refuse to shrink
+   below their content's intrinsic width. On a phone that pushed the campaign
+   page's layout viewport out to 545px on a 375px screen. Letting them shrink
+   is what keeps wide content (tables, long email addresses) inside the
+   viewport instead of widening the page. */
+.grid > *,
+.flex > *,
+.flex-between > *,
+.flex-center > * {
+  min-width: 0;
+}
+
 .grid-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -923,6 +979,45 @@ textarea.form-control {
   padding: 0 12px;
 }
 
+/* Compact variant for controls sitting inside dense panels. */
+.form-control-sm {
+  height: 36px;
+  line-height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+/* Reveal/hide control sitting inside a password field. */
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: var(--gold-strong);
+}
+
 .field-error {
   min-height: 18px;
   margin-top: 6px;
@@ -1023,6 +1118,7 @@ tbody tr.is-selected td {
   width: 100%;
   max-width: 560px;
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1188,6 +1284,7 @@ tbody tr.is-selected td {
 
 .login-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 40px 24px;
@@ -1519,13 +1616,72 @@ tbody tr.is-selected td {
 
 @media (max-width: 767px) {
   #topbar {
-    padding: 0 16px;
+    padding: 0 max(14px, env(safe-area-inset-right)) 0 14px;
+    gap: 10px;
+  }
+
+  .page-content {
+    padding: 16px 14px calc(20px + env(safe-area-inset-bottom));
   }
 
   .page-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 12px;
+  }
+
+  /* Sub-11px type is unreadable at arm's length. */
+  .brand-caption {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+  }
+
+  .nav-group-label {
+    font-size: 0.75rem;
+    opacity: 0.85;
+  }
+
+  .stat-label,
+  .sidebar-user-role,
+  .upload-hint,
+  .draft-row-subject {
+    font-size: 0.75rem;
+  }
+
+  /* Four stat cards stacked is a lot of scrolling before the content starts. */
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .dashboard-stat-card {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .stat-delta {
+    margin-top: 10px;
+  }
+
+  .chat-messages {
+    height: 260px;
+  }
+
+  .chat-input {
+    min-height: 46px;
+  }
+
+  .draft-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .draft-row .btn {
+    flex: 1;
   }
 
   .modal-overlay {
@@ -1535,7 +1691,17 @@ tbody tr.is-selected td {
 
   .modal-box {
     max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
     border-radius: 20px 20px 14px 14px;
+  }
+
+  /* Stack footer actions so each one is a full-width target. */
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
   }
 
   .modal-header,
@@ -1551,10 +1717,16 @@ tbody tr.is-selected td {
     width: 100%;
   }
 
-  .grid-4,
   .grid-3,
   .grid-2 {
     grid-template-columns: 1fr;
+  }
+
+  /* Stat tiles stay 2-up — four full-width cards is a lot of scrolling before
+     the page's actual content begins. Declared after the blanket rule above so
+     it is not undone by it. */
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* Off-canvas sidebar. The collapsed rail is a desktop-only affordance, so
@@ -1576,9 +1748,21 @@ tbody tr.is-selected td {
     transform: translateX(0);
   }
 
-  /* Collapsing is a desktop affordance; there is nothing to toggle here. */
+  /* Collapsing is a desktop affordance; the drawer has the hamburger instead. */
   .sidebar-collapse-btn {
     display: none;
+  }
+
+  .sidebar-logo {
+    padding: 18px 20px 16px;
+  }
+
+  .sidebar-footer {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  #sidebar {
+    padding-left: env(safe-area-inset-left);
   }
 
   .sidebar-overlay {
@@ -2043,6 +2227,198 @@ tbody tr.is-selected td {
 }
 
 /* ---------------------------------------------------------------------------
+   Stacked tables
+
+   A five-column table cannot be read on a 375px screen, and sideways scrolling
+   through it is worse than useless. Below the breakpoint each row becomes a
+   card and each cell shows its column name, taken from `data-label` on the td.
+   Add both `class="table-stack"` and `data-label` when introducing a table.
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+
+  .table-stack thead {
+    /* Hidden visually and from assistive tech alike: every cell now carries its
+       own label, so announcing the header row too would read twice. */
+    display: none;
+  }
+
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-stack tr {
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-soft);
+  }
+
+  .table-stack tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .table-stack td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    height: auto;
+    padding: 5px 0;
+    border-bottom: 0;
+    text-align: right;
+    /* Email addresses have no spaces to break on. */
+    overflow-wrap: anywhere;
+  }
+
+  .table-stack td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+  }
+
+  /* Cells with no label — a checkbox or an action button — fill the row. */
+  .table-stack td:not([data-label]) {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .table-stack td:not([data-label])::before {
+    content: none;
+  }
+
+  .table-stack td .btn {
+    width: 100%;
+  }
+
+  /* The row is the card now, so the hover fill would tint the whole thing. */
+  .table-stack tbody tr:hover td,
+  .table-stack tbody tr.is-selected td {
+    background: transparent;
+  }
+
+  .table-stack tbody tr.is-selected {
+    border-color: rgba(239, 201, 76, 0.3);
+    background: var(--gold-dim);
+  }
+
+  /* Truncation belongs to the wide layout; here the text should wrap. */
+  .table-stack td [style*="white-space:nowrap"],
+  .table-stack td [data-tooltip] {
+    white-space: normal !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Touch input
+
+   Keyed off `pointer: coarse` rather than a width breakpoint, so a touchscreen
+   laptop gets the same comfortable targets and a narrow desktop window does
+   not lose its compact controls.
+   --------------------------------------------------------------------------- */
+
+@media (pointer: coarse) {
+
+  /* 44px is the size a fingertip reliably hits. Controls stay visually the
+     same; the extra area comes from padding, not from bigger boxes. */
+  .btn,
+  .btn-sm {
+    min-height: 44px;
+  }
+
+  .btn-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .nav-link {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .command-item {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .command-trigger,
+  .sidebar-collapse-btn,
+  .mobile-menu-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .toast-close {
+    padding: 10px;
+  }
+
+  .variable-chip {
+    padding: 11px 14px;
+  }
+
+  .form-control-sm {
+    height: 44px;
+    line-height: 44px;
+  }
+
+  /* Agent cards run their inputs shorter than the app default; on touch they
+     still need a full-size target. */
+  .agent-body .form-control {
+    min-height: 44px;
+  }
+
+  .checkbox,
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 22px;
+    height: 22px;
+  }
+
+  .password-toggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .skip-link {
+    padding: 14px 20px;
+  }
+
+  /* iOS zooms the whole page when a focused field's text is under 16px.
+     Setting the field text to 16px keeps the layout still on focus. */
+  .form-control,
+  .input-wrap input,
+  .input-wrap select,
+  .chat-input,
+  #command-input,
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Momentum scrolling inside the table and modal scroll containers. */
+  .table-wrap,
+  .modal-body,
+  .chat-messages,
+  .command-results {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Motion preferences
    --------------------------------------------------------------------------- */
 
@@ -2056,4 +2432,12 @@ tbody tr.is-selected td {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Upload size/format hint under each asset picker in the template editor. */
+.upload-hint {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
 }

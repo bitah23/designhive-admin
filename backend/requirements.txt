@@ -11,6 +11,10 @@ google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.1
 pydantic==2.10.3
 python-multipart==0.0.18
+# Normalises uploaded artwork into email-safe formats/sizes (services/images.py)
+Pillow==11.3.0
+# Lets iPhone HEIC/HEIF uploads be decoded
+pillow-heif==0.21.0
 httpx==0.27.2
 anthropic==0.88.0
 APScheduler==3.10.4

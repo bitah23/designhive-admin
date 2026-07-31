@@ -455,3 +455,93 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 | DELETE | `/api/admins/{id}` | JWT | Delete admin |
 | POST | `/api/webhooks/welcome` | Secret header | Supabase signup trigger |
 | GET | `/api/health` | No | Health check |
+
+---
+
+## Email image rendering
+
+An email has no page to resolve relative URLs against, and mail clients fetch
+images anonymously from a remote host. `services/email.py` normalises for that
+in `_sanitize_body_html()`, which every send path goes through — campaigns and
+direct mail alike:
+
+1. **Every relative `src`/`href` is made absolute** against `ADMIN_BASE_URL`.
+   `/assets/images/email/hero.png` is unresolvable in an inbox and renders as a
+   broken image. This previously patched only two hard-coded literals, so any
+   other relative path shipped broken.
+2. **Bundled `.svg` email art is swapped for its `.png` sibling.** No mainstream
+   client renders SVG. `routes/assets.py` also refuses `.svg` uploads.
+3. **Images that already declare a width are left alone.** The header, hero, and
+   36px social icons size themselves deliberately; the previous pass stripped
+   their `width`/`height` and forced `width:100%`, which blew the social icons up
+   to the full 600px column and dropped the `width="600"` Outlook needs on the
+   hero. Only unsized images — typically pasted into the editor — get the
+   responsive treatment.
+
+The function is idempotent, so running it over already-sanitised HTML is safe.
+
+**When adding an image anywhere in an email template, use an absolute
+`https://` URL, or a path under `/assets/` that resolves on `ADMIN_BASE_URL`.**
+Set `ADMIN_BASE_URL` in the environment for any deployment that is not
+`admin.designhivestudio.ai`; images break silently if it is wrong.
+
+---
+
+## Uploaded artwork — `services/images.py`
+
+Mail clients are far pickier than browsers: only **JPEG, PNG, and GIF** render
+everywhere, EXIF orientation is ignored so phone photos arrive sideways, and a
+multi-megabyte hero makes the message slow to open on mobile.
+
+Rather than reject the admin's file and send them to find a converter, the
+upload route accepts a wide set of inputs and normalises each one:
+
+| Uploaded | Stored as |
+|---|---|
+| JPEG, PNG, GIF | unchanged format (resized if needed) |
+| WebP, AVIF, BMP, TIFF, HEIC/HEIF | PNG when it has transparency, JPEG otherwise |
+| SVG | **rejected** — vector, unrenderable in mail |
+
+Every image also gets:
+
+- **EXIF orientation baked into the pixels**, then the metadata stripped. Phone
+  photos otherwise arrive rotated, because mail clients ignore the tag.
+- **Downscaling to 1200×1600 max** — 2× the 600px email column. Aspect ratio is
+  preserved and images smaller than that are never upscaled.
+- **Transparency flattened onto white** when the target is JPEG, so transparent
+  areas do not come out black.
+
+Animated GIFs are passed through byte-for-byte; re-encoding them frame by frame
+loses quality and timing, and GIF already renders everywhere.
+
+The response includes a `note` describing what changed ("converted from HEIF to
+JPEG and resized from 4032×3024 to 1200×900 for email, 3.1 MB smaller"), which
+the UI surfaces so the admin knows what was sent.
+
+`Pillow` and `pillow-heif` back this; both ship as manylinux wheels, so the slim
+image needs no extra system packages.
+
+
+---
+
+## Static file caching
+
+`main.py` mounts the frontend through `RevalidatingStaticFiles` rather than
+plain `StaticFiles`.
+
+Plain `StaticFiles` sends `last-modified` and `etag` but **no `Cache-Control`**.
+With no explicit directive a browser applies *heuristic* freshness — roughly 10%
+of the file's age — and reuses its cached copy without asking. On a long-lived
+deployment that means a released CSS or JS change can go unseen for days, and
+the failure mode is nasty: new HTML running against old scripts and styles.
+
+The app has no build step and so no content-hashed filenames, so the fix is to
+make the browser check:
+
+- `.html`, `.css`, `.js`, `.json`, `.map` → `Cache-Control: no-cache`. The
+  cached copy is still reused; it just needs an ETag revalidation first, which
+  answers `304` with no body when nothing changed.
+- Everything else (images) → `public, max-age=86400`. They are larger, change
+  rarely, and a new version ships under a new filename.
+
+If a deploy ever appears not to have taken effect, check this first.

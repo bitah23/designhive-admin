@@ -79,7 +79,7 @@ function renderCampaignUI() {
         <div>
           <div class="label-upper" style="margin-bottom:4px;font-size:10px">Rule</div>
           <select id="seg-rule" onchange="updateSegRule(this.value)"
-            style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px">
+            class="form-control form-control-sm">
             <option value="all" ${segRule === 'all' ? 'selected' : ''}>All Users</option>
             <option value="new_users" ${segRule === 'new_users' ? 'selected' : ''}>New Users</option>
             <option value="inactive" ${segRule === 'inactive' ? 'selected' : ''}>Inactive</option>
@@ -90,18 +90,18 @@ function renderCampaignUI() {
         <div id="seg-days-wrap" style="display:${showDays ? '' : 'none'}">
           <div class="label-upper" style="margin-bottom:4px;font-size:10px">Days</div>
           <input type="number" id="seg-days" min="1" value="${segDays || defaultDays}"
-            style="width:72px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px">
+            class="form-control form-control-sm" style="width:92px">
         </div>
         <div id="seg-range-wrap" style="display:${showRange ? '' : 'none'};display:flex;gap:6px">
           <div>
             <div class="label-upper" style="margin-bottom:4px;font-size:10px">From</div>
             <input type="date" id="seg-from-date" value="${segFromDate}"
-              style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px">
+              class="form-control form-control-sm">
           </div>
           <div>
             <div class="label-upper" style="margin-bottom:4px;font-size:10px">To</div>
             <input type="date" id="seg-to-date" value="${segToDate}"
-              style="background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px">
+              class="form-control form-control-sm">
           </div>
         </div>
         <div style="display:flex;gap:6px;padding-bottom:1px">
@@ -151,11 +151,11 @@ function renderCampaignUI() {
       </div>
       ${segmentPanel}
       <div class="table-wrap" style="max-height:340px;overflow:auto">
-        <table>
+        <table class="table-stack">
           <thead>
             <tr>
               <th style="width:52px">
-                <input type="checkbox" id="select-all-users" ${allChecked ? 'checked' : ''} style="accent-color:var(--gold)">
+                <input type="checkbox" id="select-all-users" ${allChecked ? 'checked' : ''} class="checkbox">
               </th>
               <th>NAME</th>
               <th>EMAIL</th>
@@ -167,10 +167,10 @@ function renderCampaignUI() {
               return `
                 <tr class="${selected ? 'is-selected' : ''}" onclick="toggleUserRow('${escapeHtml(user.id)}')" style="cursor:pointer">
                   <td>
-                    <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation();toggleUserRow('${escapeHtml(user.id)}')" style="accent-color:var(--gold)">
+                    <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation();toggleUserRow('${escapeHtml(user.id)}')" class="checkbox">
                   </td>
-                  <td class="bold">${escapeHtml(user.name || '--')}</td>
-                  <td>${escapeHtml(user.email)}</td>
+                  <td data-label="Name" class="bold">${escapeHtml(user.name || '--')}</td>
+                  <td data-label="Email">${escapeHtml(user.email)}</td>
                 </tr>
               `;
             }).join('') : `
