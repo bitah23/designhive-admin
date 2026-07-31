@@ -49,6 +49,8 @@ jobs:
           push: true
           pull: false
           tags: ${{ env.IMAGE }}:latest
+          build-args: |
+            ASSET_VERSION=${{ github.sha }}
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
