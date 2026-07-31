@@ -11,6 +11,12 @@ function initDashChat() {
   const input   = document.getElementById('dash-chat-input');
   const sendBtn = document.getElementById('dash-chat-send');
 
+  // The full example prompt wraps and gets clipped in a one-row field on a
+  // phone, so use a short prompt there.
+  if (input && window.matchMedia('(max-width: 767px)').matches) {
+    input.placeholder = 'Ask the assistant…';
+  }
+
   input?.addEventListener('input', () => {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 120) + 'px';
@@ -194,7 +200,7 @@ function renderTemplateTable(templates) {
 
   target.innerHTML = `
     <div class="table-wrap">
-      <table>
+      <table class="table-stack">
         <thead>
           <tr>
             <th>NAME</th>
@@ -214,10 +220,10 @@ function renderTemplateTable(templates) {
               : `<span style="font-size:10px;color:var(--text-muted)">Approved</span>`;
             return `
             <tr>
-              <td class="bold">${escapeHtml(t.title)}</td>
-              <td>${escapeHtml(t.subject)}</td>
-              <td>${badge}</td>
-              <td class="text-muted">${formatDate(t.created_at)}</td>
+              <td data-label="Name" class="bold">${escapeHtml(t.title)}</td>
+              <td data-label="Subject">${escapeHtml(t.subject)}</td>
+              <td data-label="Status">${badge}</td>
+              <td data-label="Created" class="text-muted">${formatDate(t.created_at)}</td>
               <td>
                 ${isDraft
                   ? `<button class="btn btn-primary btn-sm" style="font-size:12px"

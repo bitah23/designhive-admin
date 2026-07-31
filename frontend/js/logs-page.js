@@ -109,7 +109,7 @@ function renderLogs(logs) {
 
   document.getElementById('logs-card').innerHTML = `
     <div class="table-wrap">
-      <table>
+      <table class="table-stack">
         <thead>
           <tr>
             <th>EMAIL</th>
@@ -122,11 +122,11 @@ function renderLogs(logs) {
         <tbody>
           ${logs.map(log => `
             <tr>
-              <td>${escapeHtml(log.user_email)}</td>
-              <td>${log.email_templates?.title ? escapeHtml(log.email_templates.title) : '<em class="text-muted">Deleted Template</em>'}</td>
-              <td><span class="badge ${log.status === 'sent' ? 'badge-green' : 'badge-red'}">${escapeHtml(log.status.toUpperCase())}</span></td>
-              <td class="text-muted">${formatDateTime(log.timestamp)}</td>
-              <td>${renderErrorCell(log.error_message)}</td>
+              <td data-label="Email">${escapeHtml(log.user_email)}</td>
+              <td data-label="Template">${log.email_templates?.title ? escapeHtml(log.email_templates.title) : '<em class="text-muted">Deleted Template</em>'}</td>
+              <td data-label="Status"><span class="badge ${log.status === 'sent' ? 'badge-green' : 'badge-red'}">${escapeHtml(log.status.toUpperCase())}</span></td>
+              <td data-label="Time" class="text-muted">${formatDateTime(log.timestamp)}</td>
+              <td data-label="Error">${renderErrorCell(log.error_message)}</td>
             </tr>
           `).join('')}
         </tbody>

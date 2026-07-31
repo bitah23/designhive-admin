@@ -136,6 +136,30 @@ keeps the navy palette, the signed-in app is black. Nothing else redefines them.
 - **The collapsed sidebar rail is inside `@media (min-width: 768px)`.** Below
   that the sidebar is an off-canvas drawer that always shows full labels.
 
+### Mobile
+
+The breakpoint is 767px. Beyond stacking the grids, four things matter:
+
+- **`min-width: 0` on grid and flex children.** Both default to `min-width:auto`
+  and refuse to shrink below their content's intrinsic width. That is what
+  pushed the campaign page's layout viewport out to 545px on a 375px screen —
+  wide content widened the page instead of scrolling inside its container.
+- **Data tables become cards.** A five-column table is unreadable on a phone and
+  scrolling it sideways is worse. `.table-stack` hides the header row and turns
+  each `<td>` into a labelled line, reading its label from `data-label`. **When
+  adding a table, set both `class="table-stack"` and `data-label` on each
+  cell** — a cell with no label renders full-width, which is right for a
+  checkbox or an action button.
+- **Touch sizing lives under `@media (pointer: coarse)`, not a width query**, so
+  a touchscreen laptop gets 44px targets and a narrow desktop window keeps its
+  compact controls. That block also sets form fields to 16px, because iOS zooms
+  the page when a focused field's text is smaller.
+- **`dvh` alongside `vh`.** `100vh` on mobile excludes the browser chrome, so
+  full-height elements overflow the visible area.
+
+Safe-area insets (`env(safe-area-inset-*)`) pad the topbar, page content, and
+sidebar footer so nothing sits under a notch or the home indicator.
+
 ### Page-specific styles
 
 Live at the bottom of `app.css` under a heading, not in an inline `<style>` in

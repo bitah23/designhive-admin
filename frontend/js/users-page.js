@@ -67,7 +67,7 @@ function renderUsers() {
 
   usersCard.innerHTML = `
     <div class="table-wrap">
-      <table>
+      <table class="table-stack">
         <thead>
           <tr>
             <th>NAME</th>
@@ -79,9 +79,9 @@ function renderUsers() {
         <tbody>
           ${pageUsers.length ? pageUsers.map(user => `
             <tr>
-              <td class="bold">${escapeHtml(user.name || '--')}</td>
-              <td class="text-gold">${escapeHtml(user.email)}</td>
-              <td class="text-muted">${formatDate(user.created_at)}</td>
+              <td data-label="Name" class="bold">${escapeHtml(user.name || '--')}</td>
+              <td data-label="Email" class="text-gold">${escapeHtml(user.email)}</td>
+              <td data-label="Joined" class="text-muted">${formatDate(user.created_at)}</td>
               <td>
                 <button type="button" class="btn btn-outline btn-sm" onclick="openEmailModal('${escapeHtml(user.id)}')">
                   <i data-lucide="mail" style="width:12px;height:12px"></i>
