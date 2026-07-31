@@ -182,6 +182,11 @@ Consequences worth knowing before changing either side:
 - If a hero points at a URL that is not in the asset library, the picker gains
   a one-off "(in use)" option so it shows the real state rather than reading as
   "no image set".
+- **The hero is sized to the artwork.** `setHeroMedia()` measures the image and
+  writes `width`/`max-width` of `min(naturalWidth, 600)`, centring anything
+  narrower than the column. A 320px badge stays 320px instead of being stretched
+  to 600px and going soft. That measurement is why `setHeroMedia()` and
+  `applyEditMediaToBody()` are async — await them.
 - `__remove__` (`REMOVE_MEDIA`) is the picker value that clears a hero. An empty
   value means "keep whatever the template already has".
 
@@ -203,10 +208,17 @@ decides which limit applies.
   for when that request fails.
 - Current ceilings: **10 MB** for images, **50 MB** for video. Change them in
   `routes/assets.py`; the UI follows automatically.
-- **SVG is not accepted.** Gmail, Outlook, and Apple Mail all refuse to render
-  it, so an SVG hero arrives as a broken image. The bundled hero art under
-  `assets/images/email/` keeps its `.svg` for the admin UI and ships a matching
-  `.png` that the send pipeline substitutes.
+- **Accepted inputs:** JPEG, PNG, GIF, WebP, AVIF, BMP, TIFF, and HEIC/HEIF.
+  The backend decodes each one and re-encodes it to JPEG, PNG, or GIF — the
+  three formats every mail client renders — so the admin never has to convert
+  anything by hand. `services/images.py` owns that; see BACKEND.md.
+- **SVG is the one rejection.** Gmail, Outlook, and Apple Mail all refuse to
+  render it, so an SVG hero arrives as a broken image. The error says to export
+  PNG or JPEG. The bundled hero art under `assets/images/email/` keeps its
+  `.svg` for the admin UI and ships a matching `.png` for mail.
+- Uploads wider than 1200px are scaled down automatically, so a 4000px phone
+  photo does not ship as a multi-megabyte hero. The response carries a `note`
+  describing any conversion or resize, which the UI reports in the success toast.
 - After a successful upload the backend fetches the public URL once, anonymously.
   If storage answers 401/403/404 — the usual sign of a private bucket — the
   response carries a `warning` and the UI shows it as an error, because that file

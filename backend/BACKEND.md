@@ -484,3 +484,39 @@ The function is idempotent, so running it over already-sanitised HTML is safe.
 `https://` URL, or a path under `/assets/` that resolves on `ADMIN_BASE_URL`.**
 Set `ADMIN_BASE_URL` in the environment for any deployment that is not
 `admin.designhivestudio.ai`; images break silently if it is wrong.
+
+---
+
+## Uploaded artwork — `services/images.py`
+
+Mail clients are far pickier than browsers: only **JPEG, PNG, and GIF** render
+everywhere, EXIF orientation is ignored so phone photos arrive sideways, and a
+multi-megabyte hero makes the message slow to open on mobile.
+
+Rather than reject the admin's file and send them to find a converter, the
+upload route accepts a wide set of inputs and normalises each one:
+
+| Uploaded | Stored as |
+|---|---|
+| JPEG, PNG, GIF | unchanged format (resized if needed) |
+| WebP, AVIF, BMP, TIFF, HEIC/HEIF | PNG when it has transparency, JPEG otherwise |
+| SVG | **rejected** — vector, unrenderable in mail |
+
+Every image also gets:
+
+- **EXIF orientation baked into the pixels**, then the metadata stripped. Phone
+  photos otherwise arrive rotated, because mail clients ignore the tag.
+- **Downscaling to 1200×1600 max** — 2× the 600px email column. Aspect ratio is
+  preserved and images smaller than that are never upscaled.
+- **Transparency flattened onto white** when the target is JPEG, so transparent
+  areas do not come out black.
+
+Animated GIFs are passed through byte-for-byte; re-encoding them frame by frame
+loses quality and timing, and GIF already renders everywhere.
+
+The response includes a `note` describing what changed ("converted from HEIF to
+JPEG and resized from 4032×3024 to 1200×900 for email, 3.1 MB smaller"), which
+the UI surfaces so the admin knows what was sent.
+
+`Pillow` and `pillow-heif` back this; both ship as manylinux wheels, so the slim
+image needs no extra system packages.

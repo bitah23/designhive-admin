@@ -6,6 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from config import supabase
 from deps import get_current_admin
 from models import CtaLinkCreate
+from services.images import (
+    HEIF_SUPPORTED, INPUT_FORMATS, MAX_WIDTH, OUTPUT_CONTENT_TYPES,
+    ImageRejected, describe_normalisation, normalise_email_image,
+)
 
 _BUCKET = "template-images"
 
@@ -18,26 +22,26 @@ _MB = 1024 * 1024
 MAX_IMAGE_BYTES = 10 * _MB
 MAX_VIDEO_BYTES = 50 * _MB
 
-# Content type is derived from the extension rather than trusted from the
-# client, so an upload cannot be stored as text/html and served as a page from
-# the public bucket URL.
-# SVG is deliberately absent: Gmail, Outlook, and Apple Mail all refuse to
-# render it, so an SVG hero reaches the inbox as a broken image. The bundled
-# hero art under frontend/assets/images/email/ ships as PNG for the same reason.
-_IMAGE_TYPES = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-}
+# Accept what design tools and phones actually produce. Anything mail cannot
+# render is converted to JPEG/PNG on the way in (services/images.py), so this
+# list is about what we can decode, not what we store.
+#
+# SVG is the one deliberate exclusion: it is a vector document, not a raster
+# image, and Gmail, Outlook, and Apple Mail all refuse to render it.
+_IMAGE_TYPES = dict(INPUT_FORMATS)
+if not HEIF_SUPPORTED:
+    _IMAGE_TYPES.pop(".heic", None)
+    _IMAGE_TYPES.pop(".heif", None)
 _VIDEO_TYPES = {
     ".mp4": "video/mp4",
     ".webm": "video/webm",
     ".mov": "video/quicktime",
     ".m4v": "video/x-m4v",
 }
-_CONTENT_TYPES = {**_IMAGE_TYPES, **_VIDEO_TYPES}
+# Stored content types are derived from the final extension rather than trusted
+# from the client, so an upload cannot be served as HTML from the bucket URL.
+_CONTENT_TYPES = {**OUTPUT_CONTENT_TYPES, **_VIDEO_TYPES}
+_ACCEPTED_EXTENSIONS = set(_IMAGE_TYPES) | set(_VIDEO_TYPES)
 
 _UNSAFE_NAME_CHARS = re.compile(r"[^A-Za-z0-9._-]+")
 
@@ -153,6 +157,10 @@ def upload_limits(admin=Depends(get_current_admin)):
             "max_bytes": MAX_IMAGE_BYTES,
             "max_label": _human_size(MAX_IMAGE_BYTES),
             "extensions": sorted(_IMAGE_TYPES),
+            # Anything wider than this is scaled down on upload, so the admin
+            # never has to resize artwork by hand.
+            "auto_resize_width": MAX_WIDTH,
+            "stored_as": sorted(OUTPUT_CONTENT_TYPES),
         },
         "video": {
             "max_bytes": MAX_VIDEO_BYTES,
@@ -175,11 +183,14 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
         raise HTTPException(status_code=400, detail="X-Filename header is required.")
 
     ext = os.path.splitext(filename)[1].lower()
-    if ext not in _CONTENT_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"File type not allowed. Accepted: {', '.join(sorted(_CONTENT_TYPES))}",
-        )
+    if ext not in _ACCEPTED_EXTENSIONS:
+        detail = f"File type not allowed. Accepted: {', '.join(sorted(_ACCEPTED_EXTENSIONS))}"
+        if ext == ".svg":
+            detail = (
+                "SVG cannot be used in email — Gmail, Outlook, and Apple Mail all "
+                "refuse to render it. Export the artwork as PNG or JPEG and upload that."
+            )
+        raise HTTPException(status_code=400, detail=detail)
 
     is_video = ext in _VIDEO_TYPES
     limit = MAX_VIDEO_BYTES if is_video else MAX_IMAGE_BYTES
@@ -187,13 +198,29 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
     if not body:
         raise HTTPException(status_code=400, detail="Empty file.")
 
-    object_name = _unique_object_name(_safe_object_name(filename))
+    # Video is stored as uploaded; images are decoded, re-oriented, resized to
+    # the email column, and converted to a format mail clients can render.
+    note = None
+    if is_video:
+        stored_ext = ext
+    else:
+        try:
+            body, stored_ext, info = normalise_email_image(body, ext)
+        except ImageRejected as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        note = describe_normalisation(info)
+
+    base_name = _safe_object_name(filename)
+    if not is_video:
+        # The stored extension reflects what we actually wrote, not what arrived.
+        base_name = f"{os.path.splitext(base_name)[0]}{stored_ext}"
+    object_name = _unique_object_name(base_name)
 
     try:
         supabase.storage.from_(_BUCKET).upload(
             path=object_name,
             file=body,
-            file_options={"content-type": _CONTENT_TYPES[ext], "upsert": "false"},
+            file_options={"content-type": _CONTENT_TYPES[stored_ext], "upsert": "false"},
         )
     except Exception as e:
         # Storage enforces its own per-bucket ceiling, which can be lower than
@@ -221,6 +248,7 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
         "name": row["name"],
         "url": row["url"],
         "size_bytes": len(body),
+        "note": note,
         "warning": _public_url_warning(row["url"]),
     }
 

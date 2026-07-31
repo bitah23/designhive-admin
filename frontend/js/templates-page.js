@@ -296,7 +296,7 @@ function toggleEditorMode() {
 async function saveTemplate(event) {
   event.preventDefault();
   let body = (htmlMode || visualPreview || !quillAvailable) ? htmlEditor.value : quill.root.innerHTML;
-  body = applyEditMediaToBody(body);
+  body = await applyEditMediaToBody(body);
   const payload = {
     title: document.getElementById('t-title').value.trim(),
     subject: document.getElementById('t-subject').value.trim(),
@@ -837,7 +837,7 @@ async function loadCtaLinks() {
 
 // Mirrors the backend defaults so validation still works if /limits fails.
 let uploadLimits = {
-  image: { max_bytes: 10 * 1024 * 1024, max_label: '10.0 MB', extensions: ['.gif', '.jpeg', '.jpg', '.png', '.webp'] },
+  image: { max_bytes: 10 * 1024 * 1024, max_label: '10.0 MB', extensions: ['.avif', '.bmp', '.gif', '.heic', '.heif', '.jfif', '.jpeg', '.jpg', '.png', '.tif', '.tiff', '.webp'] },
   video: { max_bytes: 50 * 1024 * 1024, max_label: '50.0 MB', extensions: ['.m4v', '.mov', '.mp4', '.webm'] },
 };
 
@@ -856,7 +856,11 @@ function renderUploadHints() {
     const kind = node.getAttribute('data-upload-hint');
     const limit = uploadLimits[kind];
     if (!limit) return;
-    node.textContent = `${limit.extensions.join(', ')} · max ${limit.max_label}`;
+    const formats = limit.extensions.map(e => e.replace('.', '')).join(', ');
+    const resize = limit.auto_resize_width
+      ? ` · resized to ${limit.auto_resize_width}px and converted for email automatically`
+      : '';
+    node.textContent = `${formats} · max ${limit.max_label}${resize}`;
   });
 }
 
@@ -876,7 +880,10 @@ function validateUpload(file, kind) {
 
   const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
   if (!limit.extensions.includes(ext)) {
-    return `"${file.name}" is not a supported ${kind} type. Accepted: ${limit.extensions.join(', ')}.`;
+    const hint = ext === '.svg'
+      ? 'SVG cannot be used in email — export it as PNG or JPEG first.'
+      : `Accepted: ${limit.extensions.join(', ')}.`;
+    return `"${file.name}" is not a supported ${kind} type. ${hint}`;
   }
   if (file.size > limit.max_bytes) {
     return `"${file.name}" is ${formatBytes(file.size)} — over the ${limit.max_label} ${kind} limit. `
@@ -931,9 +938,12 @@ async function handleAssetUpload(input, kind, after) {
       return;
     }
 
-    // The stored name can differ from the file's when it would have collided.
-    const renamed = data.name !== file.name ? ` (saved as "${data.name}")` : '';
-    Toast.success(`"${file.name}" uploaded${renamed}.`);
+    // Say what happened to the file: it may have been converted to an
+    // email-safe format, scaled down, or renamed to avoid a collision.
+    const details = [];
+    if (data.note) details.push(data.note);
+    if (data.name !== file.name) details.push(`saved as "${data.name}"`);
+    Toast.success(`"${file.name}" uploaded${details.length ? ' — ' + details.join(', ') : ''}.`);
   } catch (e) {
     Toast.error(e.message || `${kind === 'video' ? 'Video' : 'Image'} upload failed.`);
   } finally {
@@ -1063,18 +1073,44 @@ const CONTENT_TABLE_OPEN_RE =
   /(<td\b[^>]*\bclass="content-td"[^>]*>\s*<table\b[^>]*>)/i;
 
 /** Hero row markup matching what the backend generates, so edits stay consistent. */
-function heroRowHtml(url, isVideo) {
+// The email content column is 600px. Artwork narrower than that is centred at
+// its own size rather than stretched, which is what made small logos and badges
+// look soft and over-scaled in the inbox.
+const EMAIL_COLUMN_WIDTH = 600;
+
+/**
+ * Measure an image so the hero can be sized to fit rather than always stretched.
+ *
+ * Resolves to the natural width, or the full column width if the image cannot be
+ * measured — an unreachable asset must not block saving a template.
+ */
+function measureImageWidth(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const done = width => resolve(Math.max(1, Math.min(width || EMAIL_COLUMN_WIDTH, EMAIL_COLUMN_WIDTH)));
+    const timer = setTimeout(() => done(EMAIL_COLUMN_WIDTH), 4000);
+    img.onload = () => { clearTimeout(timer); done(img.naturalWidth); };
+    img.onerror = () => { clearTimeout(timer); done(EMAIL_COLUMN_WIDTH); };
+    img.src = url;
+  });
+}
+
+function heroRowHtml(url, isVideo, width = EMAIL_COLUMN_WIDTH) {
+  const w = Math.round(width);
+  // `width` attribute for Outlook, max-width for everyone else, and margin auto
+  // so anything narrower than the column stays centred.
+  const style = `display:block;width:100%;max-width:${w}px;height:auto;border:0;margin:0 auto;`;
   const media = isVideo
-    ? `<video class="dh-hero-img" src="${url}" width="600" controls playsinline\n` +
-      `                     style="display:block;width:100%;max-width:600px;height:auto;border:0;">\n` +
+    ? `<video class="dh-hero-img" src="${url}" width="${w}" controls playsinline\n` +
+      `                     style="${style}">\n` +
       `              </video>`
     : `<img class="dh-hero-img" src="${url}" alt="Design Hive"\n` +
-      `                   width="600"\n` +
-      `                   style="display:block;width:100%;max-width:600px;height:auto;border:0;">`;
+      `                   width="${w}"\n` +
+      `                   style="${style}">`;
 
   return `
           <tr>
-            <td style="padding:0;line-height:0;font-size:0;">
+            <td align="center" style="padding:0;line-height:0;font-size:0;">
               ${media}
             </td>
           </tr>`;
@@ -1144,15 +1180,22 @@ function prefillEditMedia(body) {
  * Image and video heroes are mutually exclusive — the generator renders one or
  * the other — so setting one removes the other.
  */
-function setHeroMedia(body, url, isVideo) {
+async function setHeroMedia(body, url, isVideo) {
   body = body || '';
-  const row = heroRowHtml(url, isVideo);
+  // Video dimensions are not known until it downloads, so video keeps the full
+  // column; images are measured and sized to fit.
+  const width = isVideo ? EMAIL_COLUMN_WIDTH : await measureImageWidth(url);
+  const row = heroRowHtml(url, isVideo, width);
 
-  // 1. A hero of the same kind already exists: swap its src in place, keeping
-  //    whatever styling the template carries.
+  // 1. A hero of the same kind already exists: swap its src and resize it to the
+  //    new artwork, so replacing a 600px hero with a 320px badge does not leave
+  //    the old stretched width behind.
   const sameKind = isVideo ? HERO_VIDEO_RE : HERO_IMG_RE;
   if (sameKind.test(body)) {
-    return body.replace(sameKind, tag => tag.replace(/(\bsrc=")[^"]*(")/i, `$1${url}$2`));
+    return body.replace(sameKind, tag => tag
+      .replace(/(\bsrc=")[^"]*(")/i, `$1${url}$2`)
+      .replace(/(\bwidth=")[^"]*(")/i, `$1${Math.round(width)}$2`)
+      .replace(/max-width:\s*\d+px/i, `max-width:${Math.round(width)}px`));
   }
 
   // 2. A hero of the other kind exists: replace that whole row.
@@ -1177,12 +1220,14 @@ function setHeroMedia(body, url, isVideo) {
 
   // 5. A full document with no recognisable content table — wrap the media in a
   //    centred table so it still renders correctly in an email client.
+  const w = Math.round(width);
+  const inline = `display:block;width:100%;max-width:${w}px;height:auto;border:0;margin:0 auto;`;
   const standalone =
     `<table width="100%" border="0" cellpadding="0" cellspacing="0">` +
     `<tr><td align="center" style="padding:0;line-height:0;font-size:0;">` +
     (isVideo
-      ? `<video class="dh-hero-img" src="${url}" width="600" controls playsinline style="display:block;width:100%;max-width:600px;height:auto;border:0;"></video>`
-      : `<img class="dh-hero-img" src="${url}" alt="Design Hive" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;">`) +
+      ? `<video class="dh-hero-img" src="${url}" width="${w}" controls playsinline style="${inline}"></video>`
+      : `<img class="dh-hero-img" src="${url}" alt="Design Hive" width="${w}" style="${inline}">`) +
     `</td></tr></table>`;
 
   if (looksLikeFullEmailDocument(body)) {
@@ -1198,7 +1243,7 @@ function clearHeroMedia(body, isVideo) {
   return body.replace(isVideo ? HERO_VIDEO_RE : HERO_IMG_RE, '');
 }
 
-function applyEditMediaToBody(body) {
+async function applyEditMediaToBody(body) {
   const imageUrl = document.getElementById('edit-image-select').value;
   const videoUrl = document.getElementById('edit-video-select').value;
   const ctaText  = document.getElementById('edit-cta-text').value.trim();
@@ -1209,9 +1254,9 @@ function applyEditMediaToBody(body) {
 
   // Video wins when both are set, matching build_text_email_html().
   if (videoUrl && !removeVideo) {
-    body = setHeroMedia(body, videoUrl, true);
+    body = await setHeroMedia(body, videoUrl, true);
   } else if (imageUrl && !removeImage) {
-    body = setHeroMedia(body, imageUrl, false);
+    body = await setHeroMedia(body, imageUrl, false);
   }
   if (removeVideo) body = clearHeroMedia(body, true);
   if (removeImage) body = clearHeroMedia(body, false);
