@@ -837,7 +837,7 @@ async function loadCtaLinks() {
 
 // Mirrors the backend defaults so validation still works if /limits fails.
 let uploadLimits = {
-  image: { max_bytes: 10 * 1024 * 1024, max_label: '10.0 MB', extensions: ['.gif', '.jpeg', '.jpg', '.png', '.svg', '.webp'] },
+  image: { max_bytes: 10 * 1024 * 1024, max_label: '10.0 MB', extensions: ['.gif', '.jpeg', '.jpg', '.png', '.webp'] },
   video: { max_bytes: 50 * 1024 * 1024, max_label: '50.0 MB', extensions: ['.m4v', '.mov', '.mp4', '.webm'] },
 };
 
@@ -923,6 +923,14 @@ async function handleAssetUpload(input, kind, after) {
     const data = await uploadAssetFile(file);
     const select = await after(data);
     if (select) select.value = data.url;
+
+    if (data.warning) {
+      // The file stored fine but will not load in an inbox — say so now rather
+      // than letting a campaign go out with a broken image.
+      Toast.error(`"${file.name}": ${data.warning}`);
+      return;
+    }
+
     // The stored name can differ from the file's when it would have collided.
     const renamed = data.name !== file.name ? ` (saved as "${data.name}")` : '';
     Toast.success(`"${file.name}" uploaded${renamed}.`);

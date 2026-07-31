@@ -455,3 +455,32 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 | DELETE | `/api/admins/{id}` | JWT | Delete admin |
 | POST | `/api/webhooks/welcome` | Secret header | Supabase signup trigger |
 | GET | `/api/health` | No | Health check |
+
+---
+
+## Email image rendering
+
+An email has no page to resolve relative URLs against, and mail clients fetch
+images anonymously from a remote host. `services/email.py` normalises for that
+in `_sanitize_body_html()`, which every send path goes through — campaigns and
+direct mail alike:
+
+1. **Every relative `src`/`href` is made absolute** against `ADMIN_BASE_URL`.
+   `/assets/images/email/hero.png` is unresolvable in an inbox and renders as a
+   broken image. This previously patched only two hard-coded literals, so any
+   other relative path shipped broken.
+2. **Bundled `.svg` email art is swapped for its `.png` sibling.** No mainstream
+   client renders SVG. `routes/assets.py` also refuses `.svg` uploads.
+3. **Images that already declare a width are left alone.** The header, hero, and
+   36px social icons size themselves deliberately; the previous pass stripped
+   their `width`/`height` and forced `width:100%`, which blew the social icons up
+   to the full 600px column and dropped the `width="600"` Outlook needs on the
+   hero. Only unsized images — typically pasted into the editor — get the
+   responsive treatment.
+
+The function is idempotent, so running it over already-sanitised HTML is safe.
+
+**When adding an image anywhere in an email template, use an absolute
+`https://` URL, or a path under `/assets/` that resolves on `ADMIN_BASE_URL`.**
+Set `ADMIN_BASE_URL` in the environment for any deployment that is not
+`admin.designhivestudio.ai`; images break silently if it is wrong.

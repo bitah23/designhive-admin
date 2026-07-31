@@ -203,6 +203,14 @@ decides which limit applies.
   for when that request fails.
 - Current ceilings: **10 MB** for images, **50 MB** for video. Change them in
   `routes/assets.py`; the UI follows automatically.
+- **SVG is not accepted.** Gmail, Outlook, and Apple Mail all refuse to render
+  it, so an SVG hero arrives as a broken image. The bundled hero art under
+  `assets/images/email/` keeps its `.svg` for the admin UI and ships a matching
+  `.png` that the send pipeline substitutes.
+- After a successful upload the backend fetches the public URL once, anonymously.
+  If storage answers 401/403/404 — the usual sign of a private bucket — the
+  response carries a `warning` and the UI shows it as an error, because that file
+  would be a broken image in every inbox.
 - Content type is derived from the extension server-side, never trusted from the
   client, so an upload cannot be stored as `text/html` and served as a page from
   the public bucket URL.

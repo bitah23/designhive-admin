@@ -21,13 +21,15 @@ MAX_VIDEO_BYTES = 50 * _MB
 # Content type is derived from the extension rather than trusted from the
 # client, so an upload cannot be stored as text/html and served as a page from
 # the public bucket URL.
+# SVG is deliberately absent: Gmail, Outlook, and Apple Mail all refuse to
+# render it, so an SVG hero reaches the inbox as a broken image. The bundled
+# hero art under frontend/assets/images/email/ ships as PNG for the same reason.
 _IMAGE_TYPES = {
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
     ".png": "image/png",
     ".gif": "image/gif",
     ".webp": "image/webp",
-    ".svg": "image/svg+xml",
 }
 _VIDEO_TYPES = {
     ".mp4": "video/mp4",
@@ -104,6 +106,43 @@ async def _read_body_within(request: Request, limit: int, label: str) -> bytes:
     return b"".join(chunks)
 
 
+def _public_url_warning(url: str) -> str | None:
+    """
+    Confirm the stored asset is actually reachable without credentials.
+
+    A mail client fetches these URLs anonymously, so a private bucket produces a
+    broken image in every inbox with nothing to see from the admin side. Checking
+    once at upload turns that into a message the admin gets immediately.
+
+    Best-effort: a network problem here must never fail an otherwise good upload.
+    """
+    try:
+        import httpx
+
+        response = httpx.get(url, timeout=5.0, follow_redirects=True)
+    except Exception:
+        return None
+
+    if response.status_code in (401, 403) or response.status_code == 400:
+        return (
+            "Uploaded, but the file is not publicly readable, so it will show as a "
+            f"broken image in email (storage returned {response.status_code}). "
+            f"Make the '{_BUCKET}' bucket public in Supabase."
+        )
+    if response.status_code == 404:
+        return (
+            "Uploaded, but the public URL returns 404, so email clients cannot load it. "
+            f"Check that the '{_BUCKET}' bucket is public."
+        )
+    if not response.headers.get("content-type", "").startswith(("image/", "video/")):
+        return (
+            "Uploaded, but the public URL does not serve image or video content "
+            f"(got '{response.headers.get('content-type', 'unknown')}'), so it will not "
+            "render in email."
+        )
+    return None
+
+
 # ── Images & Videos ─────────────────────────────────────────────────────────
 
 @router.get("/limits")
@@ -178,7 +217,12 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
     ).execute()
 
     row = result.data[0] if result.data else {"name": object_name, "url": public_url}
-    return {"name": row["name"], "url": row["url"], "size_bytes": len(body)}
+    return {
+        "name": row["name"],
+        "url": row["url"],
+        "size_bytes": len(body),
+        "warning": _public_url_warning(row["url"]),
+    }
 
 
 # ── CTA Links ─────────────────────────────────────────────────────────────────
