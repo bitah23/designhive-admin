@@ -68,6 +68,22 @@ brand row, so the lockup gets the sidebar's full inner width.
 
 On the collapsed rail `.brand-text` is hidden and the glyph alone is centred.
 
+### Asset versioning
+
+Every local CSS/JS URL in the HTML carries `?v=__ASSET_VERSION__`. That token is
+replaced at build time — by the `Dockerfile` (`ASSET_VERSION` build arg, the
+commit SHA from CI) and by the `buildCommand` in `vercel.json`
+(`VERCEL_GIT_COMMIT_SHA`). Locally it stays as the literal token, which serves
+fine because a query string does not affect static file matching.
+
+It exists because `Cache-Control: no-cache` only governs requests a browser
+actually makes. A copy cached *before* that header shipped is reused without
+revalidating, so a release can be invisible until the old entry expires. A new
+commit means new URLs, which are new cache keys, so there is nothing stale to
+reuse — and it defeats any CDN in front of the app for the same reason.
+
+**Adding a stylesheet or script means adding `?v=__ASSET_VERSION__` to its URL.**
+
 ### Why no framework
 
 The admin surface is seven pages of forms and tables against a REST API. A
