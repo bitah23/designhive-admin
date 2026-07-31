@@ -1,5 +1,4 @@
 import base64
-import os
 import re
 from datetime import date
 from email.mime.multipart import MIMEMultipart
@@ -15,22 +14,10 @@ from config import (
 from email_template_default import DEFAULT_EMAIL_TEMPLATE
 from email_direct_template import build_direct_email_html
 
-_WELCOME_TEMPLATE_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "email-templates", "01-welcome.html")
-)
-
 
 def _looks_like_full_email_document(html: str) -> bool:
     value = (html or "").lower()
     return "<html" in value and "</body>" in value
-
-
-def _load_default_template_html() -> str:
-    try:
-        with open(_WELCOME_TEMPLATE_PATH, "r", encoding="utf-8") as f:
-            return f.read()
-    except (FileNotFoundError, OSError):
-        return DEFAULT_EMAIL_TEMPLATE
 
 
 def _resolve_template_html(body: str) -> str:
@@ -40,7 +27,8 @@ def _resolve_template_html(body: str) -> str:
 
 
 def get_default_template_html() -> str:
-    return _load_default_template_html()
+    """The starting body the template editor offers for a new template."""
+    return DEFAULT_EMAIL_TEMPLATE
 
 
 def _replace_variables(text: str, user: dict) -> str:
@@ -115,6 +103,7 @@ def _sanitize_body_html(body: str, base_url: str = ADMIN_BASE_URL) -> str:
     html = re.sub(r"<img(\s[^>]*)?>", repl, body or "", flags=re.IGNORECASE)
     html = _EMAIL_ART_SVG_RE.sub(r"\1.png", html)
     return _absolutize_urls(html, base_url)
+
 
 def _build_raw(to: str, subject: str, html_body: str, attachments: list = None) -> str:
     msg = MIMEMultipart("mixed")
