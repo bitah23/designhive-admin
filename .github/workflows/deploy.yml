@@ -24,11 +24,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
+      # Docker Hub occasionally times out resolving the base image, which fails
+      # the build at its first line and skips the deploy entirely — a green
+      # commit then silently never reaches the VPS. Pulling it here with retries
+      # means a transient blip costs a few seconds instead of a whole deploy.
+      # The build below runs with pull: false, so it reuses this local copy.
+      - name: Pre-pull base image (retries transient registry failures)
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if docker pull python:3.11-slim; then
+              echo "Base image pulled on attempt $attempt."
+              exit 0
+            fi
+            echo "Pull attempt $attempt failed; retrying in $((attempt * 10))s."
+            sleep $((attempt * 10))
+          done
+          echo "::error::Could not pull python:3.11-slim after 5 attempts."
+          exit 1
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          pull: false
           tags: ${{ env.IMAGE }}:latest
 
       - name: Deploy to VPS
@@ -79,4 +98,33 @@ jobs:
               --env-file /root/app.env \
               ghcr.io/bitah23/designhive-admin/app:latest
 
-            docker image prune -f
+            # `docker run -d` returns as soon as the container is created, so
+            # without this the job goes green even when the app dies on boot —
+            # a missing dependency or a bad import would ship unnoticed.
+            #
+            # Probed through the container's own python so the check does not
+            # depend on curl or wget being installed on the host.
+            probe() {
+              docker exec designhive-app python -c "
+            import sys, urllib.request
+            try:
+                with urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5) as r:
+                    sys.exit(0 if b'ok' in r.read() else 1)
+            except Exception:
+                sys.exit(1)
+            " >/dev/null 2>&1
+            }
+
+            echo "Waiting for the app to answer /api/health…"
+            for attempt in $(seq 1 30); do
+              if probe; then
+                echo "Healthy after ${attempt}s."
+                docker image prune -f
+                exit 0
+              fi
+              sleep 2
+            done
+
+            echo "App did not become healthy within 60s. Recent logs:"
+            docker logs --tail 60 designhive-app || true
+            exit 1
