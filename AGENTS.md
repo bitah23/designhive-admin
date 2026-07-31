@@ -32,7 +32,7 @@ This file tracks every agent planned or built for the DesignHive Admin platform.
 | 7 | [Failure Recovery](#7-failure-recovery-agent) | `done` | `backend/agents/failure_recovery.py` |
 | 8 | [Campaign Reporter](#8-campaign-reporter-agent) | `done` | `backend/agents/reporter.py` |
 | 9 | [Chat Interface](#9-chat-interface-agent) | `done` | `backend/agents/chat.py` |
-| 10 | [Suggestion Agent](#10-suggestion-agent) | `done` | `backend/agents/suggestions.py` |
+| 10 | [Suggestion Agent](#10-suggestion-agent) | `planned` | `backend/agents/suggestions.py` (not yet created) |
 
 ---
 
@@ -384,8 +384,12 @@ REPORTER_ADMIN_EMAIL=info@...       # Admin address to receive reports
 
 ## 10. Suggestion Agent
 
-**Status:** `done`  
-**Files:** `backend/agents/suggestions.py` · `backend/routes/agents.py` · `frontend/dashboard.html` · `frontend/js/dashboard-page.js`  
+**Status:** `planned` — the design below is settled, but nothing is built yet.
+`backend/agents/suggestions.py` does not exist, no route references it, and the
+dashboard has no surface for it. The other nine agents each have a file under
+`backend/agents/` and a card on `frontend/agents.html`; this one has neither.
+
+**Files (planned):** `backend/agents/suggestions.py` · `backend/routes/agents.py` · `frontend/dashboard.html` · `frontend/js/dashboard-page.js`  
 **Requires:** Claude API (`claude-sonnet-4-6`)
 
 **What it does:** Gathers analytics from the DB (last 90 days of email logs, user counts, template performance, scheduled campaigns), feeds them to Claude, and receives 3–6 structured, actionable suggestions. Results are cached in memory for 1 hour.

@@ -61,8 +61,8 @@ function renderAdminList() {
         <div class="flex-center gap-2" style="flex-wrap:wrap;justify-content:flex-end">
           <span class="badge ${isActive ? 'badge-green' : 'badge-red'}">${isActive ? 'Active' : 'Inactive'}</span>
           ${!isSelf ? `
-            <button type="button" class="btn btn-outline btn-sm" onclick="toggleAdmin('${escapeAttr(admin.id)}', ${isActive})">${isActive ? 'Deactivate' : 'Activate'}</button>
-            <button type="button" class="btn btn-danger btn-sm" onclick="deleteAdmin('${escapeAttr(admin.id)}', '${escapeAttr(admin.email)}')">Delete</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="toggleAdmin('${escapeHtml(admin.id)}', ${isActive})">${isActive ? 'Deactivate' : 'Activate'}</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="deleteAdmin('${escapeHtml(admin.id)}', '${escapeHtml(admin.email)}')">Delete</button>
           ` : ''}
         </div>
       </div>
@@ -230,18 +230,6 @@ function toggleResetPasswords() {
 
 function getCssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/'/g, '&#39;');
 }
 
 function redrawIcons() {

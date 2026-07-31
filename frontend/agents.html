@@ -3,26 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Monitor and trigger the automated DesignHive agents.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/png" href="/assets/brand/favicon.png">
   <script src="/js/auth-guard.js"></script>
   <title>Agents - DesignHive Admin</title>
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="app-shell">
     <aside id="sidebar"></aside>
     <div class="main-area">
       <div id="topbar"></div>
-      <main class="page-content">
-
-        <div class="page-header">
-          <div>
-            <h1>Agents</h1>
-            <p>Monitor, trigger, and manage all 9 automated agents.</p>
-          </div>
-        </div>
+      <main class="page-content" id="main-content">
 
         <!-- ── Agents 1–3: Segmentation, Content Gen, Scheduler ── -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px">
+        <div class="agent-grid">
 
           <!-- Agent 1: Segmentation -->
           <div class="card agent-card" id="agent-1">
@@ -35,7 +32,7 @@
               <span class="agent-badge">done</span>
             </div>
             <div class="agent-body">
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div class="agent-row">
                 <select id="seg-rule" class="form-control" style="flex:1;min-width:160px">
                   <option value="all">All users</option>
                   <option value="new_users">New users (7 days)</option>
@@ -407,43 +404,13 @@
   </div>
 
   <div id="toast-container"></div>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <script src="/js/icons.js"></script>
   <script src="/js/axios.min.js"></script>
-  <script src="/js/api.js?v=2"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/agents-page.js"></script>
-
-  <style>
-    .agent-card { overflow:hidden }
-    .agent-card-header {
-      display:flex;align-items:flex-start;gap:14px;
-      padding:16px 20px;border-bottom:1px solid var(--border);
-    }
-    .agent-num {
-      font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.08em;
-      background:var(--gold-dim);border-radius:6px;padding:3px 7px;flex-shrink:0;margin-top:1px;
-    }
-    .agent-title { font-weight:700;color:var(--text-primary);font-size:14px;margin-bottom:3px }
-    .agent-desc  { font-size:12px;color:var(--text-muted);line-height:1.4 }
-    .agent-badge {
-      margin-left:auto;flex-shrink:0;font-size:10px;font-weight:700;
-      padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em;
-      background:var(--success-dim);color:var(--success);border:1px solid rgba(74,222,128,.18);
-    }
-    .agent-body  { padding:16px 20px;display:flex;flex-direction:column;gap:10px }
-    .agent-result {
-      background:var(--bg-input);border:1px solid var(--border);border-radius:8px;
-      padding:10px 12px;font-size:12px;color:var(--text-muted);
-      white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;
-      line-height:1.5;
-    }
-    .form-control {
-      width:100%;background:var(--bg-input);border:1px solid var(--border);
-      border-radius:8px;color:var(--text-primary);padding:9px 12px;
-    }
-    .form-control:focus { outline:none;border-color:var(--gold) }
-    select.form-control { cursor:pointer }
-  </style>
 </body>
 </html>

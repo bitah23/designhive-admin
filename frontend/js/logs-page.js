@@ -21,6 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
     user-select:text;
   `;
   document.body.appendChild(tooltipEl);
+
+  // The command palette links here with ?status=failed to land pre-filtered.
+  const requestedStatus = new URLSearchParams(window.location.search).get('status');
+  const statusFilter = document.getElementById('status-filter');
+  if (requestedStatus && [...statusFilter.options].some(o => o.value === requestedStatus)) {
+    statusFilter.value = requestedStatus;
+  }
+
   fetchLogs(false);
 });
 
@@ -117,7 +125,7 @@ function renderLogs(logs) {
               <td>${escapeHtml(log.user_email)}</td>
               <td>${log.email_templates?.title ? escapeHtml(log.email_templates.title) : '<em class="text-muted">Deleted Template</em>'}</td>
               <td><span class="badge ${log.status === 'sent' ? 'badge-green' : 'badge-red'}">${escapeHtml(log.status.toUpperCase())}</span></td>
-              <td class="text-muted">${formatLogDate(log.timestamp)}</td>
+              <td class="text-muted">${formatDateTime(log.timestamp)}</td>
               <td>${renderErrorCell(log.error_message)}</td>
             </tr>
           `).join('')}
@@ -140,7 +148,7 @@ function renderErrorCell(error) {
     return '<span class="text-muted">--</span>';
   }
 
-  return `<span data-tooltip="${escapeAttr(error)}" style="display:block;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--danger);cursor:default">${escapeHtml(error)}</span>`;
+  return `<span data-tooltip="${escapeHtml(error)}" style="display:block;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--danger);cursor:default">${escapeHtml(error)}</span>`;
 }
 
 function showTooltip(event, text) {
@@ -159,31 +167,8 @@ function hideTooltip() {
   tooltipEl.style.display = 'none';
 }
 
-function formatLogDate(value) {
-  return new Date(value).toLocaleString('en-AU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  }).toLowerCase();
-}
-
 function getCssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/'/g, '&#39;');
 }
 
 function redrawIcons() {

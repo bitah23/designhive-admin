@@ -3,23 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Pick a template and a segment, then send or schedule a campaign.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/png" href="/assets/brand/favicon.png">
   <script src="/js/auth-guard.js"></script>
   <title>Campaign - DesignHive Admin</title>
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="app-shell">
     <aside id="sidebar"></aside>
     <div class="main-area">
       <div id="topbar"></div>
-      <main class="page-content">
-        <div class="page-header">
-          <div>
-            <h1>Campaign</h1>
-            <p>Select one template, choose recipients, and send with confidence.</p>
-          </div>
-        </div>
-
+      <main class="page-content" id="main-content">
         <div class="grid grid-2" id="campaign-grid" style="margin-bottom:16px">
           <div class="skeleton" style="height:420px"></div>
           <div class="skeleton" style="height:420px"></div>
@@ -108,10 +105,11 @@
   </div>
 
   <div id="toast-container"></div>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/icons.js"></script>
   <script src="/js/axios.min.js"></script>
-  <script src="/js/api.js?v=2"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/campaign-page.js"></script>

@@ -69,7 +69,7 @@ async function sendChatMessage() {
   } finally {
     sendBtn.disabled = false;
     input.focus();
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    redrawIcons();
   }
 }
 
@@ -109,40 +109,37 @@ async function loadDraftNotifications() {
   try {
     const allTemplates = await api.get('/templates');
     const drafts = allTemplates.filter(t => t.status === 'draft');
-    if (!drafts.length) { container.style.display = 'none'; return; }
+    if (!drafts.length) {
+      container.hidden = true;
+      container.innerHTML = '';
+      return;
+    }
 
-    container.style.display = 'block';
+    container.hidden = false;
     container.innerHTML = `
-      <div style="background:rgba(255,159,28,0.07);border:1px solid rgba(255,159,28,0.28);
-                  border-radius:12px;padding:14px 18px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div class="draft-banner">
+        <div class="draft-banner-title">
           <i data-lucide="bell" style="width:14px;height:14px;color:var(--gold)"></i>
-          <span style="font-weight:700;font-size:13px;color:var(--text-primary)">
-            ${drafts.length} draft template${drafts.length > 1 ? 's' : ''} awaiting approval
-          </span>
+          <span>${drafts.length} draft template${drafts.length > 1 ? 's' : ''} awaiting approval</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${drafts.map(t => `
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
-                        background:var(--bg-card);border:1px solid var(--border);
-                        border-radius:8px;padding:10px 14px">
-              <div style="min-width:0">
-                <span style="font-weight:600;font-size:13px;color:var(--text-primary)">${escapeHtml(t.title)}</span>
-                <span style="font-size:12px;color:var(--text-muted);margin-left:8px">${escapeHtml(t.subject)}</span>
-              </div>
-              <div style="display:flex;gap:7px;flex-shrink:0">
-                <a href="/templates.html" class="btn btn-outline btn-sm" style="font-size:12px">
-                  <i data-lucide="eye" style="width:12px;height:12px"></i> View
-                </a>
-                <button class="btn btn-primary btn-sm" style="font-size:12px"
-                        onclick="approveTemplate('${escapeHtml(t.id)}', this)">
-                  <i data-lucide="check" style="width:12px;height:12px"></i> Approve &amp; Send
-                </button>
-              </div>
-            </div>`).join('')}
-        </div>
+        ${drafts.map(t => `
+          <div class="draft-row">
+            <div style="min-width:0">
+              <span class="draft-row-title">${escapeHtml(t.title)}</span>
+              <span class="draft-row-subject">${escapeHtml(t.subject)}</span>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+              <a href="/templates.html" class="btn btn-outline btn-sm">
+                <i data-lucide="eye" style="width:12px;height:12px"></i> View
+              </a>
+              <button class="btn btn-primary btn-sm"
+                      onclick="approveTemplate('${escapeHtml(t.id)}', this)">
+                <i data-lucide="check" style="width:12px;height:12px"></i> Approve &amp; Send
+              </button>
+            </div>
+          </div>`).join('')}
       </div>`;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    redrawIcons();
   } catch (err) {
     console.warn('Draft notifications error:', err);
   }
@@ -159,11 +156,10 @@ async function approveTemplate(templateId, btnEl) {
     if (btnEl) {
       btnEl.disabled = false;
       btnEl.innerHTML = '<i data-lucide="check" style="width:12px;height:12px"></i> Approve &amp; Send';
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      redrawIcons();
     }
   }
 }
-
 
 /* ═══════════════════════════════════════════════════════════════
    RENDER HELPERS
@@ -179,7 +175,7 @@ function renderStatCards(cards) {
       <div class="stat-delta ${card.deltaClass}">${escapeHtml(card.delta)}</div>
     </div>
   `).join('');
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  redrawIcons();
 }
 
 function renderTemplateTable(templates) {
@@ -192,7 +188,7 @@ function renderTemplateTable(templates) {
         <p style="margin:0 0 16px;color:var(--text-muted)">Create your first template.</p>
         <a href="/templates.html" class="btn btn-outline">Create Template</a>
       </div>`;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    redrawIcons();
     return;
   }
 
@@ -238,15 +234,10 @@ function renderTemplateTable(templates) {
         </tbody>
       </table>
     </div>`;
+  redrawIcons();
+}
+
+
+function redrawIcons() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

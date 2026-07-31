@@ -83,7 +83,7 @@ function renderUsers() {
               <td class="text-gold">${escapeHtml(user.email)}</td>
               <td class="text-muted">${formatDate(user.created_at)}</td>
               <td>
-                <button type="button" class="btn btn-outline btn-sm" onclick="openEmailModal('${escapeAttr(user.id)}')">
+                <button type="button" class="btn btn-outline btn-sm" onclick="openEmailModal('${escapeHtml(user.id)}')">
                   <i data-lucide="mail" style="width:12px;height:12px"></i>
                   Send Email
                 </button>
@@ -212,30 +212,10 @@ function toBase64(file) {
   });
 }
 
-function formatDate(value) {
-  return new Date(value).toLocaleDateString('en-AU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-}
-
 function formatFileSize(value) {
   if (value < 1024) return `${value} B`;
   if (value < 1048576) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / 1048576).toFixed(1)} MB`;
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/'/g, '&#39;');
 }
 
 function redrawIcons() {
