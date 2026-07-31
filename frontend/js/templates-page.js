@@ -7,6 +7,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 let quill;
+let quillAvailable = false;
 let templates = [];
 let editingId = null;
 let htmlMode = false;
@@ -60,12 +61,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   initQuill();
   await Promise.all([ensureDefaultTemplateBody(), loadTemplates()]);
   redrawIcons();
+
+  // The command palette links here with ?new=1 to open the editor directly.
+  if (new URLSearchParams(window.location.search).get('new') === '1') {
+    openTemplateModal(null);
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════════════
    QUILL EDITOR
    ═══════════════════════════════════════════════════════════════════ */
+/**
+ * Boot the rich-text editor.
+ *
+ * Quill is loaded from a CDN, so it can be missing when that CDN is slow,
+ * blocked, or down. Rather than let the whole page die on boot, fall back to
+ * the raw HTML editor — every template stays viewable and editable.
+ */
 function initQuill() {
+  if (typeof Quill === 'undefined') {
+    quillAvailable = false;
+    htmlMode = true;
+    console.warn('[templates] Quill failed to load — falling back to HTML mode.');
+    return;
+  }
+
   quill = new Quill('#quill-editor', {
     theme: 'snow',
     placeholder: 'Write your email body here…',
@@ -79,6 +99,7 @@ function initQuill() {
       ]
     }
   });
+  quillAvailable = true;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -102,7 +123,17 @@ async function loadTemplates() {
   }
 }
 
+function renderTemplateCount() {
+  const label = document.getElementById('template-count');
+  if (!label) return;
+  const drafts = templates.filter(t => t.status === 'draft').length;
+  const total = `${templates.length} template${templates.length === 1 ? '' : 's'}`;
+  label.textContent = drafts ? `${total} · ${drafts} awaiting approval` : total;
+}
+
 function renderTemplateGrid() {
+  renderTemplateCount();
+
   if (!templates.length) {
     templatesGrid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1">
@@ -130,7 +161,7 @@ function renderTemplateGrid() {
       : '';
     const approveBtn = isDraft
       ? `<button class="btn btn-primary btn-sm" style="width:100%;margin-top:10px"
-                 onclick="approveTemplate('${escapeAttr(t.id)}', this)">
+                 onclick="approveTemplate('${escapeHtml(t.id)}', this)">
            <i data-lucide="check" style="width:13px;height:13px"></i>
            Approve &amp; Send
          </button>`
@@ -146,15 +177,15 @@ function renderTemplateGrid() {
         </div>
         <div class="t-actions flex-shrink-0">
           <button class="btn-icon" type="button" title="Preview"
-                  onclick="openPreview('${escapeAttr(t.id)}')">
+                  onclick="openPreview('${escapeHtml(t.id)}')">
             <i data-lucide="eye" style="width:14px;height:14px;color:var(--gold-strong)"></i>
           </button>
           <button class="btn-icon" type="button" title="Edit"
-                  onclick="openTemplateModal('${escapeAttr(t.id)}')">
+                  onclick="openTemplateModal('${escapeHtml(t.id)}')">
             <i data-lucide="pencil" style="width:14px;height:14px"></i>
           </button>
           <button class="btn-icon" type="button" title="Delete"
-                  onclick="deleteTemplate('${escapeAttr(t.id)}')">
+                  onclick="deleteTemplate('${escapeHtml(t.id)}')">
             <i data-lucide="trash-2" style="width:14px;height:14px;color:var(--danger)"></i>
           </button>
         </div>
@@ -180,7 +211,8 @@ async function openTemplateModal(id) {
   document.getElementById('t-title').value = t?.title || '';
   document.getElementById('t-subject').value = t?.subject || '';
 
-  htmlMode = useHtmlMode;
+  htmlMode = useHtmlMode || !quillAvailable;
+  useHtmlMode = htmlMode;
   visualPreview = false;
   document.getElementById('quill-editor').style.display = '';
   const prevFrame = document.getElementById('visual-preview-frame');
@@ -193,9 +225,9 @@ async function openTemplateModal(id) {
     : '<i data-lucide="code" style="width:12px;height:12px"></i> HTML Mode';
   saveTemplateBtn.innerHTML = `<i data-lucide="save" style="width:14px;height:14px"></i> ${t ? 'Save Changes' : 'Save Template'}`;
 
-  quill.setContents([]);
-  if (!useHtmlMode) {
-    quill.clipboard.dangerouslyPasteHTML(body);
+  if (quillAvailable) {
+    quill.setContents([]);
+    if (!useHtmlMode) quill.clipboard.dangerouslyPasteHTML(body);
   }
   htmlEditor.value = body;
 
@@ -221,6 +253,10 @@ function closeTemplateModal() {
 }
 
 function toggleEditorMode() {
+  if (!quillAvailable) {
+    Toast.warn('The visual editor is unavailable right now — editing HTML directly.');
+    return;
+  }
   htmlMode = !htmlMode;
   if (htmlMode) {
     if (!visualPreview) {
@@ -258,7 +294,7 @@ function toggleEditorMode() {
 /* ── Save ─────────────────────────────────────────────────────────── */
 async function saveTemplate(event) {
   event.preventDefault();
-  let body = (htmlMode || visualPreview) ? htmlEditor.value : quill.root.innerHTML;
+  let body = (htmlMode || visualPreview || !quillAvailable) ? htmlEditor.value : quill.root.innerHTML;
   body = applyEditMediaToBody(body);
   const payload = {
     title: document.getElementById('t-title').value.trim(),
@@ -769,7 +805,7 @@ async function loadEmailImages() {
   select.innerHTML =
     '<option value="">Auto-select</option>' +
     images.map(img =>
-      `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
+      `<option value="${escapeHtml(img.url)}">${escapeHtml(img.name)}</option>`
     ).join('');
 }
 
@@ -780,7 +816,7 @@ async function loadEmailVideos() {
   select.innerHTML =
     '<option value="">None</option>' +
     videos.map(vid =>
-      `<option value="${escapeAttr(vid.url)}">${escapeHtml(vid.name)}</option>`
+      `<option value="${escapeHtml(vid.url)}">${escapeHtml(vid.name)}</option>`
     ).join('');
 }
 
@@ -791,7 +827,7 @@ async function loadCtaLinks() {
     select.innerHTML =
       '<option value="">Use default</option>' +
       links.map(link =>
-        `<option value="${escapeAttr(link.url)}">${escapeHtml(link.label)}</option>`
+        `<option value="${escapeHtml(link.url)}">${escapeHtml(link.label)}</option>`
       ).join('');
   } catch (_) { /* silently ignore */ }
 }
@@ -880,7 +916,7 @@ async function loadEditImages() {
   select.innerHTML =
     `<option value="">${placeholder}</option>` +
     images.map(img =>
-      `<option value="${escapeAttr(img.url)}">${escapeHtml(img.name)}</option>`
+      `<option value="${escapeHtml(img.url)}">${escapeHtml(img.name)}</option>`
     ).join('');
 }
 
@@ -892,7 +928,7 @@ async function loadEditVideos() {
   select.innerHTML =
     `<option value="">${placeholder}</option>` +
     videos.map(vid =>
-      `<option value="${escapeAttr(vid.url)}">${escapeHtml(vid.name)}</option>`
+      `<option value="${escapeHtml(vid.url)}">${escapeHtml(vid.name)}</option>`
     ).join('');
 }
 
@@ -904,7 +940,7 @@ async function loadEditCtaLinks() {
     select.innerHTML =
       `<option value="">${placeholder}</option>` +
       links.map(link =>
-        `<option value="${escapeAttr(link.url)}">${escapeHtml(link.label)}</option>`
+        `<option value="${escapeHtml(link.url)}">${escapeHtml(link.label)}</option>`
       ).join('');
   } catch (_) {}
 }
@@ -1092,18 +1128,6 @@ function stripHtml(html) {
 
 function getCssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/'/g, '&#39;');
 }
 
 function redrawIcons() {

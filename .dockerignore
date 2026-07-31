@@ -6,3 +6,10 @@
 **/*.pyo
 backend/.env
 *.md
+
+# The image only COPYs backend/ and frontend/, but everything here is still
+# uploaded to the daemon as build context. These directories are several MB of
+# source artwork and one-off scripts that the running app never reads.
+assets
+docs
+scripts

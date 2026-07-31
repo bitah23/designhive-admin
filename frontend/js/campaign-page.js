@@ -126,7 +126,7 @@ function renderCampaignUI() {
         ${templates.length ? templates.map(template => {
           const selected = selectedTemplateId === template.id;
           return `
-            <div class="template-option ${selected ? 'selected' : ''}" onclick="selectTemplate('${escapeAttr(template.id)}')">
+            <div class="template-option ${selected ? 'selected' : ''}" onclick="selectTemplate('${escapeHtml(template.id)}')">
               <div class="flex-between">
                 <div class="t-name">${escapeHtml(template.title)}</div>
                 ${selected ? '<i data-lucide="check-circle-2" style="width:16px;height:16px;color:var(--gold-strong)"></i>' : ''}
@@ -165,9 +165,9 @@ function renderCampaignUI() {
             ${displayedUsers.length ? displayedUsers.map(user => {
               const selected = selectedUserIds.has(user.id);
               return `
-                <tr class="${selected ? 'is-selected' : ''}" onclick="toggleUserRow('${escapeAttr(user.id)}')" style="cursor:pointer">
+                <tr class="${selected ? 'is-selected' : ''}" onclick="toggleUserRow('${escapeHtml(user.id)}')" style="cursor:pointer">
                   <td>
-                    <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation();toggleUserRow('${escapeAttr(user.id)}')" style="accent-color:var(--gold)">
+                    <input type="checkbox" ${selected ? 'checked' : ''} onclick="event.stopPropagation();toggleUserRow('${escapeHtml(user.id)}')" style="accent-color:var(--gold)">
                   </td>
                   <td class="bold">${escapeHtml(user.name || '--')}</td>
                   <td>${escapeHtml(user.email)}</td>
@@ -557,7 +557,7 @@ function renderScheduledCampaigns() {
 
     const cancelBtn = job.status === 'pending' ? `
       <button type="button" class="btn-icon" title="Cancel campaign"
-              onclick="cancelScheduledCampaign('${escapeAttr(job.id)}')">
+              onclick="cancelScheduledCampaign('${escapeHtml(job.id)}')">
         <i data-lucide="x-circle" style="width:15px;height:15px;color:var(--danger)"></i>
       </button>
     ` : '';
@@ -619,18 +619,6 @@ async function cancelScheduledCampaign(id) {
 
 function getCssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/'/g, '&#39;');
 }
 
 function redrawIcons() {

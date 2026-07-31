@@ -3,24 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search recipients and send direct outreach from DesignHive Admin.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/png" href="/assets/brand/favicon.png">
   <script src="/js/auth-guard.js"></script>
   <title>Users - DesignHive Admin</title>
   <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="app-shell">
     <aside id="sidebar"></aside>
     <div class="main-area">
       <div id="topbar"></div>
-      <main class="page-content">
+      <main class="page-content" id="main-content">
         <div class="page-header">
-          <div>
-            <h1>Users</h1>
-            <p id="user-count">Loading users...</p>
-          </div>
-          <div class="input-wrap" style="width:min(100%, 300px)">
+          <p id="user-count" class="text-muted" style="margin:0">Loading users…</p>
+          <div class="input-wrap" style="width:min(100%, 320px)">
             <span class="icon"><i data-lucide="search" style="width:14px;height:14px"></i></span>
-            <input type="text" id="search" placeholder="Search by name or email...">
+            <input type="text" id="search" placeholder="Search by name or email…"
+                   aria-label="Search users by name or email">
           </div>
         </div>
 
@@ -83,9 +85,10 @@
   </div>
 
   <div id="toast-container"></div>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="/js/icons.js"></script>
   <script src="/js/axios.min.js"></script>
-  <script src="/js/api.js?v=2"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils.js"></script>
   <script src="/js/toast.js"></script>
   <script src="/js/layout.js"></script>
   <script src="/js/users-page.js"></script>

@@ -1,3 +1,11 @@
+/* ===========================================================================
+   DesignHive Admin — design tokens
+   ---------------------------------------------------------------------------
+   Two surface themes share one token set. `:root` holds the navy palette used
+   by the login screen; `.app-shell` (below) re-points the same background
+   tokens at true black for the signed-in dashboard. Colour, spacing, and
+   typography values are only ever declared here.
+   =========================================================================== */
 :root {
   --bg-base: #090c14;
   --bg-base-alt: #0e1220;
@@ -27,6 +35,14 @@
   --tooltip-bg: #1a1a2e;
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.32);
   --logo-shadow: 0 12px 28px rgba(239, 201, 76, 0.18);
+
+  --sidebar-width: 248px;
+  --sidebar-width-collapsed: 76px;
+  --topbar-height: 68px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *,
@@ -69,14 +85,39 @@ img {
   max-width: 100%;
 }
 
+/* Inline SVGs rendered by js/icons.js. */
+.icon {
+  flex-shrink: 0;
+}
+
 [hidden] {
   display: none !important;
+}
+
+/* Keyboard users land here first and can jump past the nav. */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10000;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  transform: translateY(-200%);
+  transition: transform 150ms var(--ease);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 .app-shell {
   display: flex;
   min-height: 100vh;
   background: var(--bg-base);
+  /* Signed-in surface theme — true black instead of the login navy. */
   --bg-base: #000000;
   --bg-base-alt: #050505;
   --bg-shell: rgba(0, 0, 0, 0.96);
@@ -86,8 +127,12 @@ img {
   --bg-input: #050505;
 }
 
+/* ---------------------------------------------------------------------------
+   Sidebar
+   --------------------------------------------------------------------------- */
+
 #sidebar {
-  width: 272px;
+  width: var(--sidebar-width);
   flex-shrink: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 14%),
@@ -99,85 +144,153 @@ img {
   top: 0;
   height: 100vh;
   z-index: 2;
+  transition: width 200ms var(--ease);
 }
 
 .sidebar-logo {
-  padding: 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--topbar-height);
+  flex-shrink: 0;
+  padding: 0 12px 0 16px;
   border-bottom: 1px solid var(--border);
 }
 
 .sidebar-logo-link {
   display: flex;
   align-items: center;
-  justify-content: center;
+  min-width: 0;
+  flex: 1;
 }
 
-.sidebar-logo-mark {
-  height: 70px;
+/* logo-mark.png is the brand lockup with its transparent padding trimmed
+   (≈8.4:1), so width drives the size here. */
+.sidebar-logo-link img {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.sidebar-logo-mark img {
-  height: 100%;
-  width: auto;
+  max-width: 168px;
+  height: auto;
   object-fit: contain;
 }
 
-.sidebar-logo-copy {
-  min-width: 0;
-}
-
-.sidebar-logo-title {
-  color: var(--text-primary);
-  font-size: 1.05rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.sidebar-logo-subtitle {
-  margin-top: 4px;
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.sidebar-collapse-btn {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.sidebar-collapse-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 16px 12px;
+  padding: 14px 12px;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nav-group + .nav-group {
+  margin-top: 18px;
+}
+
+.nav-group-label {
+  padding: 0 12px;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  white-space: nowrap;
 }
 
 .sidebar-footer {
+  flex-shrink: 0;
   padding: 12px;
   border-top: 1px solid var(--border);
 }
 
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-soft);
+  min-width: 0;
+}
+
+.sidebar-avatar {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  color: var(--gold-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sidebar-user-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  margin-bottom: 4px;
-  padding: 10px 12px;
+  margin-bottom: 2px;
+  padding: 9px 12px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-muted);
+  font-size: 0.86rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
 .nav-link:hover {
   background: var(--bg-hover);
   border-color: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
-  transform: translateX(2px);
 }
 
 .nav-link.active {
@@ -187,9 +300,8 @@ img {
   box-shadow: 0 4px 12px rgba(239, 201, 76, 0.15);
 }
 
-.nav-link.active i,
 .nav-link.active svg {
-  color: #000 !important;
+  color: #000;
 }
 
 .nav-link.logout {
@@ -202,6 +314,62 @@ img {
   color: var(--danger);
 }
 
+/* Collapsed rail — icons only, labels move into hover tooltips.
+   Desktop-only: below the breakpoint the sidebar is an off-canvas drawer that
+   always shows full labels, so the rail must not leak into it. */
+@media (min-width: 768px) {
+  .sidebar-collapsed #sidebar {
+    width: var(--sidebar-width-collapsed);
+  }
+
+  .sidebar-collapsed .nav-link-label,
+  .sidebar-collapsed .nav-group-label,
+  .sidebar-collapsed .sidebar-user-copy,
+  .sidebar-collapsed .sidebar-logo-link {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar-logo,
+  .sidebar-collapsed .nav-link,
+  .sidebar-collapsed .sidebar-user {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sidebar-collapsed .nav-group + .nav-group {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .sidebar-collapsed .sidebar-user {
+    position: relative;
+  }
+
+  .sidebar-collapsed #sidebar [data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 30;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--tooltip-bg);
+    color: var(--text-primary);
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Topbar
+   --------------------------------------------------------------------------- */
+
 .main-area {
   min-width: 0;
   flex: 1;
@@ -210,34 +378,89 @@ img {
 }
 
 #topbar {
-  height: 73px;
+  height: var(--topbar-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 28px;
+  padding: 0 24px;
   background: var(--bg-shell);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 3;
+}
+
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-right {
+  flex-shrink: 0;
+}
+
+/* Hidden by default; the mobile breakpoint below turns it on. Declared here,
+   ahead of the media query, so the responsive rule wins on source order
+   instead of needing `!important`. */
+.mobile-menu-btn {
+  display: none;
 }
 
 .page-title-group {
   min-width: 0;
 }
 
+/* The topbar is the page's only heading — pages no longer repeat it in body. */
 .page-title {
+  margin: 0;
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .page-subtitle {
-  margin-top: 3px;
+  margin: 2px 0 0;
   color: var(--text-muted);
   font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.command-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.command-trigger:hover {
+  border-color: rgba(239, 201, 76, 0.28);
+  color: var(--text-primary);
+}
+
+kbd {
+  padding: 2px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .admin-badge {
@@ -254,29 +477,128 @@ img {
 
 .page-content {
   flex: 1;
-  overflow-y: auto;
-  padding: 28px;
+  padding: 24px;
 }
 
+/* Row above the page body holding filters and primary actions. The page name
+   itself lives in the topbar, so this only carries controls. */
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.page-header h1 {
-  margin: 0 0 6px;
+.page-header:empty {
+  display: none;
+}
+
+.page-header h2 {
+  margin: 0;
   color: var(--text-primary);
-  font-size: 1.7rem;
-  line-height: 1.05;
+  font-size: 1.05rem;
+  line-height: 1.2;
 }
 
 .page-header p {
-  margin: 0;
+  margin: 4px 0 0;
   color: var(--text-muted);
-  font-size: 0.92rem;
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Command palette (Cmd/Ctrl + K)
+   --------------------------------------------------------------------------- */
+
+.command-palette[hidden] {
+  display: none;
+}
+
+.command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.command-box {
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2001;
+  width: min(560px, calc(100vw - 32px));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.command-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.command-input-row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.command-results {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.command-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.command-item.selected,
+.command-item:hover {
+  background: var(--gold-dim);
+  box-shadow: inset 2px 0 0 var(--gold);
+  color: var(--text-primary);
+}
+
+.command-item.selected svg,
+.command-item:hover svg {
+  color: var(--gold-strong);
+}
+
+.command-label {
+  flex: 1;
+  font-weight: 600;
+}
+
+.command-hint {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.command-empty {
+  padding: 22px;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 .card {
@@ -899,9 +1221,9 @@ tbody tr.is-selected td {
 }
 
 .login-logo img {
-  height: 120px;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
   margin: 0 auto 24px;
   object-fit: contain;
   filter: drop-shadow(0 12px 30px rgba(239, 201, 76, 0.12));
@@ -1235,39 +1557,28 @@ tbody tr.is-selected td {
     grid-template-columns: 1fr;
   }
 
-  /* Off-canvas Sidebar for Mobile */
+  /* Off-canvas sidebar. The collapsed rail is a desktop-only affordance, so
+     the drawer always shows full labels. */
   #sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: -280px !important;
-    /* Hide by default */
-    bottom: 0 !important;
-    width: 280px !important;
-    height: 100vh !important;
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    z-index: 1001 !important;
-    /* Above topbar */
-    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5) !important;
-    display: flex !important;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    z-index: 1001;
+    transform: translateX(-100%);
+    transition: transform 250ms var(--ease);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
   }
 
   .sidebar-open #sidebar {
-    transform: translateX(280px) !important;
-    left: -280px !important;
-    /* Keep it at -280 and use transform */
+    transform: translateX(0);
   }
 
-  .sidebar-logo-copy,
-  .nav-link span,
-  .sidebar-nav .label-upper,
-  .sidebar-footer .nav-link span {
-    display: inline;
-    /* Show labels in mobile drawer */
-  }
-
-  .nav-link {
-    justify-content: flex-start;
-    padding: 12px 16px;
+  /* Collapsing is a desktop affordance; there is nothing to toggle here. */
+  .sidebar-collapse-btn {
+    display: none;
   }
 
   .sidebar-overlay {
@@ -1278,7 +1589,7 @@ tbody tr.is-selected td {
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 250ms ease;
   }
 
   .sidebar-open .sidebar-overlay {
@@ -1287,19 +1598,29 @@ tbody tr.is-selected td {
   }
 
   .mobile-menu-btn {
-    display: flex !important;
-    /* Force show toggle */
-    align-items: center !important;
-    justify-content: center !important;
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: 10px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--bg-soft) !important;
-    color: var(--text-primary) !important;
-    cursor: pointer !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-soft);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+
+  .command-trigger-text {
+    display: none;
+  }
+
+  .command-trigger kbd {
+    display: none;
+  }
+
+  .admin-badge {
+    display: none;
   }
 
   .pagination {
@@ -1310,7 +1631,7 @@ tbody tr.is-selected td {
   }
 
   .page-title {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
   }
 
   .page-subtitle {
@@ -1318,36 +1639,29 @@ tbody tr.is-selected td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 180px;
+    max-width: 44vw;
   }
 }
 
-/* Hide mobile menu btn on desktop */
-.mobile-menu-btn {
-  display: none;
-}
+/* ---------------------------------------------------------------------------
+   Post-login welcome overlay
+   --------------------------------------------------------------------------- */
 
-/* Welcome Overlay Styles */
 .welcome-overlay {
   position: fixed;
   inset: 0;
-  z-index: 99999;
-  /* Boosted z-index */
+  z-index: 5000;
   background:
     radial-gradient(circle at top left, rgba(239, 201, 76, 0.15), transparent 30%),
     radial-gradient(circle at bottom right, rgba(169, 35, 69, 0.2), transparent 30%),
     rgba(0, 0, 0, 0.8);
-  /* Slightly more transparent backdrop */
   backdrop-filter: blur(20px);
-  display: flex;
-  align-items: flex-start;
-  /* Centered horizontally, start at top */
-  justify-content: center;
-  padding-top: 60px;
-  /* A bit at the top */
+  display: grid;
+  place-items: center;
+  padding: 24px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 320ms var(--ease);
 }
 
 .welcome-overlay.active {
@@ -1357,15 +1671,15 @@ tbody tr.is-selected td {
 
 .welcome-card {
   width: 100%;
-  max-width: 540px;
-  padding: 60px 40px;
+  max-width: 480px;
+  padding: 44px 40px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 30%), var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 32px;
+  border-radius: 24px;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
   text-align: center;
-  transform: scale(0.9) translateY(40px);
-  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(0.96) translateY(16px);
+  transition: transform 320ms var(--ease);
 }
 
 .welcome-overlay.active .welcome-card {
@@ -1373,17 +1687,16 @@ tbody tr.is-selected td {
 }
 
 .welcome-icon-wrap {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto 32px;
-  border-radius: 28px;
+  position: relative;
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 24px;
+  border-radius: 24px;
   background: var(--gold-dim);
   border: 1px solid rgba(239, 201, 76, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   color: var(--gold);
-  position: relative;
 }
 
 .welcome-icon-wrap::after {
@@ -1411,25 +1724,336 @@ tbody tr.is-selected td {
 }
 
 .welcome-title {
-  font-size: 2.8rem;
+  margin: 0 0 10px;
+  font-size: 1.9rem;
   font-weight: 800;
-  margin-bottom: 12px;
+  line-height: 1.15;
   background: linear-gradient(135deg, #fff 30%, var(--gold) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
-  line-height: 1.1;
 }
 
 .welcome-subtitle {
-  font-size: 1.1rem;
+  margin: 0 0 28px;
+  font-size: 0.95rem;
   color: var(--text-muted);
-  margin-bottom: 40px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .welcome-action-btn {
-  min-height: 56px;
-  padding: 0 40px;
-  font-size: 1rem;
-  letter-spacing: 0.02em;
+  min-height: 48px;
+  padding: 0 28px;
+}
+
+/* ---------------------------------------------------------------------------
+   Dashboard — drafts awaiting approval
+   --------------------------------------------------------------------------- */
+
+.draft-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 159, 28, 0.28);
+  border-radius: var(--radius-md);
+  background: rgba(255, 159, 28, 0.07);
+}
+
+.draft-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.draft-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+}
+
+.draft-row-title {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.draft-row-subject {
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Dashboard — AI assistant panel
+   (was an inline <style> block in dashboard.html)
+   --------------------------------------------------------------------------- */
+
+.chat-card {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.chat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-card-title {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.chat-card-hint {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.chat-messages {
+  flex: 1;
+  height: 320px;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-behavior: smooth;
+}
+
+.dm {
+  display: flex;
+  flex-direction: column;
+  max-width: 78%;
+}
+
+.dm--ai,
+.dm--thinking {
+  align-self: flex-start;
+}
+
+.dm--user {
+  align-self: flex-end;
+}
+
+.dm-bubble {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.dm--ai .dm-bubble,
+.dm--thinking .dm-bubble {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.dm--ai .dm-bubble {
+  color: var(--text-secondary);
+}
+
+.dm--thinking .dm-bubble {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.dm--user .dm-bubble {
+  background: var(--gold);
+  color: #000;
+  font-weight: 600;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  max-height: 120px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+  transition: border-color 150ms ease;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.chat-send {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gold);
+  color: #000;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.chat-send:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------------------
+   Agents page
+   (was an inline <style> block at the end of agents.html)
+   --------------------------------------------------------------------------- */
+
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.agent-card {
+  overflow: hidden;
+}
+
+.agent-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.agent-num {
+  flex-shrink: 0;
+  margin-top: 1px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--gold-dim);
+  color: var(--gold);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.agent-title {
+  margin-bottom: 3px;
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.agent-desc {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.agent-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(74, 222, 128, 0.18);
+  background: var(--success-dim);
+  color: var(--success);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.agent-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.agent-result {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Agent cards pack several controls into a narrow column, so inputs here run
+   shorter than the app-wide 48px default. */
+.agent-body .form-control {
+  height: auto;
+  line-height: 1.4;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.agent-body select.form-control {
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion preferences
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
