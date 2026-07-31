@@ -899,7 +899,11 @@ async function uploadAssetFile(file) {
   const token = localStorage.getItem('adminToken');
   const headers = { 'X-Filename': file.name, 'Content-Type': file.type || 'application/octet-stream' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch('/api/assets/images', { method: 'POST', headers, body: file });
+  // Uses API_BASE like every other call rather than a hardcoded "/api". That
+  // matters when the frontend is served from somewhere other than the backend
+  // (see vercel.json): setting window.ENV_API_URL sends large uploads straight
+  // to the backend instead of through a proxy with its own body-size limit.
+  const res = await fetch(`${API_BASE}/assets/images`, { method: 'POST', headers, body: file });
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch (_) { throw new Error(`Upload failed (${res.status})`); }

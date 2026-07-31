@@ -83,9 +83,39 @@ Sign in at `/login.html`. Once in:
 
 ## Deploying
 
-Pushing to `main` triggers `.github/workflows/deploy.yml`: it builds the
-Dockerfile, pushes to GHCR, and restarts the container on the VPS with secrets
-written to `/root/app.env`. The image contains only `backend/` and `frontend/`.
+**The VPS is production.** Pushing to `main` triggers
+`.github/workflows/deploy.yml`: it builds the Dockerfile, pushes to GHCR, and
+restarts the container on the VPS with secrets written to `/root/app.env`. The
+image contains only `backend/` and `frontend/`, and the FastAPI process serves
+both the API and the frontend. `admin.designhivestudio.ai` points here.
+
+### The Vercel mirror
+
+`vercel.json` additionally publishes the **frontend only** to Vercel, with
+`/api/*` rewritten to the backend above. It exists so the admin UI is reachable
+on a CDN; it is not a second copy of the application.
+
+```
+Vercel (static frontend)  ──/api/*──►  VPS (FastAPI + agents)
+                                       ▲
+admin.designhivestudio.ai ─────────────┘
+```
+
+Two things follow from that split, and both matter:
+
+- **The backend cannot move to Vercel.** Four agents — drip, re-engagement,
+  failure recovery, and the campaign scheduler — run on APScheduler inside the
+  FastAPI lifespan. Serverless has no long-lived process, so on Vercel they
+  would simply never fire.
+- **Large uploads should bypass the proxy.** A rewrite passes through Vercel's
+  request body limit, which is below this app's 10 MB image / 50 MB video
+  ceiling. If uploads fail from the Vercel URL, set `window.ENV_API_URL` to the
+  backend origin before `js/api.js` loads; every call, uploads included, then
+  goes direct.
+
+If you change the backend's hostname, update the `rewrites` destination in
+`vercel.json` and `ADMIN_BASE_URL` in the environment together — the second is
+what makes email image URLs absolute.
 
 ---
 
