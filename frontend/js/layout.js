@@ -104,14 +104,19 @@ function renderSidebar(path) {
   const admin = getCurrentAdmin();
   const name = adminDisplayName(admin);
 
-  // The brand block owns the full sidebar width — the collapse control lives in
-  // the topbar so nothing competes with the lockup for horizontal space.
+  // Glyph and wordmark sit side by side as one lockup: the hexagon on the left,
+  // the wordmark and its caption stacked to its right and sharing a baseline
+  // grid. The wordmark asset carries no hexagon of its own, so the mark appears
+  // exactly once. The collapse control lives in the topbar so nothing competes
+  // with the lockup for horizontal space.
   sidebar.innerHTML = `
     <div class="sidebar-logo">
       <a href="/dashboard.html" class="sidebar-logo-link" aria-label="DesignHive Admin — dashboard">
-        <img class="brand-lockup" src="/assets/brand/logo-lockup.png" alt="Design Hive">
-        <img class="brand-glyph" src="/assets/brand/logo-glyph.png" alt="Design Hive">
-        <span class="brand-caption">Admin Console</span>
+        <img class="brand-glyph" src="/assets/brand/logo-glyph.png" alt="">
+        <span class="brand-text">
+          <img class="brand-wordmark" src="/assets/brand/logo-wordmark.png" alt="Design Hive">
+          <span class="brand-caption">Admin Console</span>
+        </span>
       </a>
     </div>
 

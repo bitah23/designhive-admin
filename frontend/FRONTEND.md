@@ -49,16 +49,24 @@ frontend/
 
 | File | Where it is used | Notes |
 |---|---|---|
-| `logo-lockup.png` | Sidebar header, login card | Gold lockup, ≈3.8:1, cropped from `header_logo_v4.png` |
-| `logo-glyph.png` | Collapsed sidebar rail | Square hexagon mark |
+| `logo-wordmark.png` | Sidebar header | Gold wordmark **without** the hexagon, so the glyph beside it is not a duplicate |
+| `logo-glyph.png` | Sidebar header, collapsed rail | Square hexagon mark |
+| `logo-lockup.png` | Login card | Full gold lockup — hexagon and wordmark together, for standalone use |
 | `favicon.png` | Browser tab | Square, from the maroon mark |
 | `logo.png`, `header_logo_v4.png` | originals — do not delete | `header_logo_v4.png` is referenced by email templates |
 
-The **gold** lockup is used rather than the maroon one because the sidebar is
-true black: the maroon wordmark sat at very low contrast there, and gold is
-already the app's accent. The lockup is wide, so its rendered size is driven by
-available width — which is why the sidebar collapse control lives in the topbar
-and not in the brand row.
+The sidebar brand is composed rather than a single image: `.brand-glyph` sits
+left, and `.brand-text` stacks `.brand-wordmark` over `.brand-caption` to its
+right, the two sharing a left edge and the whole group optically centred against
+the glyph. That is why the wordmark asset excludes the hexagon — pairing the
+full lockup with a glyph would show the mark twice.
+
+The **gold** artwork is used rather than the maroon original because the sidebar
+is true black, where the maroon wordmark sat at very low contrast, and gold is
+already the app's accent. The collapse control lives in the topbar, not the
+brand row, so the lockup gets the sidebar's full inner width.
+
+On the collapsed rail `.brand-text` is hidden and the glyph alone is centred.
 
 ### Why no framework
 

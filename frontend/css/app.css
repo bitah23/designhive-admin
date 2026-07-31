@@ -153,12 +153,15 @@ img {
 /* ---------------------------------------------------------------------------
    Brand block
 
-   Uses the gold lockup (logo-lockup.png, ≈3.8:1) rather than the maroon one.
-   The maroon wordmark sat at very low contrast on the black sidebar, and gold
-   is the app's accent colour, so the brand and the UI agree.
+   One horizontal lockup: hexagon glyph, then wordmark above caption stacked
+   beside it. The wordmark asset (logo-wordmark.png) deliberately excludes the
+   hexagon so the mark is never duplicated.
 
-   The collapse control lives in the topbar rather than here, letting the mark
-   use the sidebar's full inner width instead of sharing the row with a button.
+   Gold rather than the maroon original — the sidebar is true black, where the
+   maroon wordmark sat at very low contrast, and gold is already the app accent.
+
+   The collapse control lives in the topbar, not this row, so the lockup gets
+   the sidebar's full inner width.
    --------------------------------------------------------------------------- */
 
 .sidebar-logo {
@@ -167,40 +170,47 @@ img {
   flex-shrink: 0;
   /* Matched to the topbar so the sidebar and header rules read as one line. */
   height: var(--topbar-height);
-  padding: 0 20px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--border);
 }
 
 .sidebar-logo-link {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   min-width: 0;
 }
 
-.brand-lockup {
+.brand-glyph {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  /* Aligns the wordmark and caption to a shared left edge. */
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.brand-wordmark {
   width: 100%;
-  max-width: 190px;
+  max-width: 148px;
   height: auto;
   object-fit: contain;
 }
 
-/* The square glyph stands in for the lockup on the collapsed rail. */
-.brand-glyph {
-  display: none;
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-}
-
 .brand-caption {
-  padding-left: 2px;
   color: var(--text-muted);
   font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -358,18 +368,14 @@ img {
   .sidebar-collapsed .nav-link-label,
   .sidebar-collapsed .nav-group-label,
   .sidebar-collapsed .sidebar-user-copy,
-  .sidebar-collapsed .brand-lockup,
-  .sidebar-collapsed .brand-caption {
+  .sidebar-collapsed .brand-text {
     display: none;
   }
 
-  /* The rail keeps the brand present as its square glyph. */
-  .sidebar-collapsed .brand-glyph {
-    display: block;
-  }
-
+  /* The rail keeps the brand present as its glyph alone. */
   .sidebar-collapsed .sidebar-logo-link {
-    align-items: center;
+    justify-content: center;
+    gap: 0;
   }
 
   .sidebar-collapsed .sidebar-logo,
