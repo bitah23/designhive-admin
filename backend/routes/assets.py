@@ -253,6 +253,23 @@ async def upload_image(request: Request, admin=Depends(get_current_admin)):
     }
 
 
+@router.delete("/images/{name}")
+def delete_image(name: str, admin=Depends(get_current_admin)):
+    result = supabase.table("template_images").select("name").eq("name", name).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Image not found.")
+
+    try:
+        supabase.storage.from_(_BUCKET).remove([name])
+    except Exception:
+        # The library row is the source of truth for the picker; an orphaned
+        # storage object left behind by a failed remove must not block that.
+        pass
+
+    supabase.table("template_images").delete().eq("name", name).execute()
+    return {"message": "Deleted"}
+
+
 # ── CTA Links ─────────────────────────────────────────────────────────────────
 
 @router.get("/cta-links")

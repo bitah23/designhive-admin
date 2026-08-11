@@ -36,6 +36,7 @@ window.toggleAiCtaInput = toggleAiCtaInput;
 window.approveTemplate = approveTemplate;
 window.uploadEmailImage = uploadEmailImage;
 window.uploadEmailVideo = uploadEmailVideo;
+window.deleteSelectedImage = deleteSelectedImage;
 window.showAddCtaLink = showAddCtaLink;
 window.hideAddCtaLink = hideAddCtaLink;
 window.saveNewCtaLink = saveNewCtaLink;
@@ -806,7 +807,7 @@ async function loadEmailImages() {
   select.innerHTML =
     '<option value="">Auto-select</option>' +
     images.map(img =>
-      `<option value="${escapeHtml(img.url)}">${escapeHtml(img.name)}</option>`
+      `<option value="${escapeHtml(img.url)}" data-name="${escapeHtml(img.name)}">${escapeHtml(img.name)}</option>`
     ).join('');
 }
 
@@ -819,6 +820,39 @@ async function loadEmailVideos() {
     videos.map(vid =>
       `<option value="${escapeHtml(vid.url)}">${escapeHtml(vid.name)}</option>`
     ).join('');
+}
+
+/** Remove the currently-selected image from the shared asset library. */
+async function deleteSelectedImage(selectId) {
+  const select = document.getElementById(selectId);
+  const option = select.options[select.selectedIndex];
+  const name = option?.dataset.name;
+  if (!select.value || !name) {
+    Toast.warn('Select an uploaded image to remove first.');
+    return;
+  }
+
+  const confirmed = await Swal.fire({
+    title: 'Remove this image?',
+    text: `"${name}" will be removed from the library. Templates already using it keep their current copy.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Remove',
+    confirmButtonColor: getCssVar('--danger'),
+    cancelButtonColor: 'transparent',
+    background: getCssVar('--bg-card'),
+    color: getCssVar('--text-primary'),
+    customClass: { popup: 'swal-dark' }
+  });
+  if (!confirmed.isConfirmed) return;
+
+  try {
+    await api.del(`/assets/images/${encodeURIComponent(name)}`);
+    await Promise.all([loadEmailImages(), loadEditImages()]);
+    Toast.success('Image removed.');
+  } catch (e) {
+    Toast.error(e.response?.data?.detail || 'Failed to remove image.');
+  }
 }
 
 async function loadCtaLinks() {
@@ -1022,7 +1056,7 @@ async function loadEditImages() {
     `<option value="">${placeholder}</option>` +
     (editingId ? `<option value="${REMOVE_MEDIA}">— remove image —</option>` : '') +
     images.map(img =>
-      `<option value="${escapeHtml(img.url)}">${escapeHtml(img.name)}</option>`
+      `<option value="${escapeHtml(img.url)}" data-name="${escapeHtml(img.name)}">${escapeHtml(img.name)}</option>`
     ).join('');
 }
 
@@ -1065,6 +1099,22 @@ const REMOVE_MEDIA = '__remove__';
 
 const HERO_IMG_RE = /<img\b[^>]*\bclass="[^"]*\bdh-hero-img\b[^"]*"[^>]*>/i;
 const HERO_VIDEO_RE = /<video\b[^>]*\bclass="[^"]*\bdh-hero-img\b[^"]*"[^>]*>[\s\S]*?<\/video>/i;
+
+// CTA buttons authored through the editor carry class="cta-button" (see
+// email_template_default.py / the embedded default body below). AI-generated
+// bodies built by build_text_email_html() instead wrap a bare <a> in a
+// class="dh-cta-td" cell — this fallback keeps those anchors discoverable so
+// editing an AI-generated template's CTA actually finds something to change.
+const CTA_BUTTON_RE = /<a\b([^>]*\bclass="[^"]*\bcta-button\b[^"]*"[^>]*)>([\s\S]*?)<\/a>/i;
+const CTA_TD_ANCHOR_RE = /(<td\b[^>]*\bclass="[^"]*\bdh-cta-td\b[^"]*"[^>]*>[\s\S]*?<a\b)([^>]*)(>)([\s\S]*?)(<\/a>)/i;
+
+function findCtaAnchor(body) {
+  const direct = body.match(CTA_BUTTON_RE);
+  if (direct) return { attrs: direct[1], content: direct[2] };
+  const wrapped = body.match(CTA_TD_ANCHOR_RE);
+  if (wrapped) return { attrs: wrapped[2], content: wrapped[4] };
+  return null;
+}
 
 // The <tr> wrapping a hero element, so a swap replaces the whole row.
 const HERO_IMG_ROW_RE =
@@ -1161,15 +1211,15 @@ function prefillEditMedia(body) {
   }
 
   // Detect CTA button text and link
-  const ctaMatch = body.match(/<a\b([^>]*\bclass="[^"]*\bcta-button\b[^"]*"[^>]*)>([\s\S]*?)<\/a>/i);
-  if (ctaMatch) {
-    const innerText = ctaMatch[2]
+  const cta = findCtaAnchor(body);
+  if (cta) {
+    const innerText = cta.content
       .replace(/<[^>]*>/g, '')
       .replace(/&rarr;/g, '→').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
       .trim();
     if (innerText) document.getElementById('edit-cta-text').value = innerText;
 
-    const hrefMatch = ctaMatch[1].match(/\bhref="([^"]*)"/i);
+    const hrefMatch = cta.attrs.match(/\bhref="([^"]*)"/i);
     if (hrefMatch) {
       const select = document.getElementById('edit-cta-link-select');
       const opt = Array.from(select.options).find(o => o.value === hrefMatch[1]);
@@ -1266,20 +1316,28 @@ async function applyEditMediaToBody(body) {
   if (removeImage) body = clearHeroMedia(body, false);
 
   if (ctaLink || ctaText) {
-    body = body.replace(
-      /(<a\b([^>]*\bclass="[^"]*\bcta-button\b[^"]*"[^>]*)>)([\s\S]*?)(<\/a>)/gi,
-      (match, openTag, attrs, content, closeTag) => {
-        let tag = openTag;
-        if (ctaLink) {
-          if (/\bhref="/i.test(tag)) {
-            tag = tag.replace(/(\bhref=")[^"]*(")/i, `$1${ctaLink}$2`);
-          } else {
-            tag = tag.replace(/^(<a\b)/, `$1 href="${ctaLink}"`);
-          }
-        }
-        return `${tag}${ctaText || content}${closeTag}`;
-      }
-    );
+    const applyHref = attrs => {
+      if (!ctaLink) return attrs;
+      return /\bhref="/i.test(attrs)
+        ? attrs.replace(/(\bhref=")[^"]*(")/i, `$1${ctaLink}$2`)
+        : `${attrs} href="${ctaLink}"`;
+    };
+
+    if (CTA_BUTTON_RE.test(body)) {
+      body = body.replace(CTA_BUTTON_RE, (match, attrs, content) =>
+        `<a${applyHref(attrs)}>${ctaText || content}</a>`
+      );
+    } else if (CTA_TD_ANCHOR_RE.test(body)) {
+      // No class="cta-button" here yet (an AI-generated CTA built before that
+      // marker existed) — add it so the template is editable normally next time.
+      body = body.replace(CTA_TD_ANCHOR_RE, (match, prefix, attrs, gt, content, closeTag) => {
+        let openAttrs = applyHref(attrs);
+        openAttrs = /\bclass="/i.test(openAttrs)
+          ? openAttrs.replace(/\bclass="([^"]*)"/i, (m, cls) => `class="${cls} cta-button"`)
+          : `${openAttrs} class="cta-button"`;
+        return `${prefix}${openAttrs}${gt}${ctaText || content}${closeTag}`;
+      });
+    }
   }
 
   return body;

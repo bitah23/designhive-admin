@@ -89,6 +89,10 @@
                   <select id="ai-image-select" class="form-control" style="flex:1;min-width:0">
                     <option value="">Auto-select</option>
                   </select>
+                  <button type="button" class="btn btn-outline btn-sm" title="Remove selected image"
+                          onclick="deleteSelectedImage('ai-image-select')" style="flex-shrink:0">
+                    <i data-lucide="x" style="width:12px;height:12px"></i>
+                  </button>
                   <label class="btn btn-outline btn-sm" title="Upload new image"
                          style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
                     <i data-lucide="upload" style="width:12px;height:12px"></i>
@@ -216,6 +220,10 @@
                   <select id="edit-image-select" class="form-control" style="flex:1;min-width:0">
                     <option value="">— select image —</option>
                   </select>
+                  <button type="button" class="btn btn-outline btn-sm" title="Remove selected image"
+                          onclick="deleteSelectedImage('edit-image-select')" style="flex-shrink:0">
+                    <i data-lucide="x" style="width:12px;height:12px"></i>
+                  </button>
                   <label class="btn btn-outline btn-sm" title="Upload new image"
                          style="cursor:pointer;margin:0;white-space:nowrap;flex-shrink:0">
                     <i data-lucide="upload" style="width:12px;height:12px"></i>

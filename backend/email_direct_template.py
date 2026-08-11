@@ -210,7 +210,7 @@ def build_text_email_html(
                       style="background:linear-gradient(135deg,#7a1515 0%,#a52020 100%);
                              border-radius:8px;padding:16px 48px;
                              mso-padding-alt:16px 48px;">
-                    <a href="{effective_cta_url}" target="_blank"
+                    <a href="{effective_cta_url}" target="_blank" class="cta-button"
                        style="color:#ffffff;font-family:'DM Sans',system-ui,sans-serif;
                               font-weight:700;font-size:15px;text-decoration:none;
                               letter-spacing:0.03em;white-space:nowrap;display:inline-block;">
