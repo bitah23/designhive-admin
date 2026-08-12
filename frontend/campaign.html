@@ -50,10 +50,14 @@
             <div style="color:var(--text-primary);font-weight:700;font-size:1rem">Send Results</div>
           </div>
           <div style="padding:20px">
-            <div class="grid grid-2" style="gap:12px;margin-bottom:16px">
+            <div class="grid grid-3" style="gap:12px;margin-bottom:16px">
               <div class="card" style="padding:18px;box-shadow:none;background:var(--success-dim)">
                 <div id="res-sent" style="font-size:2rem;font-weight:700;color:var(--success)">0</div>
                 <div class="label-upper" style="margin-top:8px">Sent</div>
+              </div>
+              <div class="card" style="padding:18px;box-shadow:none;background:var(--warning-dim)">
+                <div id="res-skipped" style="font-size:2rem;font-weight:700;color:var(--warning)">0</div>
+                <div class="label-upper" style="margin-top:8px">Skipped (unsubscribed)</div>
               </div>
               <div class="card" style="padding:18px;box-shadow:none;background:var(--danger-dim)">
                 <div id="res-failed" style="font-size:2rem;font-weight:700;color:var(--danger)">0</div>

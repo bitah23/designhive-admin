@@ -136,6 +136,9 @@ def build_direct_email_html(body_content: str) -> str:
                 &copy; 2025 DesignHive Studio &nbsp;&middot;&nbsp;
                 <a href="https://designhivestudio.ai"
                    style="color:#aaaaaa;text-decoration:none;">designhivestudio.ai</a>
+                &nbsp;&middot;&nbsp;
+                <a href="{{{{unsubscribe_url}}}}"
+                   style="color:#aaaaaa;text-decoration:none;">Unsubscribe</a>
               </p>
 
             </td>

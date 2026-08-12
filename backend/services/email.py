@@ -9,10 +9,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import (
     gmail, supabase, ADMIN_BASE_URL,
-    GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME, TABLE_EMAIL_LOGS,
+    GMAIL_SENDER_EMAIL, GMAIL_SENDER_NAME, TABLE_EMAIL_LOGS, TABLE_PROFILES,
 )
 from email_template_default import DEFAULT_EMAIL_TEMPLATE
 from email_direct_template import build_direct_email_html
+from services.unsubscribe import make_unsubscribe_token
 
 
 def _looks_like_full_email_document(html: str) -> bool:
@@ -32,12 +33,28 @@ def get_default_template_html() -> str:
 
 
 def _replace_variables(text: str, user: dict) -> str:
+    email = user.get("email") or ""
+    unsubscribe_url = f"{ADMIN_BASE_URL.rstrip('/')}/api/unsubscribe?token={make_unsubscribe_token(email)}" if email else "#"
     return (
         text
         .replace("{{name}}", user.get("name") or "")
-        .replace("{{email}}", user.get("email") or "")
+        .replace("{{email}}", email)
         .replace("{{date}}", str(date.today()))
+        .replace("{{unsubscribe_url}}", unsubscribe_url)
     )
+
+
+def _is_unsubscribed(email: str) -> bool:
+    if not email:
+        return False
+    result = (
+        supabase.table(TABLE_PROFILES)
+        .select("unsubscribed")
+        .eq("email", email)
+        .limit(1)
+        .execute()
+    )
+    return bool(result.data and result.data[0].get("unsubscribed"))
 
 
 # An email has no page to resolve relative URLs against, so "/assets/x.png" and
@@ -123,6 +140,15 @@ def _build_raw(to: str, subject: str, html_body: str, attachments: list = None) 
 
 
 def _send_one(template: dict, user: dict) -> dict:
+    if _is_unsubscribed(user.get("email", "")):
+        supabase.table(TABLE_EMAIL_LOGS).insert({
+            "user_email": user["email"],
+            "template_id": template["id"],
+            "status": "skipped",
+            "error_message": "Recipient unsubscribed",
+        }).execute()
+        return {"email": user["email"], "status": "skipped", "error": "Recipient unsubscribed"}
+
     try:
         # 1. Resolve the template HTML that should actually be sent
         template_html = _resolve_template_html(template.get("body", ""))

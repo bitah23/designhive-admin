@@ -35,7 +35,13 @@ def _pick(user: dict) -> dict:
 
 
 def _all_users() -> list[dict]:
-    result = supabase.table(TABLE_PROFILES).select("id,name,email,created_at").order("created_at", desc=True).execute()
+    result = (
+        supabase.table(TABLE_PROFILES)
+        .select("id,name,email,created_at")
+        .eq("unsubscribed", False)
+        .order("created_at", desc=True)
+        .execute()
+    )
     return [_pick(u) for u in result.data]
 
 
@@ -44,6 +50,7 @@ def _new_users(days: int) -> list[dict]:
     result = (
         supabase.table(TABLE_PROFILES)
         .select("id,name,email,created_at")
+        .eq("unsubscribed", False)
         .gte("created_at", cutoff)
         .order("created_at", desc=True)
         .execute()
@@ -86,6 +93,7 @@ def _users_by_date_range(from_date: str, to_date: str) -> list[dict]:
     result = (
         supabase.table(TABLE_PROFILES)
         .select("id,name,email,created_at")
+        .eq("unsubscribed", False)
         .gte("created_at", from_date)
         .lte("created_at", to_dt)
         .order("created_at", desc=True)

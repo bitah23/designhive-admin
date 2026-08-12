@@ -407,7 +407,8 @@ function buildPreviewEmail(template) {
   let body = (template.body || '')
     .replace(/\{\{name\}\}/g, 'John Doe')
     .replace(/\{\{email\}\}/g, 'john@example.com')
-    .replace(/\{\{date\}\}/g, today);
+    .replace(/\{\{date\}\}/g, today)
+    .replace(/\{\{unsubscribe_url\}\}/g, '#');
 
   /* ── 2. Sanitise any <img> tags in the stored body ────────────
      Remove explicit width/height attrs and force responsive sizing.
@@ -685,7 +686,7 @@ function getEmbeddedDefaultTemplateBody() {
         </div>
         <p class="footer-legal">
           You're receiving this because you signed up for Design Hive.<br>
-          <a href="#">Unsubscribe</a> &nbsp;&middot;&nbsp; <a href="#">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="#">View in
+          <a href="{{unsubscribe_url}}">Unsubscribe</a> &nbsp;&middot;&nbsp; <a href="#">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="#">View in
             Browser</a>
         </p>
         <div class="footer-divider"></div>

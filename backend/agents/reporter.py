@@ -45,15 +45,18 @@ def generate_report(
     should_email = config["email_admin"] if send_admin_email is None else send_admin_email
 
     sent = [r for r in results if r.get("status") == "sent"]
-    failed = [r for r in results if r.get("status") != "sent"]
+    skipped = [r for r in results if r.get("status") == "skipped"]
+    failed = [r for r in results if r.get("status") not in ("sent", "skipped")]
     total = total_targeted if total_targeted is not None else len(results)
-    success_rate = round(len(sent) / total * 100, 1) if total else 0.0
+    attempted = total - len(skipped)
+    success_rate = round(len(sent) / attempted * 100, 1) if attempted else 0.0
 
     report = {
         "campaign_name": template.get("title", "Untitled"),
         "template_id": template.get("id"),
         "total_targeted": total,
         "sent": len(sent),
+        "skipped": len(skipped),
         "failed": len(failed),
         "success_rate": success_rate,
         "failed_recipients": [
@@ -98,6 +101,8 @@ def _email_report(report: dict, admin_email: str):
               <td><strong>{report['total_targeted']}</strong></td></tr>
           <tr><td style='padding:6px 16px 6px 0;color:#666;'>Sent</td>
               <td><strong style='color:#27ae60;'>{report['sent']}</strong></td></tr>
+          <tr><td style='padding:6px 16px 6px 0;color:#666;'>Skipped (unsubscribed)</td>
+              <td><strong style='color:#888;'>{report['skipped']}</strong></td></tr>
           <tr><td style='padding:6px 16px 6px 0;color:#666;'>Failed</td>
               <td><strong style='color:#c0392b;'>{report['failed']}</strong></td></tr>
           <tr><td style='padding:6px 16px 6px 0;color:#666;'>Success rate</td>

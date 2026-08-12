@@ -80,7 +80,10 @@ function renderUsers() {
           ${pageUsers.length ? pageUsers.map(user => `
             <tr>
               <td data-label="Name" class="bold">${escapeHtml(user.name || '--')}</td>
-              <td data-label="Email" class="text-gold">${escapeHtml(user.email)}</td>
+              <td data-label="Email" class="text-gold">
+                ${escapeHtml(user.email)}
+                ${user.unsubscribed ? '<span class="badge badge-neutral" style="margin-left:8px">UNSUBSCRIBED</span>' : ''}
+              </td>
               <td data-label="Joined" class="text-muted">${formatDate(user.created_at)}</td>
               <td>
                 <button type="button" class="btn btn-outline btn-sm" onclick="openEmailModal('${escapeHtml(user.id)}')">

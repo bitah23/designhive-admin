@@ -392,22 +392,30 @@ async function sendCampaign() {
 
     const results = response.results || [];
     const sent = results.filter(item => item.status === 'sent').length;
-    const failed = results.filter(item => item.status === 'failed').length;
+    const skipped = results.filter(item => item.status === 'skipped').length;
+    const failed = results.filter(item => item.status !== 'sent' && item.status !== 'skipped').length;
 
     document.getElementById('res-sent').textContent = sent;
+    document.getElementById('res-skipped').textContent = skipped;
     document.getElementById('res-failed').textContent = failed;
-    document.getElementById('res-rows').innerHTML = results.map(item => `
+    document.getElementById('res-rows').innerHTML = results.map(item => {
+      const isSkipped = item.status === 'skipped';
+      const badgeClass = item.status === 'sent' ? 'badge-green' : isSkipped ? 'badge-neutral' : 'badge-red';
+      const reasonClass = isSkipped ? 'text-muted' : 'text-danger';
+      return `
       <div class="card" style="padding:12px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;box-shadow:none">
         <div>
           <div style="color:var(--text-primary);font-weight:600">${escapeHtml(item.email)}</div>
-          ${item.error ? `<div class="text-danger" style="font-size:12px;margin-top:4px">${escapeHtml(item.error)}</div>` : ''}
+          ${item.error ? `<div class="${reasonClass}" style="font-size:12px;margin-top:4px">${escapeHtml(item.error)}</div>` : ''}
         </div>
-        <span class="badge ${item.status === 'sent' ? 'badge-green' : 'badge-red'}">${escapeHtml(item.status.toUpperCase())}</span>
+        <span class="badge ${badgeClass}">${escapeHtml(item.status.toUpperCase())}</span>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     resultsCard.hidden = false;
-    Toast.success(failed ? `${sent} sent, ${failed} failed.` : `Sent to ${sent} user${sent === 1 ? '' : 's'}.`);
+    const summary = [`${sent} sent`, skipped && `${skipped} skipped`, failed && `${failed} failed`].filter(Boolean).join(', ');
+    Toast.success(summary + '.');
   } catch (error) {
     Toast.error(error.response?.data?.detail || error.message || 'Failed to send campaign.');
   } finally {

@@ -140,7 +140,7 @@ DEFAULT_EMAIL_TEMPLATE = """<!DOCTYPE HTML
         </div>
         <div class="footer-divider"></div>
         <div class="footer-logo"><span class="footer-logo-text">Design<span class="footer-dot"></span>Hive</span></div>
-        <p class="footer-legal">You're receiving this because you signed up for Design Hive.<br><a href="#">Unsubscribe</a> &nbsp;&middot;&nbsp; <a href="#">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="#">View in Browser</a></p>
+        <p class="footer-legal">You're receiving this because you signed up for Design Hive.<br><a href="{{unsubscribe_url}}">Unsubscribe</a> &nbsp;&middot;&nbsp; <a href="#">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="#">View in Browser</a></p>
         <div class="footer-divider"></div>
         <p class="footer-legal" style="font-size: 11px; margin-top: 0;">&copy; 2025 Design Hive. All rights reserved.</p>
       </div>
